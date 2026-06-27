@@ -5,6 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Factory Passport</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root { color-scheme: dark; }
+    textarea, input, select { outline: none; }
+    textarea:focus, input:focus, select:focus { box-shadow: 0 0 0 2px rgba(99,102,241,.55); }
+    .thin-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
+    .thin-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 999px; }
+    .diff-add { background: rgba(16,185,129,.18); color: #a7f3d0; }
+    .diff-remove { background: rgba(239,68,68,.18); color: #fecaca; text-decoration: line-through; }
+    .node-line:before { content: ""; position: absolute; left: 12px; top: 28px; bottom: -20px; width: 1px; background: #334155; }
+    .node-line:last-child:before { display: none; }
+  </style>
 </head>
 
 <body class="bg-slate-950 text-slate-100 min-h-screen">
@@ -14,365 +25,1263 @@
         <div>
           <h1 class="text-3xl md:text-4xl font-bold tracking-tight">Factory Passport</h1>
           <p class="text-slate-400 mt-1">
-            Human-in-the-loop snapshots for AI software factories.
+            Interoperable, human-in-the-loop snapshots for AI software factories.
+          </p>
+          <p class="text-xs text-slate-500 mt-2">
+            Single HTML file · localStorage · shareable hash URLs · export/import JSON · webhook-friendly
           </p>
         </div>
 
         <div class="flex flex-wrap gap-2">
-          <button onclick="exportRun()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700">
-            Export JSON
-          </button>
-
+          <button onclick="exportRun()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700">Export JSON</button>
           <label class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 cursor-pointer">
             Import JSON
             <input type="file" accept="application/json" class="hidden" onchange="importRun(event)" />
           </label>
-
-          <button onclick="copyShareUrl()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500">
-            Copy Share URL
-          </button>
+          <button onclick="copyShareUrl('run')" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500">Share Run</button>
+          <button onclick="copyShareUrl('snapshot')" class="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500">Share Selected</button>
         </div>
       </div>
     </header>
 
-    <section class="grid lg:grid-cols-3 gap-4 mb-6">
+    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4">
+        <div>
+          <h2 class="font-semibold text-xl">Connections</h2>
+          <p class="text-sm text-slate-400">Optional. The app still works manually without API keys.</p>
+        </div>
+        <button onclick="togglePanel('connectionsBody')" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm">Show / Hide</button>
+      </div>
+
+      <div id="connectionsBody" class="grid lg:grid-cols-3 gap-6">
+        <div>
+          <h3 class="font-semibold mb-2">GitHub</h3>
+          <div class="space-y-3">
+            <input id="githubOwner" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700" placeholder="Owner" value="superplanehq">
+            <input id="githubRepo" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700" placeholder="Repo" value="superplane">
+            <div class="relative">
+              <input id="githubToken" type="password" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700" placeholder="GitHub token optional">
+              <button type="button" onclick="togglePassword('githubToken')" class="absolute right-3 top-3 text-slate-400 hover:text-slate-200">👁</button>
+            </div>
+          </div>
+          <div class="flex gap-2 mt-3">
+            <button onclick="saveGithubConfig()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700">Save</button>
+            <button onclick="openRepo()" class="px-4 py-2 rounded-xl bg-indigo-700 hover:bg-indigo-600">Open Repo</button>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="font-semibold mb-2">Render</h3>
+          <div class="space-y-3">
+            <div class="relative">
+              <input id="renderApiKey" type="password" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700" placeholder="Render API Key optional">
+              <button type="button" onclick="togglePassword('renderApiKey')" class="absolute right-3 top-3 text-slate-400 hover:text-slate-200">👁</button>
+            </div>
+            <input id="renderServiceId" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700" placeholder="Render Service ID">
+            <input id="renderPreviewUrl" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700" placeholder="Known preview URL optional">
+          </div>
+        </div>
+
+        <div>
+          <h3 class="font-semibold mb-2">SuperPlane / Webhook</h3>
+          <div class="space-y-3">
+            <div class="relative">
+              <input id="superplaneApiKey" type="password" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700" placeholder="SuperPlane API key optional">
+              <button type="button" onclick="togglePassword('superplaneApiKey')" class="absolute right-3 top-3 text-slate-400 hover:text-slate-200">👁</button>
+            </div>
+            <input id="superplaneEndpoint" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700" placeholder="SuperPlane / webhook endpoint">
+            <input id="genericWebhook" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700" placeholder="Generic webhook URL">
+          </div>
+          <button onclick="saveIntegrations()" class="mt-3 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500">Save Integrations</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid lg:grid-cols-4 gap-4 mb-6">
       <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-4">
         <h2 class="font-semibold text-xl mb-3">Create Factory Run</h2>
+        <textarea id="ideaInput" class="w-full min-h-36 p-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100" placeholder="Paste a vague idea, feature request, or GitHub issue numbers like #5368 #5366..."></textarea>
 
-        <textarea
-          id="ideaInput"
-          class="w-full min-h-28 p-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          placeholder="Paste a vague idea, feature request, or GitHub issue here..."
-        ></textarea>
+        <div class="grid md:grid-cols-2 gap-3 mt-3">
+          <input id="runTitleInput" class="p-3 rounded-xl bg-slate-950 border border-slate-700" placeholder="Run title optional">
+          <select id="templateSelect" class="p-3 rounded-xl bg-slate-950 border border-slate-700">
+            <option value="software-factory">Software Factory</option>
+            <option value="security-upgrade">Security / Upgrade</option>
+            <option value="custom">Minimal Custom</option>
+          </select>
+        </div>
 
         <div class="flex flex-wrap gap-2 mt-3">
-          <button onclick="createRun()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-medium">
-            Start Run
-          </button>
-
-          <button onclick="resetRun()" class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 font-medium">
-            Reset
-          </button>
+          <button onclick="createRun()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-medium">Start Manual Run</button>
+          <button onclick="createRunFromGithubIssues()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 font-medium">Fetch GitHub Issues + Start</button>
+          <button onclick="addSnapshotAfterSelected()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700">Add Snapshot</button>
+          <button onclick="resetRun()" class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500">Reset</button>
         </div>
+        <p id="fetchStatus" class="text-sm text-slate-400 mt-3"></p>
       </div>
 
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
         <h2 class="font-semibold text-xl mb-3">Factory Fingerprint</h2>
         <div id="insights" class="space-y-2 text-sm text-slate-300"></div>
       </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <h2 class="font-semibold text-xl mb-3">Selected Snapshot</h2>
+        <div id="selectedPanel" class="text-sm text-slate-300 space-y-2"></div>
+      </div>
     </section>
 
-    <main>
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="font-semibold text-xl">Pipeline Snapshots</h2>
-        <span id="runId" class="text-xs text-slate-500"></span>
-      </div>
+    <section class="grid xl:grid-cols-4 gap-4">
+      <aside class="xl:col-span-1 space-y-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="font-semibold text-xl">Timeline</h2>
+            <span id="eventCount" class="text-xs text-slate-500"></span>
+          </div>
+          <div id="timeline" class="space-y-3 text-sm max-h-[520px] overflow-auto thin-scroll pr-1"></div>
+        </div>
 
-      <div id="board" class="grid md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
-    </main>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+          <h2 class="font-semibold text-xl mb-3">Lineage</h2>
+          <div id="lineage" class="space-y-2 text-sm max-h-[420px] overflow-auto thin-scroll pr-1"></div>
+        </div>
+      </aside>
+
+      <main class="xl:col-span-3">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-3">
+          <div>
+            <h2 class="font-semibold text-xl">Snapshot Commits</h2>
+            <span id="runId" class="text-xs text-slate-500"></span>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="setView('cards')" id="viewCardsBtn" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm">Cards</button>
+            <button onclick="setView('diff')" id="viewDiffBtn" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm">Diff</button>
+            <button onclick="setView('interop')" id="viewInteropBtn" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm">Interop Payload</button>
+          </div>
+        </div>
+
+        <div id="board" class="grid md:grid-cols-2 2xl:grid-cols-3 gap-4"></div>
+        <div id="diffView" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-4"></div>
+        <div id="interopView" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-4"></div>
+      </main>
+    </section>
   </div>
 
   <script>
-    const stages = [
-      "Idea",
-      "Spec",
-      "Plan",
-      "Patch",
-      "Test",
-      "Preview",
-      "Approve"
-    ];
+    const DEFAULT_STAGES = ["Idea", "Spec", "Plan", "Patch", "Test", "Preview", "Experience", "Approve"];
 
-    let run = {
-      id: null,
-      createdAt: null,
-      snapshots: []
+    const templates = {
+      "software-factory": DEFAULT_STAGES,
+      "security-upgrade": ["Idea", "Repo Health", "Risk Spec", "Upgrade Plan", "Patch", "Validation", "Render Preview", "Approve"],
+      "custom": ["Idea", "Snapshot"]
     };
 
-    function now() {
-      return new Date().toLocaleString();
+    let githubConfig = { owner: "superplanehq", repo: "superplane", token: "" };
+    let integrations = {
+      renderApiKey: "",
+      renderServiceId: "",
+      renderPreviewUrl: "",
+      superplaneApiKey: "",
+      superplaneEndpoint: "",
+      genericWebhook: ""
+    };
+
+    let run = emptyRun();
+    let selectedSnapshotId = null;
+    let currentView = "cards";
+
+    function emptyRun() {
+      return {
+        schema: "factory-passport/v2",
+        id: null,
+        title: "",
+        createdAt: null,
+        updatedAt: null,
+        github: null,
+        integrations: null,
+        snapshots: [],
+        events: []
+      };
     }
 
-    function makeSnapshot(stage, input = "", output = "") {
+    function now() { return new Date().toLocaleString(); }
+
+    function uid(prefix = "id") {
+      const id = window.crypto?.randomUUID?.() || Date.now() + "-" + Math.random().toString(16).slice(2);
+      return `${prefix}-${id}`;
+    }
+
+    function hashText(str) {
+      let h = 2166136261;
+      str = String(str || "");
+      for (let i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return ("00000000" + (h >>> 0).toString(16)).slice(-8);
+    }
+
+    function createEvent(type, snapshotId = null, message = "", meta = {}) {
       return {
-        id: crypto.randomUUID(),
+        id: uid("evt"),
+        type,
+        snapshotId,
+        message,
+        meta,
+        createdAt: now()
+      };
+    }
+
+    function addEvent(type, snapshotId, message, meta = {}) {
+      run.events ||= [];
+      run.events.unshift(createEvent(type, snapshotId, message, meta));
+      run.updatedAt = now();
+    }
+
+    function makeSnapshot({ stage, input = "", output = "", parentId = null, source = "Human", status = "pending" }) {
+      const snap = {
+        id: uid("snap"),
         stage,
         input,
         output,
         notes: "",
-        status: "pending",
-        retries: 0,
-        parentId: run.snapshots.at(-1)?.id || null,
+        status,
+        parentId,
         createdAt: now(),
-        updatedAt: now()
+        updatedAt: now(),
+        source,
+        author: source,
+        confidence: "",
+        retries: 0,
+        validation: {
+          human: status === "approved",
+          ai: false,
+          tests: false,
+          build: false,
+          preview: false,
+          security: false
+        },
+        artifacts: {
+          githubIssueUrl: "",
+          githubPrUrl: "",
+          renderPreviewUrl: "",
+          renderDeployId: "",
+          superplaneRunId: "",
+          logsUrl: ""
+        },
+        interop: {
+          kind: "snapshot",
+          accepts: ["manual", "webhook", "github", "render", "superplane"],
+          emits: ["json", "url-hash", "webhook-payload"]
+        }
       };
+      snap.inputHash = hashText(input);
+      snap.outputHash = hashText(output);
+      return snap;
+    }
+
+    function buildSnapshotsFromIdea(idea, templateName) {
+      const stageList = templates[templateName] || DEFAULT_STAGES;
+      const snapshots = [];
+      let parentId = null;
+
+      stageList.forEach((stage, index) => {
+        const snap = makeSnapshot({
+          stage,
+          input: index === 0 ? "User input" : stageList[index - 1],
+          output: index === 0 ? idea : "",
+          parentId,
+          source: index === 0 ? "Human" : "Factory",
+          status: index === 0 ? "approved" : "pending"
+        });
+
+        snapshots.push(snap);
+        parentId = snap.id;
+      });
+
+      return snapshots;
     }
 
     function createRun() {
       const idea = document.getElementById("ideaInput").value.trim();
+      if (!idea) return alert("Add an idea or issue first.");
 
-      if (!idea) {
-        alert("Add an idea or issue first.");
-        return;
-      }
+      const templateName = document.getElementById("templateSelect").value;
+      const title = document.getElementById("runTitleInput").value.trim() || firstLine(idea).slice(0, 90) || "Factory Passport Run";
 
       run = {
+        schema: "factory-passport/v2",
         id: "run-" + Date.now(),
+        title,
         createdAt: now(),
-        snapshots: stages.map((stage, index) => {
-          if (index === 0) {
-            return makeSnapshot("Idea", "User input", idea);
-          }
-
-          return makeSnapshot(stage, stages[index - 1], "");
-        })
+        updatedAt: now(),
+        github: { ...githubConfig },
+        integrations: publicIntegrations(),
+        snapshots: buildSnapshotsFromIdea(idea, templateName),
+        events: []
       };
 
-      run.snapshots[0].status = "approved";
+      selectedSnapshotId = run.snapshots[0]?.id || null;
+      addEvent("run.created", selectedSnapshotId, `Run created: ${title}`, { templateName });
       saveRun();
       render();
     }
 
-    function render() {
-      document.getElementById("runId").textContent = run.id ? `Run: ${run.id}` : "No active run";
+    async function createRunFromGithubIssues() {
+      saveGithubConfig();
+      const raw = document.getElementById("ideaInput").value.trim();
+      const issueNumbers = Array.from(raw.matchAll(/#?(\d{3,6})/g)).map(m => m[1]);
+      if (!issueNumbers.length) return alert("Paste issue numbers like #5368 #5366 first.");
 
+      setFetchStatus("Fetching GitHub issues...");
+      const headers = { "Accept": "application/vnd.github+json" };
+      if (githubConfig.token) headers.Authorization = `Bearer ${githubConfig.token}`;
+
+      const fetched = [];
+      for (const n of issueNumbers) {
+        try {
+          const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/issues/${n}`;
+          const res = await fetch(url, { headers });
+          if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+          const issue = await res.json();
+          fetched.push(`#${issue.number} - ${issue.title}\n${issue.html_url}\n\n${issue.body || ""}`);
+        } catch (err) {
+          fetched.push(`#${n} - Could not fetch issue\nReason: ${err.message}`);
+        }
+      }
+
+      document.getElementById("ideaInput").value = fetched.join("\n\n---\n\n");
+      setFetchStatus(`Fetched ${fetched.length} issue(s). Creating run...`);
+      createRun();
+      addEvent("github.issues.fetched", selectedSnapshotId, `Fetched ${fetched.length} GitHub issues`, { issueNumbers });
+      saveRun();
+      render();
+      setFetchStatus("Done.");
+    }
+
+    function setFetchStatus(text) {
+      document.getElementById("fetchStatus").textContent = text;
+    }
+
+    function publicIntegrations() {
+      return {
+        github: { owner: githubConfig.owner, repo: githubConfig.repo, tokenConfigured: Boolean(githubConfig.token) },
+        render: { serviceId: integrations.renderServiceId, previewUrl: integrations.renderPreviewUrl, apiKeyConfigured: Boolean(integrations.renderApiKey) },
+        superplane: { endpoint: integrations.superplaneEndpoint, apiKeyConfigured: Boolean(integrations.superplaneApiKey) },
+        webhook: { url: integrations.genericWebhook }
+      };
+    }
+
+    function render() {
+      document.getElementById("runId").textContent = run.id ? `${run.title || "Untitled"} · ${run.id}` : "No active run";
+      renderBoard();
+      renderInsights();
+      renderTimeline();
+      renderLineage();
+      renderSelectedPanel();
+      renderDiffView();
+      renderInteropView();
+      updateView();
+    }
+
+    function renderBoard() {
       const board = document.getElementById("board");
       board.innerHTML = "";
 
+      if (!run.snapshots.length) {
+        board.innerHTML = `
+          <section class="md:col-span-2 2xl:col-span-3 bg-slate-900 border border-dashed border-slate-700 rounded-2xl p-8 text-center text-slate-400">
+            Create or import a run to start collecting snapshot commits.
+          </section>
+        `;
+        return;
+      }
+
       run.snapshots.forEach((snapshot, index) => {
         const card = document.createElement("section");
-        card.className = "bg-slate-900 border border-slate-800 rounded-2xl p-4";
+        const selected = snapshot.id === selectedSnapshotId;
+        card.className = `${selected ? "ring-2 ring-indigo-500 " : ""}bg-slate-900 border border-slate-800 rounded-2xl p-4 cursor-pointer`;
+        card.onclick = (e) => {
+          if (e.target.closest("button, textarea, input, select, a")) return;
+          selectedSnapshotId = snapshot.id;
+          render();
+        };
 
         card.innerHTML = `
           <div class="flex items-start justify-between gap-3 mb-3">
             <div>
-              <h3 class="text-lg font-semibold">${index + 1}. ${snapshot.stage}</h3>
-              <p class="text-xs text-slate-500">Updated: ${snapshot.updatedAt}</p>
+              <h3 class="text-lg font-semibold">${index + 1}. ${escapeHtml(snapshot.stage)}</h3>
+              <p class="text-xs text-slate-500">By ${escapeHtml(snapshot.source || "Unknown")} · ${escapeHtml(snapshot.updatedAt)}</p>
+              <p class="text-[11px] text-slate-600">in:${snapshot.inputHash || hashText(snapshot.input)} out:${snapshot.outputHash || hashText(snapshot.output)}</p>
             </div>
-            <span class="text-xs px-2 py-1 rounded-full ${statusClass(snapshot.status)}">
-              ${snapshot.status}
-            </span>
+            <span class="text-xs px-2 py-1 rounded-full ${statusClass(snapshot.status)}">${escapeHtml(snapshot.status)}</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 mb-3">
+            <select class="p-2 rounded-xl bg-slate-950 border border-slate-700 text-xs" onchange="updateSnapshot('${snapshot.id}', 'stage', this.value, true)">
+              ${stageOptions(snapshot.stage)}
+            </select>
+            <select class="p-2 rounded-xl bg-slate-950 border border-slate-700 text-xs" onchange="updateSnapshot('${snapshot.id}', 'source', this.value, true)">
+              ${sourceOptions(snapshot.source)}
+            </select>
           </div>
 
           <label class="text-xs text-slate-400">Input</label>
-          <textarea
-            class="w-full mt-1 mb-3 min-h-20 p-2 rounded-xl bg-slate-950 border border-slate-700 text-sm"
-            onchange="updateSnapshot('${snapshot.id}', 'input', this.value)"
-          >${escapeHtml(snapshot.input)}</textarea>
+          <textarea class="w-full mt-1 mb-3 min-h-20 p-2 rounded-xl bg-slate-950 border border-slate-700 text-sm" onchange="updateSnapshot('${snapshot.id}', 'input', this.value)">${escapeHtml(snapshot.input)}</textarea>
 
           <label class="text-xs text-slate-400">Output</label>
-          <textarea
-            class="w-full mt-1 mb-3 min-h-28 p-2 rounded-xl bg-slate-950 border border-slate-700 text-sm"
-            placeholder="Agent output, human edit, validation result, Render preview URL..."
-            onchange="updateSnapshot('${snapshot.id}', 'output', this.value)"
-          >${escapeHtml(snapshot.output)}</textarea>
+          <textarea class="w-full mt-1 mb-3 min-h-28 p-2 rounded-xl bg-slate-950 border border-slate-700 text-sm" placeholder="Agent output, human edit, validation result, PR link, Render preview URL..." onchange="updateSnapshot('${snapshot.id}', 'output', this.value)">${escapeHtml(snapshot.output)}</textarea>
 
-          <label class="text-xs text-slate-400">Human Notes</label>
-          <textarea
-            class="w-full mt-1 mb-3 min-h-16 p-2 rounded-xl bg-slate-950 border border-slate-700 text-sm"
-            placeholder="Why approved, rejected, retried, or changed..."
-            onchange="updateSnapshot('${snapshot.id}', 'notes', this.value)"
-          >${escapeHtml(snapshot.notes)}</textarea>
-
-          <div class="flex flex-wrap gap-2">
-            <button onclick="approveSnapshot('${snapshot.id}')" class="px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-sm">
-              Approve
-            </button>
-
-            <button onclick="rejectSnapshot('${snapshot.id}')" class="px-3 py-2 rounded-xl bg-red-700 hover:bg-red-600 text-sm">
-              Reject
-            </button>
-
-            <button onclick="retrySnapshot('${snapshot.id}')" class="px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-sm">
-              Retry
-            </button>
-
-            <button onclick="forkSnapshot('${snapshot.id}')" class="px-3 py-2 rounded-xl bg-indigo-700 hover:bg-indigo-600 text-sm">
-              Fork
-            </button>
+          <div class="grid grid-cols-2 gap-2 mb-3">
+            <input class="p-2 rounded-xl bg-slate-950 border border-slate-700 text-xs" placeholder="Confidence %" value="${escapeHtml(snapshot.confidence || "")}" onchange="updateSnapshot('${snapshot.id}', 'confidence', this.value, true)">
+            <input class="p-2 rounded-xl bg-slate-950 border border-slate-700 text-xs" placeholder="Preview / PR URL" value="${escapeHtml(snapshot.artifacts?.renderPreviewUrl || snapshot.artifacts?.githubPrUrl || "")}" onchange="updateArtifact('${snapshot.id}', this.value)">
           </div>
 
-          <div class="mt-3 text-xs text-slate-500">
-            Retries: ${snapshot.retries} · Parent: ${snapshot.parentId || "none"}
+          <label class="text-xs text-slate-400">Validation</label>
+          <div class="grid grid-cols-3 gap-2 my-2 text-xs">
+            ${validationChecks(snapshot)}
+          </div>
+
+          <label class="text-xs text-slate-400">Human Notes</label>
+          <textarea class="w-full mt-1 mb-3 min-h-16 p-2 rounded-xl bg-slate-950 border border-slate-700 text-sm" placeholder="Why approved, rejected, retried, forked, or changed..." onchange="updateSnapshot('${snapshot.id}', 'notes', this.value)">${escapeHtml(snapshot.notes)}</textarea>
+
+          <div class="flex flex-wrap gap-2">
+            <button onclick="approveSnapshot('${snapshot.id}')" class="px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-sm">Approve</button>
+            <button onclick="rejectSnapshot('${snapshot.id}')" class="px-3 py-2 rounded-xl bg-red-700 hover:bg-red-600 text-sm">Reject</button>
+            <button onclick="retrySnapshot('${snapshot.id}')" class="px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-sm">Retry</button>
+            <button onclick="forkSnapshot('${snapshot.id}')" class="px-3 py-2 rounded-xl bg-indigo-700 hover:bg-indigo-600 text-sm">Fork</button>
+            <button onclick="replayFromSnapshot('${snapshot.id}')" class="px-3 py-2 rounded-xl bg-cyan-700 hover:bg-cyan-600 text-sm">Replay</button>
+            <button onclick="sendSnapshotWebhook('${snapshot.id}')" class="px-3 py-2 rounded-xl bg-violet-700 hover:bg-violet-600 text-sm">Webhook</button>
+          </div>
+
+          <div class="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
+            <span>Retries: ${snapshot.retries || 0}</span>
+            <span>Parent: ${snapshot.parentId ? shortId(snapshot.parentId) : "none"}</span>
+            ${artifactLinks(snapshot)}
           </div>
         `;
 
         board.appendChild(card);
       });
+    }
 
-      renderInsights();
+    function stageOptions(current) {
+      const all = Array.from(new Set([...DEFAULT_STAGES, "Repo Health", "Risk Spec", "Validation", "Render Preview", "Experience", "Custom", current].filter(Boolean)));
+      return all.map(s => `<option value="${escapeAttr(s)}" ${s === current ? "selected" : ""}>${escapeHtml(s)}</option>`).join("");
+    }
+
+    function sourceOptions(current) {
+      const all = ["Human", "AI Agent", "SuperPlane", "Render", "GitHub", "Factory", "Webhook", "CLI", "Other"];
+      return all.map(s => `<option value="${escapeAttr(s)}" ${s === current ? "selected" : ""}>${escapeHtml(s)}</option>`).join("");
+    }
+
+    function validationChecks(snapshot) {
+      const keys = [
+        ["human", "Human"],
+        ["ai", "AI"],
+        ["tests", "Tests"],
+        ["build", "Build"],
+        ["preview", "Preview"],
+        ["security", "Security"]
+      ];
+
+      return keys.map(([key, label]) => `
+        <label class="flex items-center gap-1 rounded-lg bg-slate-950 border border-slate-800 px-2 py-1">
+          <input type="checkbox" ${snapshot.validation?.[key] ? "checked" : ""} onchange="toggleValidation('${snapshot.id}', '${key}', this.checked)">
+          <span>${label}</span>
+        </label>
+      `).join("");
+    }
+
+    function artifactLinks(snapshot) {
+      const a = snapshot.artifacts || {};
+      const links = [];
+      if (a.githubIssueUrl) links.push(`<a class="text-blue-300 underline" target="_blank" href="${escapeAttr(a.githubIssueUrl)}">Issue</a>`);
+      if (a.githubPrUrl) links.push(`<a class="text-blue-300 underline" target="_blank" href="${escapeAttr(a.githubPrUrl)}">PR</a>`);
+      if (a.renderPreviewUrl) links.push(`<a class="text-violet-300 underline" target="_blank" href="${escapeAttr(a.renderPreviewUrl)}">Preview</a>`);
+      if (a.logsUrl) links.push(`<a class="text-slate-300 underline" target="_blank" href="${escapeAttr(a.logsUrl)}">Logs</a>`);
+      return links.join(" ");
     }
 
     function statusClass(status) {
       if (status === "approved") return "bg-emerald-500/20 text-emerald-300";
       if (status === "rejected") return "bg-red-500/20 text-red-300";
       if (status === "retrying") return "bg-amber-500/20 text-amber-200";
+      if (status === "running") return "bg-blue-500/20 text-blue-200";
+      if (status === "forked") return "bg-indigo-500/20 text-indigo-200";
       return "bg-slate-700 text-slate-300";
     }
 
-    function updateSnapshot(id, field, value) {
-      const snapshot = run.snapshots.find(s => s.id === id);
-      if (!snapshot) return;
-
-      snapshot[field] = value;
-      snapshot.updatedAt = now();
+    function updateSnapshot(id, field, value, quiet = false) {
+      const snap = findSnapshot(id);
+      if (!snap) return;
+      const old = snap[field];
+      snap[field] = value;
+      snap.updatedAt = now();
+      snap.inputHash = hashText(snap.input);
+      snap.outputHash = hashText(snap.output);
+      if (!quiet) addEvent("snapshot.edited", id, `${snap.stage} edited`, { field, oldHash: hashText(old), newHash: hashText(value) });
       saveRun();
       renderInsights();
+      renderTimeline();
+      renderSelectedPanel();
+      renderDiffView();
+      renderInteropView();
+    }
+
+    function updateArtifact(id, value) {
+      const snap = findSnapshot(id);
+      if (!snap) return;
+      snap.artifacts ||= {};
+      const url = value.trim();
+      if (url.includes("github.com") && url.includes("/pull/")) snap.artifacts.githubPrUrl = url;
+      else if (url.includes("github.com") && url.includes("/issues/")) snap.artifacts.githubIssueUrl = url;
+      else snap.artifacts.renderPreviewUrl = url;
+      snap.updatedAt = now();
+      addEvent("artifact.linked", id, `Artifact linked to ${snap.stage}`, { url });
+      saveRun();
+      render();
+    }
+
+    function toggleValidation(id, key, checked) {
+      const snap = findSnapshot(id);
+      if (!snap) return;
+      snap.validation ||= {};
+      snap.validation[key] = checked;
+      snap.updatedAt = now();
+      addEvent("validation.changed", id, `${key} validation ${checked ? "passed" : "unchecked"}`);
+      saveRun();
+      renderInsights();
+      renderTimeline();
+      renderSelectedPanel();
     }
 
     function approveSnapshot(id) {
-      const snapshot = run.snapshots.find(s => s.id === id);
-      snapshot.status = "approved";
-      snapshot.updatedAt = now();
+      const snap = findSnapshot(id);
+      if (!snap) return;
+      snap.status = "approved";
+      snap.validation ||= {};
+      snap.validation.human = true;
+      snap.updatedAt = now();
+      addEvent("snapshot.approved", id, `${snap.stage} approved`);
+      selectedSnapshotId = id;
       saveRun();
       render();
     }
 
     function rejectSnapshot(id) {
-      const snapshot = run.snapshots.find(s => s.id === id);
-      snapshot.status = "rejected";
-      snapshot.updatedAt = now();
+      const snap = findSnapshot(id);
+      if (!snap) return;
+      snap.status = "rejected";
+      snap.updatedAt = now();
+      addEvent("snapshot.rejected", id, `${snap.stage} rejected`);
+      selectedSnapshotId = id;
       saveRun();
       render();
     }
 
     function retrySnapshot(id) {
-      const snapshot = run.snapshots.find(s => s.id === id);
-      snapshot.status = "retrying";
-      snapshot.retries += 1;
-      snapshot.updatedAt = now();
+      const snap = findSnapshot(id);
+      if (!snap) return;
+      snap.status = "retrying";
+      snap.retries = (snap.retries || 0) + 1;
+      snap.updatedAt = now();
+      addEvent("snapshot.retry", id, `${snap.stage} marked for retry`, { retries: snap.retries });
+      selectedSnapshotId = id;
       saveRun();
       render();
     }
 
     function forkSnapshot(id) {
-      const snapshot = run.snapshots.find(s => s.id === id);
-      const copy = {
-        ...snapshot,
-        id: crypto.randomUUID(),
-        parentId: snapshot.id,
-        stage: snapshot.stage + " Fork",
-        status: "pending",
-        createdAt: now(),
-        updatedAt: now()
-      };
+      const snap = findSnapshot(id);
+      if (!snap) return;
+      const copy = JSON.parse(JSON.stringify(snap));
+      copy.id = uid("snap");
+      copy.parentId = snap.id;
+      copy.stage = snap.stage.includes("Fork") ? snap.stage : `${snap.stage} Fork`;
+      copy.status = "pending";
+      copy.source = "Human";
+      copy.createdAt = now();
+      copy.updatedAt = now();
+      copy.notes = `Forked from ${shortId(snap.id)}. ${copy.notes || ""}`.trim();
+      run.snapshots.splice(run.snapshots.indexOf(snap) + 1, 0, copy);
+      snap.status = snap.status === "approved" ? snap.status : "forked";
+      addEvent("snapshot.forked", copy.id, `${snap.stage} forked`, { parentId: snap.id });
+      selectedSnapshotId = copy.id;
+      saveRun();
+      render();
+    }
 
-      run.snapshots.splice(run.snapshots.indexOf(snapshot) + 1, 0, copy);
+    function replayFromSnapshot(id) {
+      const snap = findSnapshot(id);
+      if (!snap) return;
+      const next = nextStageName(snap.stage);
+      const child = makeSnapshot({
+        stage: `${next} Replay`,
+        input: snap.output || snap.input || "",
+        output: "",
+        parentId: snap.id,
+        source: "Factory",
+        status: "pending"
+      });
+      child.notes = `Replayed from ${snap.stage} / ${shortId(snap.id)}. Continue the factory from here.`;
+      run.snapshots.splice(run.snapshots.indexOf(snap) + 1, 0, child);
+      addEvent("snapshot.replayed", child.id, `Replay started from ${snap.stage}`, { parentId: snap.id });
+      selectedSnapshotId = child.id;
+      saveRun();
+      render();
+    }
+
+    function nextStageName(stage) {
+      const clean = String(stage).replace(" Replay", "").replace(" Fork", "");
+      const idx = DEFAULT_STAGES.indexOf(clean);
+      return idx >= 0 && DEFAULT_STAGES[idx + 1] ? DEFAULT_STAGES[idx + 1] : "Next";
+    }
+
+    function addSnapshotAfterSelected() {
+      const parent = findSnapshot(selectedSnapshotId) || run.snapshots.at(-1);
+      if (!run.id) {
+        document.getElementById("ideaInput").value ||= "Manual factory run";
+        createRun();
+        return;
+      }
+      const snap = makeSnapshot({
+        stage: "Custom",
+        input: parent?.output || "",
+        output: "",
+        parentId: parent?.id || null,
+        source: "Human",
+        status: "pending"
+      });
+      const index = parent ? run.snapshots.indexOf(parent) + 1 : run.snapshots.length;
+      run.snapshots.splice(index, 0, snap);
+      addEvent("snapshot.created", snap.id, "Custom snapshot added", { parentId: snap.parentId });
+      selectedSnapshotId = snap.id;
+      saveRun();
+      render();
+    }
+
+    async function sendSnapshotWebhook(id) {
+      const snap = findSnapshot(id);
+      if (!snap) return;
+      const endpoint = integrations.genericWebhook || integrations.superplaneEndpoint;
+      if (!endpoint) {
+        copyInteropPayload(id);
+        return alert("No webhook endpoint configured. Interop payload copied instead.");
+      }
+
+      snap.status = "running";
+      addEvent("webhook.started", id, `Webhook sent for ${snap.stage}`, { endpoint });
+      saveRun();
+      render();
+
+      try {
+        const headers = { "Content-Type": "application/json" };
+        if (integrations.superplaneApiKey) headers.Authorization = `Bearer ${integrations.superplaneApiKey}`;
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(buildInteropPayload(snap))
+        });
+        const text = await res.text();
+        snap.output = `${snap.output || ""}\n\nWebhook response (${res.status}):\n${text}`.trim();
+        snap.status = res.ok ? "approved" : "rejected";
+        snap.updatedAt = now();
+        addEvent("webhook.completed", id, `Webhook completed with ${res.status}`);
+      } catch (err) {
+        snap.status = "rejected";
+        snap.output = `${snap.output || ""}\n\nWebhook failed:\n${err.message}`.trim();
+        addEvent("webhook.failed", id, `Webhook failed: ${err.message}`);
+      }
+
+      saveRun();
+      render();
+    }
+
+    async function triggerRenderSnapshot(id) {
+      const snap = findSnapshot(id);
+      if (!snap) return;
+      snap.status = "running";
+      addEvent("render.deploy.started", id, `Render deploy requested for ${snap.stage}`);
+      saveRun();
+      render();
+
+      if (!integrations.renderApiKey || !integrations.renderServiceId) {
+        const demoUrl = integrations.renderPreviewUrl || `https://factory-passport-demo-${Date.now()}.onrender.com`;
+        snap.artifacts.renderPreviewUrl = demoUrl;
+        snap.output = `${snap.output || ""}\n\nRender Preview Snapshot:\nPreview URL: ${demoUrl}\nBuild: simulated\nStatus: live proof placeholder`.trim();
+        snap.status = "approved";
+        snap.validation.preview = true;
+        snap.validation.build = true;
+        snap.updatedAt = now();
+        addEvent("render.deploy.simulated", id, "Render preview recorded in demo mode", { demoUrl });
+        saveRun();
+        render();
+        return;
+      }
+
+      try {
+        const res = await fetch(`https://api.render.com/v1/services/${integrations.renderServiceId}/deploys`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${integrations.renderApiKey}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ clearCache: "do_not_clear" })
+        });
+        const data = await res.json().catch(() => ({}));
+        snap.artifacts.renderDeployId = data.id || data.deploy?.id || "";
+        snap.artifacts.renderPreviewUrl = integrations.renderPreviewUrl || snap.artifacts.renderPreviewUrl || "";
+        snap.output = `${snap.output || ""}\n\nRender deploy requested:\n${JSON.stringify(data, null, 2)}`.trim();
+        snap.status = res.ok ? "approved" : "rejected";
+        snap.validation.build = res.ok;
+        snap.validation.preview = Boolean(snap.artifacts.renderPreviewUrl);
+        addEvent("render.deploy.completed", id, `Render deploy API returned ${res.status}`);
+      } catch (err) {
+        snap.status = "rejected";
+        snap.output = `${snap.output || ""}\n\nRender API call failed, likely browser CORS or token issue:\n${err.message}`.trim();
+        addEvent("render.deploy.failed", id, err.message);
+      }
+
+      snap.updatedAt = now();
       saveRun();
       render();
     }
 
     function renderInsights() {
       const total = run.snapshots.length;
-      const approved = run.snapshots.filter(s => s.status === "approved").length;
-      const rejected = run.snapshots.filter(s => s.status === "rejected").length;
-      const retrying = run.snapshots.filter(s => s.status === "retrying").length;
-      const retries = run.snapshots.reduce((sum, s) => sum + s.retries, 0);
+      const approved = countStatus("approved");
+      const rejected = countStatus("rejected");
+      const running = countStatus("running");
+      const retrying = countStatus("retrying");
+      const forks = run.snapshots.filter(s => s.parentId && s.stage.includes("Fork")).length;
+      const replays = (run.events || []).filter(e => e.type === "snapshot.replayed").length;
+      const retries = run.snapshots.reduce((sum, s) => sum + (s.retries || 0), 0);
+      const humanEdits = (run.events || []).filter(e => e.type === "snapshot.edited").length;
       const completion = total ? Math.round((approved / total) * 100) : 0;
+      const mostEdited = mostCommon((run.events || []).filter(e => e.type === "snapshot.edited").map(e => findSnapshot(e.snapshotId)?.stage).filter(Boolean));
+      const mostForked = mostCommon((run.events || []).filter(e => e.type === "snapshot.forked").map(e => findSnapshot(e.snapshotId)?.stage).filter(Boolean));
 
       document.getElementById("insights").innerHTML = `
         <div class="flex justify-between"><span>Snapshots</span><strong>${total}</strong></div>
         <div class="flex justify-between"><span>Approved</span><strong>${approved}</strong></div>
         <div class="flex justify-between"><span>Rejected</span><strong>${rejected}</strong></div>
-        <div class="flex justify-between"><span>Retrying</span><strong>${retrying}</strong></div>
+        <div class="flex justify-between"><span>Running / Retry</span><strong>${running + retrying}</strong></div>
+        <div class="flex justify-between"><span>Forks</span><strong>${forks}</strong></div>
+        <div class="flex justify-between"><span>Replays</span><strong>${replays}</strong></div>
         <div class="flex justify-between"><span>Total Retries</span><strong>${retries}</strong></div>
+        <div class="flex justify-between"><span>Human Edits</span><strong>${humanEdits}</strong></div>
+        <div class="flex justify-between"><span>Most Edited</span><strong>${escapeHtml(mostEdited || "—")}</strong></div>
+        <div class="flex justify-between"><span>Most Forked</span><strong>${escapeHtml(mostForked || "—")}</strong></div>
         <div class="flex justify-between"><span>Completion</span><strong>${completion}%</strong></div>
-
         <div class="mt-3 h-3 bg-slate-800 rounded-full overflow-hidden">
           <div class="h-full bg-emerald-500" style="width:${completion}%"></div>
+        </div>
+        <div class="mt-4 text-xs ${integrations.renderApiKey || integrations.renderPreviewUrl ? "text-emerald-400" : "text-slate-500"}">
+          Render: ${integrations.renderApiKey || integrations.renderPreviewUrl ? "connected / ready" : "manual mode"}
+        </div>
+        <div class="text-xs ${integrations.superplaneEndpoint || integrations.genericWebhook ? "text-emerald-400" : "text-slate-500"}">
+          Interop: ${integrations.superplaneEndpoint || integrations.genericWebhook ? "webhook configured" : "copy payload mode"}
         </div>
       `;
     }
 
-    function exportRun() {
-      const blob = new Blob([JSON.stringify(run, null, 2)], {
-        type: "application/json"
-      });
+    function renderTimeline() {
+      const timeline = document.getElementById("timeline");
+      const events = run.events || [];
+      document.getElementById("eventCount").textContent = `${events.length} events`;
+      if (!events.length) {
+        timeline.innerHTML = `<p class="text-slate-500">No events yet.</p>`;
+        return;
+      }
 
+      timeline.innerHTML = events.map(e => {
+        const snap = findSnapshot(e.snapshotId);
+        return `
+          <div class="relative node-line pl-8">
+            <div class="absolute left-0 top-1 w-6 h-6 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs">${eventIcon(e.type)}</div>
+            <div class="text-slate-200">${escapeHtml(e.message || e.type)}</div>
+            <div class="text-xs text-slate-500">${escapeHtml(e.createdAt)} ${snap ? "· " + escapeHtml(snap.stage) : ""}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderLineage() {
+      const el = document.getElementById("lineage");
+      if (!run.snapshots.length) {
+        el.innerHTML = `<p class="text-slate-500">No lineage yet.</p>`;
+        return;
+      }
+
+      el.innerHTML = run.snapshots.map(s => {
+        const depth = lineageDepth(s);
+        const selected = s.id === selectedSnapshotId;
+        return `
+          <button onclick="selectSnapshot('${s.id}')" class="w-full text-left rounded-xl px-3 py-2 ${selected ? "bg-indigo-600/30 border border-indigo-500" : "bg-slate-950 border border-slate-800 hover:bg-slate-800"}" style="margin-left:${Math.min(depth * 14, 56)}px; width:calc(100% - ${Math.min(depth * 14, 56)}px)">
+            <div class="flex justify-between gap-2">
+              <span>${lineagePrefix(s)} ${escapeHtml(s.stage)}</span>
+              <span class="text-xs ${statusTextClass(s.status)}">${escapeHtml(s.status)}</span>
+            </div>
+            <div class="text-xs text-slate-500">${shortId(s.id)} ← ${s.parentId ? shortId(s.parentId) : "root"}</div>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function renderSelectedPanel() {
+      const el = document.getElementById("selectedPanel");
+      const snap = findSnapshot(selectedSnapshotId);
+      if (!snap) {
+        el.innerHTML = `<p class="text-slate-500">No snapshot selected.</p>`;
+        return;
+      }
+
+      const passed = Object.values(snap.validation || {}).filter(Boolean).length;
+      const total = Object.keys(snap.validation || {}).length || 0;
+      el.innerHTML = `
+        <div class="flex justify-between"><span>Stage</span><strong>${escapeHtml(snap.stage)}</strong></div>
+        <div class="flex justify-between"><span>Status</span><strong class="${statusTextClass(snap.status)}">${escapeHtml(snap.status)}</strong></div>
+        <div class="flex justify-between"><span>Source</span><strong>${escapeHtml(snap.source || "—")}</strong></div>
+        <div class="flex justify-between"><span>Validation</span><strong>${passed}/${total}</strong></div>
+        <div class="flex justify-between"><span>Confidence</span><strong>${escapeHtml(snap.confidence || "—")}</strong></div>
+        <div class="flex justify-between"><span>Input Hash</span><strong>${snap.inputHash || hashText(snap.input)}</strong></div>
+        <div class="flex justify-between"><span>Output Hash</span><strong>${snap.outputHash || hashText(snap.output)}</strong></div>
+        <div class="pt-3 flex flex-wrap gap-2">
+          <button onclick="copyShareUrl('snapshot')" class="px-3 py-2 rounded-xl bg-indigo-700 hover:bg-indigo-600 text-xs">Share</button>
+          <button onclick="copyInteropPayload('${snap.id}')" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs">Copy Payload</button>
+          <button onclick="triggerRenderSnapshot('${snap.id}')" class="px-3 py-2 rounded-xl bg-violet-700 hover:bg-violet-600 text-xs">Render Proof</button>
+        </div>
+      `;
+    }
+
+    function renderDiffView() {
+      const el = document.getElementById("diffView");
+      const snap = findSnapshot(selectedSnapshotId);
+      if (!snap) {
+        el.innerHTML = `<p class="text-slate-500">Select a snapshot to view diff.</p>`;
+        return;
+      }
+      const parent = findSnapshot(snap.parentId);
+      const before = parent ? parent.output || parent.input || "" : snap.input || "";
+      const after = snap.output || "";
+      el.innerHTML = `
+        <div class="flex items-start justify-between gap-3 mb-4">
+          <div>
+            <h3 class="text-xl font-semibold">Diff: ${escapeHtml(parent?.stage || "Input")} → ${escapeHtml(snap.stage)}</h3>
+            <p class="text-sm text-slate-400">Simple line diff between parent output and selected output.</p>
+          </div>
+          <button onclick="copyText(getSelectedDiffText())" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm">Copy Diff</button>
+        </div>
+        <pre class="thin-scroll overflow-auto whitespace-pre-wrap rounded-xl bg-slate-950 border border-slate-800 p-4 text-sm leading-6">${simpleDiffHtml(before, after)}</pre>
+      `;
+    }
+
+    function renderInteropView() {
+      const el = document.getElementById("interopView");
+      const snap = findSnapshot(selectedSnapshotId);
+      const payload = snap ? buildInteropPayload(snap) : { run };
+      el.innerHTML = `
+        <div class="flex items-start justify-between gap-3 mb-4">
+          <div>
+            <h3 class="text-xl font-semibold">Interop Payload</h3>
+            <p class="text-sm text-slate-400">This JSON can be sent to SuperPlane, GitHub Actions, Render scripts, CLI tools, or any webhook.</p>
+          </div>
+          <button onclick="copyInteropPayload('${snap?.id || ""}')" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm">Copy JSON</button>
+        </div>
+        <pre class="thin-scroll overflow-auto whitespace-pre-wrap rounded-xl bg-slate-950 border border-slate-800 p-4 text-xs">${escapeHtml(JSON.stringify(payload, null, 2))}</pre>
+      `;
+    }
+
+    function buildInteropPayload(snapshot) {
+      return {
+        schema: "factory-passport/interop/v1",
+        run: {
+          id: run.id,
+          title: run.title,
+          createdAt: run.createdAt,
+          updatedAt: run.updatedAt,
+          github: publicIntegrations().github
+        },
+        snapshot,
+        parent: snapshot?.parentId ? findSnapshot(snapshot.parentId) : null,
+        eventCount: (run.events || []).length,
+        desiredContract: {
+          input: "Accept idea/issue/snapshot JSON",
+          transform: "Perform one software-factory stage",
+          output: "Return patch, validation result, artifact URL, or notes",
+          validation: "Return pass/fail plus reason before next stage continues"
+        }
+      };
+    }
+
+    function copyInteropPayload(id = selectedSnapshotId) {
+      const snap = findSnapshot(id) || findSnapshot(selectedSnapshotId);
+      copyText(JSON.stringify(buildInteropPayload(snap), null, 2));
+    }
+
+    function getSelectedDiffText() {
+      const snap = findSnapshot(selectedSnapshotId);
+      if (!snap) return "";
+      const parent = findSnapshot(snap.parentId);
+      return simpleDiffText(parent ? parent.output || parent.input || "" : snap.input || "", snap.output || "");
+    }
+
+    function setView(view) {
+      currentView = view;
+      updateView();
+    }
+
+    function updateView() {
+      document.getElementById("board").classList.toggle("hidden", currentView !== "cards");
+      document.getElementById("diffView").classList.toggle("hidden", currentView !== "diff");
+      document.getElementById("interopView").classList.toggle("hidden", currentView !== "interop");
+      for (const [id, view] of [["viewCardsBtn","cards"],["viewDiffBtn","diff"],["viewInteropBtn","interop"]]) {
+        const btn = document.getElementById(id);
+        if (btn) btn.className = `px-3 py-2 rounded-xl text-sm ${currentView === view ? "bg-indigo-600 hover:bg-indigo-500" : "bg-slate-800 hover:bg-slate-700"}`;
+      }
+    }
+
+    function saveGithubConfig() {
+      githubConfig = {
+        owner: document.getElementById("githubOwner").value.trim(),
+        repo: document.getElementById("githubRepo").value.trim(),
+        token: document.getElementById("githubToken").value.trim()
+      };
+      localStorage.setItem("factory-passport-github", JSON.stringify(githubConfig));
+      alert("GitHub config saved.");
+    }
+
+    function saveIntegrations() {
+      integrations = {
+        renderApiKey: document.getElementById("renderApiKey").value.trim(),
+        renderServiceId: document.getElementById("renderServiceId").value.trim(),
+        renderPreviewUrl: document.getElementById("renderPreviewUrl").value.trim(),
+        superplaneApiKey: document.getElementById("superplaneApiKey").value.trim(),
+        superplaneEndpoint: document.getElementById("superplaneEndpoint").value.trim(),
+        genericWebhook: document.getElementById("genericWebhook").value.trim()
+      };
+      localStorage.setItem("factory-passport-integrations", JSON.stringify(integrations));
+      if (run.id) {
+        run.integrations = publicIntegrations();
+        saveRun();
+        renderInsights();
+      }
+      alert("Integrations saved.");
+    }
+
+    function loadConfigs() {
+      try {
+        const gh = localStorage.getItem("factory-passport-github");
+        if (gh) githubConfig = { ...githubConfig, ...JSON.parse(gh) };
+      } catch {}
+
+      try {
+        const ints = localStorage.getItem("factory-passport-integrations");
+        if (ints) integrations = { ...integrations, ...JSON.parse(ints) };
+      } catch {}
+
+      setValue("githubOwner", githubConfig.owner);
+      setValue("githubRepo", githubConfig.repo);
+      setValue("githubToken", githubConfig.token);
+      setValue("renderApiKey", integrations.renderApiKey);
+      setValue("renderServiceId", integrations.renderServiceId);
+      setValue("renderPreviewUrl", integrations.renderPreviewUrl);
+      setValue("superplaneApiKey", integrations.superplaneApiKey);
+      setValue("superplaneEndpoint", integrations.superplaneEndpoint);
+      setValue("genericWebhook", integrations.genericWebhook);
+    }
+
+    function openRepo() {
+      saveGithubConfig();
+      window.open(`https://github.com/${encodeURIComponent(githubConfig.owner)}/${encodeURIComponent(githubConfig.repo)}`, "_blank");
+    }
+
+    function exportRun() {
+      const blob = new Blob([JSON.stringify(run, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `${run.id || "factory-passport-run"}.json`;
       a.click();
       URL.revokeObjectURL(url);
+      addEvent("run.exported", selectedSnapshotId, "Run exported as JSON");
+      saveRun();
+      renderTimeline();
     }
 
     function importRun(event) {
       const file = event.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
-
       reader.onload = () => {
         try {
-          run = JSON.parse(reader.result);
+          const imported = JSON.parse(reader.result);
+          run = normalizeRun(imported);
+          selectedSnapshotId = run.snapshots[0]?.id || null;
+          addEvent("run.imported", selectedSnapshotId, `Imported ${file.name}`);
           saveRun();
           render();
         } catch {
           alert("Invalid JSON file.");
         }
       };
-
       reader.readAsText(file);
     }
 
-    function copyShareUrl() {
-      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(run))));
-      const url = `${location.origin}${location.pathname}#run=${encoded}`;
-
-      navigator.clipboard.writeText(url).then(() => {
-        alert("Share URL copied.");
-      });
+    function copyShareUrl(kind = "run") {
+      if (!run.id) return alert("Create or import a run first.");
+      let data;
+      let prefix;
+      if (kind === "snapshot") {
+        const snap = findSnapshot(selectedSnapshotId) || run.snapshots.at(-1);
+        if (!snap) return alert("No snapshot selected.");
+        data = { schema: "factory-passport/share/v1", kind: "snapshot", run: runSummary(), snapshot: snap, parent: snap.parentId ? findSnapshot(snap.parentId) : null };
+        prefix = "#snapshot=";
+      } else {
+        data = run;
+        prefix = "#run=";
+      }
+      const encoded = encodeBase64Json(data);
+      const url = `${location.origin}${location.pathname}${prefix}${encoded}`;
+      copyText(url);
+      addEvent("share.copied", selectedSnapshotId, `${kind} share URL copied`);
+      saveRun();
+      renderTimeline();
     }
 
     function loadFromHash() {
-      if (!location.hash.startsWith("#run=")) return false;
-
+      if (!location.hash) return false;
       try {
-        const encoded = location.hash.replace("#run=", "");
-        run = JSON.parse(decodeURIComponent(escape(atob(encoded))));
-        saveRun();
-        return true;
-      } catch {
-        alert("Could not load shared run.");
+        if (location.hash.startsWith("#run=")) {
+          run = normalizeRun(decodeBase64Json(location.hash.replace("#run=", "")));
+          selectedSnapshotId = run.snapshots[0]?.id || null;
+          saveRun();
+          return true;
+        }
+        if (location.hash.startsWith("#snapshot=")) {
+          const shared = decodeBase64Json(location.hash.replace("#snapshot=", ""));
+          run = emptyRun();
+          run.id = shared.run?.id || "shared-snapshot-" + Date.now();
+          run.title = `Shared Snapshot: ${shared.snapshot?.stage || "Snapshot"}`;
+          run.createdAt = now();
+          run.updatedAt = now();
+          run.snapshots = [shared.parent, shared.snapshot].filter(Boolean);
+          run.events = [createEvent("share.loaded", shared.snapshot?.id, "Loaded shared snapshot URL")];
+          selectedSnapshotId = shared.snapshot?.id || run.snapshots[0]?.id || null;
+          saveRun();
+          return true;
+        }
+      } catch (err) {
+        alert("Could not load shared URL. It may be too large or damaged.");
         return false;
       }
+      return false;
     }
 
     function saveRun() {
+      run = normalizeRun(run);
       localStorage.setItem("factory-passport-run", JSON.stringify(run));
     }
 
     function loadRun() {
       const saved = localStorage.getItem("factory-passport-run");
-      if (saved) run = JSON.parse(saved);
+      if (!saved) return;
+      try {
+        run = normalizeRun(JSON.parse(saved));
+        selectedSnapshotId = run.snapshots[0]?.id || null;
+      } catch {}
     }
 
     function resetRun() {
       if (!confirm("Reset this Factory Passport run?")) return;
-
-      run = {
-        id: null,
-        createdAt: null,
-        snapshots: []
-      };
-
+      run = emptyRun();
+      selectedSnapshotId = null;
       localStorage.removeItem("factory-passport-run");
       location.hash = "";
       render();
     }
 
+    function normalizeRun(value) {
+      const r = { ...emptyRun(), ...(value || {}) };
+      r.snapshots = Array.isArray(r.snapshots) ? r.snapshots.map(normalizeSnapshot) : [];
+      r.events = Array.isArray(r.events) ? r.events : [];
+      r.updatedAt ||= now();
+      return r;
+    }
+
+    function normalizeSnapshot(s) {
+      const snap = {
+        ...makeSnapshot({ stage: s?.stage || "Snapshot" }),
+        ...(s || {})
+      };
+      snap.validation ||= {};
+      for (const k of ["human","ai","tests","build","preview","security"]) snap.validation[k] = Boolean(snap.validation[k]);
+      snap.artifacts ||= {};
+      snap.interop ||= {};
+      snap.inputHash = hashText(snap.input);
+      snap.outputHash = hashText(snap.output);
+      return snap;
+    }
+
+    function runSummary() {
+      return {
+        id: run.id,
+        title: run.title,
+        createdAt: run.createdAt,
+        updatedAt: run.updatedAt,
+        snapshotCount: run.snapshots.length
+      };
+    }
+
+    function findSnapshot(id) {
+      return run.snapshots.find(s => s.id === id);
+    }
+
+    function selectSnapshot(id) {
+      selectedSnapshotId = id;
+      render();
+    }
+
+    function countStatus(status) {
+      return run.snapshots.filter(s => s.status === status).length;
+    }
+
+    function mostCommon(items) {
+      const counts = {};
+      for (const item of items) counts[item] = (counts[item] || 0) + 1;
+      return Object.entries(counts).sort((a,b) => b[1] - a[1])[0]?.[0] || "";
+    }
+
+    function lineageDepth(snapshot, seen = new Set()) {
+      let depth = 0;
+      let cur = snapshot;
+      while (cur?.parentId && !seen.has(cur.parentId)) {
+        seen.add(cur.parentId);
+        cur = findSnapshot(cur.parentId);
+        if (cur) depth++;
+      }
+      return depth;
+    }
+
+    function lineagePrefix(s) {
+      if (!s.parentId) return "●";
+      if (s.stage.includes("Fork")) return "⑂";
+      if (s.stage.includes("Replay")) return "↻";
+      return "↳";
+    }
+
+    function eventIcon(type) {
+      if (type.includes("approved")) return "✓";
+      if (type.includes("rejected") || type.includes("failed")) return "×";
+      if (type.includes("fork")) return "⑂";
+      if (type.includes("replay") || type.includes("retry")) return "↻";
+      if (type.includes("render")) return "🚀";
+      if (type.includes("webhook")) return "⌁";
+      if (type.includes("share")) return "↗";
+      return "•";
+    }
+
+    function statusTextClass(status) {
+      if (status === "approved") return "text-emerald-300";
+      if (status === "rejected") return "text-red-300";
+      if (status === "retrying") return "text-amber-200";
+      if (status === "running") return "text-blue-200";
+      if (status === "forked") return "text-indigo-200";
+      return "text-slate-300";
+    }
+
+    function firstLine(text) {
+      return String(text || "").split(/\n/).find(Boolean) || "";
+    }
+
+    function simpleDiffText(before, after) {
+      const a = String(before || "").split(/\n/);
+      const b = String(after || "").split(/\n/);
+      const out = [];
+      const max = Math.max(a.length, b.length);
+      for (let i = 0; i < max; i++) {
+        if (a[i] === b[i]) {
+          if (a[i] !== undefined) out.push("  " + a[i]);
+        } else {
+          if (a[i] !== undefined) out.push("- " + a[i]);
+          if (b[i] !== undefined) out.push("+ " + b[i]);
+        }
+      }
+      return out.join("\n");
+    }
+
+    function simpleDiffHtml(before, after) {
+      return simpleDiffText(before, after).split("\n").map(line => {
+        const cls = line.startsWith("+ ") ? "diff-add" : line.startsWith("- ") ? "diff-remove" : "";
+        return `<span class="${cls}">${escapeHtml(line)}</span>`;
+      }).join("\n");
+    }
+
+    function copyText(text) {
+      navigator.clipboard?.writeText(text).then(() => {
+        alert("Copied.");
+      }).catch(() => {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+        alert("Copied.");
+      });
+    }
+
+    function encodeBase64Json(obj) {
+      const json = JSON.stringify(obj);
+      return btoa(unescape(encodeURIComponent(json)));
+    }
+
+    function decodeBase64Json(str) {
+      return JSON.parse(decodeURIComponent(escape(atob(str))));
+    }
+
     function escapeHtml(value) {
-      return String(value || "")
+      return String(value ?? "")
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;");
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
     }
 
-    if (!loadFromHash()) {
-      loadRun();
+    function escapeAttr(value) {
+      return escapeHtml(value).replaceAll("`", "&#96;");
     }
 
+    function shortId(id) {
+      return String(id || "").split("-").slice(-1)[0].slice(0, 8);
+    }
+
+    function setValue(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.value = value || "";
+    }
+
+    function togglePassword(id) {
+      const field = document.getElementById(id);
+      if (!field) return;
+      const isPassword = field.type === "password";
+      field.type = isPassword ? "text" : "password";
+      const btn = field.parentElement.querySelector("button");
+      if (btn) btn.textContent = isPassword ? "🙈" : "👁";
+    }
+
+    function togglePanel(id) {
+      document.getElementById(id)?.classList.toggle("hidden");
+    }
+
+    window.addEventListener("hashchange", () => {
+      if (loadFromHash()) render();
+    });
+
+    loadConfigs();
+    if (!loadFromHash()) loadRun();
     render();
   </script>
 </body>
