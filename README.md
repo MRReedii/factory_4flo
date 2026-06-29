@@ -27,7 +27,7 @@ You can be productive in less than five minutes.
 Clone the repository or download the HTML file.
 
 ```bash
-git clone https://github.com/<your-org>/factory-4flo.git
+git clone https://github.com/MRReedii/factory_4flo.git
 ```
 
 or simply open
@@ -514,7 +514,7 @@ If you have an idea that improves how humans and AI build software together, we'
 
 # 📄 License
 
-Factory 4flo is licensed under the **MIT License**.
+Factory 4flo is licensed under the **[MIT License](https://spdx.org/licenses/MIT.html)**.
 
 You are free to:
 
@@ -525,9 +525,9 @@ You are free to:
 * ✅ Build products with it
 * ✅ Use it privately
 
-The only requirement is that the original copyright notice and license remain included in copies of the software.
+The only requirement is that the original copyright notice and this license remain included in all copies or substantial portions of the software.
 
-See the included **LICENSE** file for the full license text.
+See the [LICENSE](LICENSE) file for the complete license text.
 
 ---
 
