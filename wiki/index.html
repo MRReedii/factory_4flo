@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Factory 4flo Wiki — How to Use</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+    :root { color-scheme: dark; --pink:#ff8ec8; --blue:#00d4ff; --ink:#09090b; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: Inter, system-ui, sans-serif; background:#050509; color:white; }
+    .logo-font { font-family:'Space Grotesk', sans-serif; }
+    .hero-bg { background: radial-gradient(circle at top left, rgba(255,142,200,.22), transparent 34%), radial-gradient(circle at top right, rgba(0,212,255,.18), transparent 30%), linear-gradient(180deg,#09090b 0%,#111827 100%); }
+    .glass { background: rgba(24,24,27,.72); border:1px solid rgba(255,255,255,.08); box-shadow:0 22px 70px rgba(0,0,0,.35); }
+    .card { background:#101014; border:1px solid #27272a; border-radius:24px; }
+    .pill { border:1px solid #3f3f46; background:#18181b; border-radius:999px; padding:.4rem .75rem; font-size:.78rem; color:#d4d4d8; }
+    .toc a { display:block; padding:.55rem .7rem; color:#d4d4d8; border-radius:14px; }
+    .toc a:hover { background:#18181b; color:white; }
+    .step-number { width:2.25rem; height:2.25rem; display:inline-flex; align-items:center; justify-content:center; border-radius:14px; background:linear-gradient(135deg,var(--pink),var(--blue)); color:#050509; font-weight:800; flex-shrink:0; }
+
+    .info-wrap { position:relative; display:inline-flex; align-items:center; }
+    .info-btn { width:22px; height:22px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; margin-left:8px; background:#27272a; border:1px solid #52525b; color:#f9a8d4; font-weight:800; font-size:13px; cursor:help; }
+    .info-tooltip { position:absolute; left:50%; top:calc(100% + 12px); transform:translateX(-50%) translateY(-4px); width:min(340px, 88vw); background:#09090b; color:#f4f4f5; border:1px solid #3f3f46; border-radius:18px; padding:14px 16px; box-shadow:0 24px 70px rgba(0,0,0,.55); opacity:0; pointer-events:none; transition:opacity .16s ease, transform .16s ease; z-index:50; font-size:14px; line-height:1.45; }
+    .info-tooltip:before { content:""; position:absolute; top:-7px; left:50%; transform:translateX(-50%) rotate(45deg); width:14px; height:14px; background:#09090b; border-left:1px solid #3f3f46; border-top:1px solid #3f3f46; }
+    .info-wrap:hover .info-tooltip, .info-wrap:focus-within .info-tooltip, .info-wrap.open .info-tooltip { opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns:1fr !important; }
+      .sticky-side { position:static !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero-bg border-b border-zinc-800">
+    <div class="max-w-7xl mx-auto px-5 py-8 md:py-12">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div>
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-12 h-12 bg-gradient-to-br from-pink-500 to-violet-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-pink-500/30">🌸</div>
+            <div>
+              <h1 class="logo-font text-4xl md:text-5xl font-bold tracking-tight">Factory 4flo Wiki</h1>
+              <p class="text-zinc-400">How to use the Factory Passport page</p>
+            </div>
+          </div>
+
+          <div class="glass rounded-3xl p-5 md:p-6 max-w-4xl">
+            <p class="text-lg md:text-xl leading-relaxed text-zinc-100">
+              <strong>Factory 4flo</strong> is a single-file, local-first project assistant.
+              It turns rough ideas, feature requests, or GitHub issue numbers into a structured <strong>Factory Passport
+                run</strong> with snapshots, timeline history, interop payloads, credentials, plugins, and optional automations.
+              <span class="info-wrap" id="infoWrap">
+                <button class="info-btn" type="button" aria-label="Plain English explanation"
+                  onclick="toggleInfoTooltip(event)">i</button>
+                <span class="info-tooltip" role="tooltip">
+                  In plain words: this page helps you take a messy idea and turn it into an organized project plan. It saves the
+                  work in your own browser, shows each step, keeps a history, and can connect to tools like GitHub or deployment
+                  services when you choose to set them up.
+                </span>
+              </span>
+            </p>
+            <div class="flex flex-wrap gap-2 mt-5">
+              <span class="pill">Single HTML file</span>
+              <span class="pill">Saves in this browser</span>
+              <span class="pill">Shareable URLs</span>
+              <span class="pill">Export / Import JSON</span>
+              <span class="pill">Plugin friendly</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-5 py-8 md:py-10">
+    <div class="layout grid grid-cols-[280px_1fr] gap-6">
+      <aside class="sticky-side sticky top-5 self-start card p-4 toc">
+        <div class="text-sm uppercase tracking-widest text-zinc-500 mb-3">Contents</div>
+        <a href="#what">What this page does</a>
+        <a href="#quick-start">Quick start</a>
+        <a href="#tabs">Main tabs</a>
+        <a href="#factory-run">Factory runs</a>
+        <a href="#snapshots">Snapshots</a>
+        <a href="#plugins">Plugins</a>
+        <a href="#credentials">Credentials</a>
+        <a href="#share-export">Share and export</a>
+        <a href="#plain-words">Plain words glossary</a>
+        <a href="#tips">Tips</a>
+      </aside>
+
+      <section class="space-y-6">
+        <section id="what" class="card p-6 md:p-8">
+          <h2 class="logo-font text-3xl font-bold mb-4">What this page does</h2>
+          <p class="text-zinc-300 leading-relaxed">
+            Factory 4flo helps you move from “I have an idea” to “I have a structured project record.” Instead of keeping notes, issue links, decisions, and next steps scattered everywhere, the page stores them inside a Factory Passport run.
+          </p>
+          <div class="grid md:grid-cols-3 gap-4 mt-6">
+            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><i class="fa-solid fa-lightbulb text-pink-400 text-xl mb-3"></i><h3 class="font-semibold mb-1">Start with messy input</h3><p class="text-sm text-zinc-400">Paste an idea, feature request, or GitHub issue numbers.</p></div>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><i class="fa-solid fa-layer-group text-blue-400 text-xl mb-3"></i><h3 class="font-semibold mb-1">Break it into steps</h3><p class="text-sm text-zinc-400">The app creates snapshots like context, specification, implementation, and proof.</p></div>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><i class="fa-solid fa-box-archive text-emerald-400 text-xl mb-3"></i><h3 class="font-semibold mb-1">Keep a record</h3><p class="text-sm text-zinc-400">Timeline history, exports, and share links help you explain the work later.</p></div>
+          </div>
+        </section>
+
+        <section id="quick-start" class="card p-6 md:p-8">
+          <h2 class="logo-font text-3xl font-bold mb-5">Quick start</h2>
+          <div class="space-y-5">
+            <div class="flex gap-4"><span class="step-number">1</span><div><h3 class="font-semibold text-lg">Open Factory Passport</h3><p class="text-zinc-400">Use the left sidebar and choose <strong>Factory Passport</strong>.</p></div></div>
+            <div class="flex gap-4"><span class="step-number">2</span><div><h3 class="font-semibold text-lg">Paste your idea</h3><p class="text-zinc-400">Add a rough idea, task description, or GitHub issue numbers like <code class="bg-zinc-900 px-2 py-1 rounded">#5368 #5366</code>.</p></div></div>
+            <div class="flex gap-4"><span class="step-number">3</span><div><h3 class="font-semibold text-lg">Pick a template</h3><p class="text-zinc-400">Use <strong>4-Step Factory</strong> for normal product work, <strong>Security / Upgrade</strong> for risk-focused work, or <strong>Minimal Custom</strong> for a small run.</p></div></div>
+            <div class="flex gap-4"><span class="step-number">4</span><div><h3 class="font-semibold text-lg">Start the run</h3><p class="text-zinc-400">Click <strong>Start Factory Run</strong>. The page creates the first set of snapshots and timeline events.</p></div></div>
+            <div class="flex gap-4"><span class="step-number">5</span><div><h3 class="font-semibold text-lg">Review, edit, approve, export</h3><p class="text-zinc-400">Open each snapshot, improve the text, approve what looks right, then export or share the run.</p></div></div>
+          </div>
+        </section>
+
+        <section id="tabs" class="card p-6 md:p-8">
+          <h2 class="logo-font text-3xl font-bold mb-5">Main tabs</h2>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><h3 class="font-semibold"><i class="fa-solid fa-factory text-pink-400 mr-2"></i>Factory Passport</h3><p class="text-sm text-zinc-400 mt-2">Main workspace for creating runs, viewing snapshots, timeline, lineage, diffs, and interop payloads.</p></div>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><h3 class="font-semibold"><i class="fa-solid fa-comments text-blue-400 mr-2"></i>4flo Assistant</h3><p class="text-sm text-zinc-400 mt-2">Chat-style helper for controlling runs, asking questions, or creating quick actions.</p></div>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><h3 class="font-semibold"><i class="fa-solid fa-key text-yellow-300 mr-2"></i>Credentials</h3><p class="text-sm text-zinc-400 mt-2">Local vault for tokens, API keys, webhook URLs, provider details, and notes.</p></div>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><h3 class="font-semibold"><i class="fa-solid fa-history text-violet-400 mr-2"></i>History</h3><p class="text-sm text-zinc-400 mt-2">Past assistant sessions and saved local activity.</p></div>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><h3 class="font-semibold"><i class="fa-solid fa-bolt text-emerald-400 mr-2"></i>Automations</h3><p class="text-sm text-zinc-400 mt-2">Optional triggers and actions, such as “when this happens, do that.”</p></div>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><h3 class="font-semibold"><i class="fa-solid fa-plug text-cyan-300 mr-2"></i>Plugins</h3><p class="text-sm text-zinc-400 mt-2">Connect model, git, deployment, execution, storage, proxy, or webhook tools.</p></div>
+          </div>
+        </section>
+
+        <section id="factory-run" class="card p-6 md:p-8">
+          <h2 class="logo-font text-3xl font-bold mb-4">Factory runs</h2>
+          <p class="text-zinc-300 leading-relaxed">A Factory run is the full project record. Think of it like a folder for one idea. It contains the starting prompt, every snapshot, decisions, timeline events, links, plugin choices, and export data.</p>
+          <div class="mt-5 rounded-2xl border border-zinc-800 bg-black p-4 text-sm text-zinc-300">
+            <strong class="text-white">Example input:</strong><br />
+            “Improve auth security and create a safer login flow. Include GitHub issues #5368 and #5366.”
+          </div>
+        </section>
+
+        <section id="snapshots" class="card p-6 md:p-8">
+          <h2 class="logo-font text-3xl font-bold mb-4">Snapshots</h2>
+          <p class="text-zinc-300 leading-relaxed">A snapshot is one checkpoint in the work. It lets you see what the app understood, what it generated, and whether that step is ready to move forward.</p>
+          <div class="grid md:grid-cols-4 gap-3 mt-5 text-sm">
+            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><strong>Context</strong><p class="text-zinc-400 mt-1">What problem are we solving?</p></div>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><strong>Specification</strong><p class="text-zinc-400 mt-1">What should be built?</p></div>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><strong>Implementation</strong><p class="text-zinc-400 mt-1">How should it be changed?</p></div>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><strong>Proof</strong><p class="text-zinc-400 mt-1">How do we know it worked?</p></div>
+          </div>
+        </section>
+
+        <section id="plugins" class="card p-6 md:p-8">
+          <h2 class="logo-font text-3xl font-bold mb-4">Plugins</h2>
+          <p class="text-zinc-300 leading-relaxed">Plugins are optional connections. The page works locally without them, but plugins let you connect to outside tools when you want more power.</p>
+          <div class="grid md:grid-cols-2 gap-4 mt-5">
+            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><strong>AI Model Plugin</strong><p class="text-sm text-zinc-400 mt-1">Choose a local or cloud model for assistant work.</p></div>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><strong>Git Provider Plugin</strong><p class="text-sm text-zinc-400 mt-1">Connect GitHub, GitLab, Bitbucket, or another repository provider.</p></div>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><strong>Deployment Plugin</strong><p class="text-sm text-zinc-400 mt-1">Connect preview or hosting tools such as Render-style deployment workflows.</p></div>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><strong>Execution / Webhook Plugin</strong><p class="text-sm text-zinc-400 mt-1">Connect custom REST APIs, webhook actions, proxies, or local command bridges.</p></div>
+          </div>
+        </section>
+
+        <section id="credentials" class="card p-6 md:p-8">
+          <h2 class="logo-font text-3xl font-bold mb-4">Credentials</h2>
+          <p class="text-zinc-300 leading-relaxed">Credentials are saved in your browser only. Use this area for tokens, API keys, webhook URLs, local bridge URLs, or notes that plugins may need.</p>
+          <div class="mt-5 bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 text-amber-100 text-sm"><strong>Important:</strong> Do not put sensitive production secrets into a public copy of this HTML page. For real production use, connect through a backend proxy.</div>
+        </section>
+
+        <section id="share-export" class="card p-6 md:p-8">
+          <h2 class="logo-font text-3xl font-bold mb-4">Share and export</h2>
+          <div class="grid md:grid-cols-3 gap-4">
+            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><h3 class="font-semibold">Share Run</h3><p class="text-sm text-zinc-400 mt-2">Creates a link that can carry the run data in the URL hash.</p></div>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><h3 class="font-semibold">Share Selected</h3><p class="text-sm text-zinc-400 mt-2">Creates a link focused on the selected snapshot.</p></div>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><h3 class="font-semibold">Export JSON</h3><p class="text-sm text-zinc-400 mt-2">Downloads a structured file you can save, send, back up, or import later.</p></div>
+          </div>
+        </section>
+
+        <section id="plain-words" class="card p-6 md:p-8">
+          <h2 class="logo-font text-3xl font-bold mb-5">Plain words glossary</h2>
+          <dl class="space-y-4 text-zinc-300">
+            <div><dt class="font-semibold text-white">Local-first</dt><dd class="text-zinc-400">The page saves your work in your browser first, instead of needing a server before anything works.</dd></div>
+            <div><dt class="font-semibold text-white">Single-file</dt><dd class="text-zinc-400">The whole app can live in one HTML file.</dd></div>
+            <div><dt class="font-semibold text-white">Factory Passport</dt><dd class="text-zinc-400">A structured record of an idea becoming a plan, implementation, and proof.</dd></div>
+            <div><dt class="font-semibold text-white">Snapshot</dt><dd class="text-zinc-400">A checkpoint in the work that can be reviewed, edited, approved, rejected, shared, or exported.</dd></div>
+            <div><dt class="font-semibold text-white">Interop payload</dt><dd class="text-zinc-400">A clean package of data another tool can understand.</dd></div>
+            <div><dt class="font-semibold text-white">Plugin</dt><dd class="text-zinc-400">A connection to another tool, such as an AI model, GitHub, a deployment service, or a webhook.</dd></div>
+            <div><dt class="font-semibold text-white">Automation</dt><dd class="text-zinc-400">A saved rule that describes what should happen when something else happens.</dd></div>
+          </dl>
+        </section>
+
+        <section id="tips" class="card p-6 md:p-8">
+          <h2 class="logo-font text-3xl font-bold mb-4">Tips</h2>
+          <ul class="space-y-3 text-zinc-300">
+            <li><i class="fa-solid fa-check text-emerald-400 mr-2"></i>Start with messy notes. The point is to organize them.</li>
+            <li><i class="fa-solid fa-check text-emerald-400 mr-2"></i>Use Export JSON before resetting a run.</li>
+            <li><i class="fa-solid fa-check text-emerald-400 mr-2"></i>Use plugins only when you need outside tools.</li>
+            <li><i class="fa-solid fa-check text-emerald-400 mr-2"></i>Keep sensitive tokens out of public demos.</li>
+            <li><i class="fa-solid fa-check text-emerald-400 mr-2"></i>Use the tooltip beside the definition when explaining the page to non-technical people.</li>
+          </ul>
+        </section>
+      </section>
+    </div>
+  </main>
+
+  <footer class="border-t border-zinc-800 mt-10">
+    <div class="max-w-7xl mx-auto px-5 py-8 text-sm text-zinc-500 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <p>Factory 4flo Wiki · Local-first project assistant guide</p>
+      <p>Built as a standalone HTML page.</p>
+    </div>
+  </footer>
+
+  <script>
+    function toggleInfoTooltip(event) {
+      event.stopPropagation();
+      document.getElementById('infoWrap').classList.toggle('open');
+    }
+    document.addEventListener('click', function () {
+      document.getElementById('infoWrap')?.classList.remove('open');
+    });
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') document.getElementById('infoWrap')?.classList.remove('open');
+    });
+  </script>
+</body>
+</html>
