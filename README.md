@@ -531,13 +531,17 @@ See the [LICENSE](LICENSE) file for the complete license text.
 
 ---
 
-# 🌸 Built in the Open
+## 🌸 Built in the Open
 
-Factory 4flo is open source because we believe the future of AI-assisted software development should be transparent, extensible, and owned by the people who build with it.
+Factory 4flo began as a one-day hackathon.
 
-Whether you're a solo developer, a student, a startup, a nonprofit, or a large engineering team, you're welcome to use, modify, and improve Factory 4flo.
+I didn't know what anyone else was building. I just knew I wanted to build something different—something simple, interoperable, and useful in almost any environment.
 
-If Factory 4flo helps you build something amazing, we'd love to hear about it.
+The challenge was to create an AI-powered software factory. Rather than focusing only on generating code, I became interested in everything that happens around it: capturing context, recording decisions, validating results, and giving people the ability to inspect, replay, fork, and improve the process.
+
+Those ideas shaped the project's core principles: keep it simple, keep it portable, keep it human-readable, and avoid locking the workflow to any single AI model, platform, or vendor. Every component should have a clear responsibility, degrade gracefully, and remain useful on its own—from a single HTML file to a local CLI, or as part of a larger software factory.
+
+Factory 4flo is open source because the future of AI-assisted software development should be transparent, interoperable, extensible, and owned by the people who build with it.
 
 Share your plugins.
 
@@ -545,7 +549,7 @@ Share your workflows.
 
 Share your ideas.
 
-Together we can build a better software factory.
+Let's build better software factories together.
 
 ---
 
