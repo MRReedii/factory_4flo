@@ -30,10 +30,10 @@ Clone the repository or download the HTML file.
 git clone https://github.com/MRReedii/factory_4flo.git
 ```
 
-or simply open
+or simply download and open
 
 ```text
-4flo.html
+index.html
 ```
 
 inside your favorite browser.
