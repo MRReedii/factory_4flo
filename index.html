@@ -1,25 +1,126 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Factory Passport</title>
+  <title>Factory 4flo</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
   <style>
-    :root { color-scheme: dark; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+    :root { color-scheme: dark; --pink:#ff8ec8; --blue:#00d4ff; }
+    * { transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, transform; transition-duration: 150ms; transition-timing-function: cubic-bezier(.4,0,.2,1); }
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .logo-font { font-family: 'Space Grotesk', sans-serif; }
     textarea, input, select { outline: none; }
-    textarea:focus, input:focus, select:focus { box-shadow: 0 0 0 2px rgba(99,102,241,.55); }
+    textarea:focus, input:focus, select:focus { box-shadow: 0 0 0 2px rgba(255,142,200,.45); }
     .thin-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
-    .thin-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 999px; }
+    .thin-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 999px; }
+    .message-bubble { max-width: min(85%, 760px); padding: 14px 20px; border-radius: 20px; white-space: pre-wrap; word-break: break-word; }
+    .user-bubble { background: var(--pink); color: #111; border-bottom-right-radius: 4px; }
+    .ai-bubble { background: #27272a; border: 1px solid #3f3f46; border-bottom-left-radius: 4px; }
+    .sidebar-item { position: relative; }
+    .sidebar-item.active { background: #18181b; color: white; }
+    .sidebar-item.active::after { content:''; position:absolute; left:0; top:50%; transform:translateY(-50%); height:28px; width:4px; background:var(--pink); border-top-right-radius:9999px; border-bottom-right-radius:9999px; }
+    .chat-container { background: radial-gradient(circle at top left, rgba(255,142,200,.08), transparent 32%), linear-gradient(180deg,#09090b 0%,#111827 100%); }
+    .modal-backdrop { background: rgba(0,0,0,.72); backdrop-filter: blur(8px); }
     .diff-add { background: rgba(16,185,129,.18); color: #a7f3d0; }
     .diff-remove { background: rgba(239,68,68,.18); color: #fecaca; text-decoration: line-through; }
-    .node-line:before { content: ""; position: absolute; left: 12px; top: 28px; bottom: -20px; width: 1px; background: #334155; }
-    .node-line:last-child:before { display: none; }
+    .node-line:before { content:""; position:absolute; left:12px; top:28px; bottom:-20px; width:1px; background:#334155; }
+    .node-line:last-child:before { display:none; }
+
+    /* Keep tooltips, alerts, modals, and popups above every app surface */
+    #modal-root { z-index: 9998 !important; }
+    .app-modal { position: relative; z-index: 9999 !important; }
+    #toast { z-index: 10000 !important; pointer-events: none; }
+    [role="tooltip"], .tooltip, .app-tooltip, [data-tooltip]::after { z-index: 10001 !important; }
+    [data-tooltip] { position: relative; }
+    [data-tooltip]::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 8px);
+      transform: translateX(-50%);
+      opacity: 0;
+      pointer-events: none;
+      white-space: nowrap;
+      max-width: 260px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      background: #09090b;
+      color: #fff;
+      border: 1px solid #3f3f46;
+      border-radius: 12px;
+      padding: 6px 10px;
+      font-size: 12px;
+      box-shadow: 0 18px 45px rgba(0,0,0,.45);
+    }
+    [data-tooltip]:hover::after, [data-tooltip]:focus-visible::after { opacity: 1; }
+
+    @media (max-width: 820px) {
+      body { overflow:auto; height:auto; min-height:100vh; }
+      #app-shell { flex-direction:column; min-height:100vh; }
+      #sidebar { width:100%; border-right:0; border-bottom:1px solid #27272a; }
+      #nav { display:grid; grid-template-columns:repeat(5,1fr); gap:.35rem; padding:.75rem; }
+      #nav .sidebar-item { justify-content:center; font-size:.8rem; padding:.7rem .4rem; margin:0; }
+      #nav .sidebar-item span { display:none; }
+      #topbar { padding-inline:1rem; }
+      #topbar .hide-mobile { display:none; }
+      .message-bubble { max-width:90%; }
+    }
   </style>
 </head>
+<body class="bg-black text-white overflow-hidden h-screen">
+  <div id="app-shell" class="flex h-full">
+    <aside id="sidebar" class="w-72 bg-zinc-950 border-r border-zinc-800 flex flex-col shrink-0">
+      <div class="p-6 border-b border-zinc-800 flex items-center gap-3">
+        <div class="w-10 h-10 bg-gradient-to-br from-pink-500 to-violet-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-pink-500/30">🌸</div>
+        <div class="min-w-0"><div class="logo-font text-3xl font-bold tracking-tighter truncate">Factory 4flo</div><div class="text-xs text-zinc-500">Passport + Assistant</div></div>
+      </div>
+      <nav id="nav" class="flex-1 p-4 space-y-1">
+        <button onclick="switchTab('factory')" id="nav-factory" class="sidebar-item active w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-900 rounded-2xl text-lg font-medium cursor-pointer text-left"><i class="fa-solid fa-factory w-5"></i><span>Factory Passport</span></button>
+        <button onclick="switchTab('chat')" id="nav-chat" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-900 rounded-2xl text-lg font-medium cursor-pointer text-left"><i class="fa-solid fa-comments w-5"></i><span>4flo Assistant</span></button>
+        <button onclick="switchTab('keys')" id="nav-keys" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-900 rounded-2xl text-lg font-medium cursor-pointer text-left"><i class="fa-solid fa-key w-5"></i><span>Credentials</span></button>
+        <button onclick="switchTab('history')" id="nav-history" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-900 rounded-2xl text-lg font-medium cursor-pointer text-left"><i class="fa-solid fa-history w-5"></i><span>History</span></button>
+        <button onclick="switchTab('flows')" id="nav-flows" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-900 rounded-2xl text-lg font-medium cursor-pointer text-left"><i class="fa-solid fa-bolt w-5"></i><span>Automations</span></button>
+        <button onclick="switchTab('plugins')" id="nav-plugins" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-900 rounded-2xl text-lg font-medium cursor-pointer text-left"><i class="fa-solid fa-plug w-5"></i><span>Plugins</span></button>
+      </nav>
+      <div class="p-4 border-t border-zinc-800 space-y-3">
+        <button onclick="newFactoryRun()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-2xl font-medium flex items-center justify-center gap-2"><i class="fa-solid fa-plus"></i> New Factory Run</button>
+        <div class="flex items-center gap-3 px-2">
+          <div class="w-9 h-9 bg-zinc-800 rounded-full flex items-center justify-center text-pink-400"><i class="fa-solid fa-robot"></i></div>
+          <div class="flex-1 min-w-0"><div id="active-model-label" class="text-sm font-medium truncate">Local-first Core</div><div id="sidebar-plugin-status" class="text-xs text-zinc-500">Browser local-first</div></div>
+          <button onclick="openModal('settings-modal')" data-tooltip="Settings" aria-label="Settings" class="w-9 h-9 hover:bg-zinc-800 rounded-xl"><i class="fa-solid fa-gear"></i></button>
+        </div>
+      </div>
+    </aside>
 
-<body class="bg-slate-950 text-slate-100 min-h-screen">
-  <div class="max-w-7xl mx-auto p-4 md:p-6">
+    <main class="flex-1 flex flex-col min-w-0">
+      <header id="topbar" class="h-14 border-b border-zinc-800 bg-zinc-950 flex items-center justify-between px-6 shrink-0">
+        <div id="tab-title" class="text-xl font-semibold logo-font tracking-tight">Factory Passport</div>
+        <div class="flex items-center gap-2 text-sm">
+          <span id="connection-status" class="hide-mobile px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-xs">Local-first</span>
+          <button onclick="syncNow()" id="sync-now-btn" class="hide-mobile hidden px-4 py-1.5 bg-emerald-700 hover:bg-emerald-600 rounded-xl">Sync Now</button>
+          <button onclick="copyShareUrl('run')" class="hide-mobile px-4 py-1.5 bg-violet-600 hover:bg-violet-500 rounded-xl">Share Run</button>
+          <button onclick="exportRun()" class="hide-mobile px-4 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-xl">Export</button>
+          <button onclick="newChat()" class="px-4 py-1.5 bg-white text-black rounded-xl font-semibold"><i class="fa-solid fa-plus mr-1"></i><span class="hide-mobile">New Session</span></button>
+        </div>
+      </header>
+      <div id="local-mode-banner" class="hidden border-b border-amber-500/30 bg-amber-500/10 px-6 py-3 text-sm text-amber-100">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div><b>Local-first Model Mode</b> · Factory stages use your local model by default. Select a configured cloud model only when you want non-local execution.</div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="switchTab('plugins')" class="px-3 py-1.5 rounded-xl bg-amber-400 text-black font-semibold">Manage Model Plugins</button>
+            <button onclick="detectLocalModelEndpoint()" class="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white">Auto-detect Local Endpoint</button>
+            <button onclick="connectNonLocalAI()" class="px-3 py-1.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold">Use Non-Local Model Plugin</button>
+          </div>
+        </div>
+      </div>
+
+      <section id="factory-screen" class="tab-screen flex-1 overflow-auto bg-slate-950 text-slate-100 thin-scroll">
+        <div class="max-w-7xl mx-auto p-4 md:p-6">
     <header class="mb-6">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -47,52 +148,55 @@
     <section class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4">
         <div>
-          <h2 class="font-semibold text-xl">Connections</h2>
-          <p class="text-sm text-slate-400">Optional. The app still works manually without API keys.</p>
+          <h2 class="font-semibold text-xl">Plugin-Powered Connections</h2>
+          <p class="text-sm text-slate-400">Core screens no longer hardcode providers. Pick enabled plugins for model, git, deployment, and execution roles.</p>
         </div>
-        <button onclick="togglePanel('connectionsBody')" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm">Show / Hide</button>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="switchTab('plugins')" class="px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-sm">Manage Plugins</button>
+          <button onclick="togglePanel('connectionsBody')" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm">Show / Hide</button>
+        </div>
       </div>
 
-      <div id="connectionsBody" class="grid lg:grid-cols-3 gap-6">
+      <div id="connectionsBody" class="grid lg:grid-cols-4 gap-6">
         <div>
-          <h3 class="font-semibold mb-2">GitHub</h3>
-          <div class="space-y-3">
-            <input id="githubOwner" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700" placeholder="Owner" value="superplanehq">
-            <input id="githubRepo" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700" placeholder="Repo" value="superplane">
-            <div class="relative">
-              <input id="githubToken" type="password" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700" placeholder="GitHub token optional">
-              <button type="button" onclick="togglePassword('githubToken')" class="absolute right-3 top-3 text-slate-400 hover:text-slate-200">👁</button>
-            </div>
+          <h3 class="font-semibold mb-2">AI Model Plugin</h3>
+          <select id="aiPluginSelect" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700"></select>
+          <p id="aiPluginSummary" class="text-xs text-slate-500 mt-2">Choose a Local, AI Model, or AI Agent plugin.</p>
+          <div class="flex flex-wrap gap-2 mt-3">
+            <button onclick="savePluginSelections()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500">Use Selected</button>
+            <button onclick="detectLocalModelEndpoint()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700">Auto-detect Local</button>
           </div>
-          <div class="flex gap-2 mt-3">
-            <button onclick="saveGithubConfig()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700">Save</button>
+        </div>
+
+        <div>
+          <h3 class="font-semibold mb-2">Git Provider Plugin</h3>
+          <select id="gitPluginSelect" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700"></select>
+          <p id="gitPluginSummary" class="text-xs text-slate-500 mt-2">Owner, repo, and API base live in the selected plugin settings.</p>
+          <div class="flex flex-wrap gap-2 mt-3">
+            <button onclick="savePluginSelections()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700">Save Role</button>
             <button onclick="openRepo()" class="px-4 py-2 rounded-xl bg-indigo-700 hover:bg-indigo-600">Open Repo</button>
+            <button onclick="openGithubToolsModal()" class="px-4 py-2 rounded-xl bg-pink-700 hover:bg-pink-600">Git Tools</button>
           </div>
         </div>
 
         <div>
-          <h3 class="font-semibold mb-2">Render</h3>
-          <div class="space-y-3">
-            <div class="relative">
-              <input id="renderApiKey" type="password" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700" placeholder="Render API Key optional">
-              <button type="button" onclick="togglePassword('renderApiKey')" class="absolute right-3 top-3 text-slate-400 hover:text-slate-200">👁</button>
-            </div>
-            <input id="renderServiceId" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700" placeholder="Render Service ID">
-            <input id="renderPreviewUrl" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700" placeholder="Known preview URL optional">
+          <h3 class="font-semibold mb-2">Deployment Plugin</h3>
+          <select id="deploymentPluginSelect" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700"></select>
+          <p id="deploymentPluginSummary" class="text-xs text-slate-500 mt-2">Deployment and preview providers are now plugins.</p>
+          <div class="flex flex-wrap gap-2 mt-3">
+            <button onclick="savePluginSelections()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700">Save Role</button>
+            <button onclick="selectedSnapshotId && triggerRenderSnapshot(selectedSnapshotId)" class="px-4 py-2 rounded-xl bg-violet-700 hover:bg-violet-600">Run Deploy</button>
           </div>
         </div>
 
         <div>
-          <h3 class="font-semibold mb-2">SuperPlane / Webhook</h3>
-          <div class="space-y-3">
-            <div class="relative">
-              <input id="superplaneApiKey" type="password" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700" placeholder="SuperPlane API key optional">
-              <button type="button" onclick="togglePassword('superplaneApiKey')" class="absolute right-3 top-3 text-slate-400 hover:text-slate-200">👁</button>
-            </div>
-            <input id="superplaneEndpoint" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700" placeholder="SuperPlane / webhook endpoint">
-            <input id="genericWebhook" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700" placeholder="Generic webhook URL">
+          <h3 class="font-semibold mb-2">Execution / Webhook Plugin</h3>
+          <select id="executionPluginSelect" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700"></select>
+          <p id="executionPluginSummary" class="text-xs text-slate-500 mt-2">Webhook, custom REST API, proxy, and local command adapters are selectable plugins.</p>
+          <div class="flex flex-wrap gap-2 mt-3">
+            <button onclick="savePluginSelections()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500">Save Roles</button>
+            <button onclick="switchTab('plugins')" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700">Add Plugin</button>
           </div>
-          <button onclick="saveIntegrations()" class="mt-3 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500">Save Integrations</button>
         </div>
       </div>
     </section>
@@ -100,20 +204,21 @@
     <section class="grid lg:grid-cols-4 gap-4 mb-6">
       <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-4">
         <h2 class="font-semibold text-xl mb-3">Create Factory Run</h2>
-        <textarea id="ideaInput" class="w-full min-h-36 p-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100" placeholder="Paste a vague idea, feature request, or GitHub issue numbers like #5368 #5366..."></textarea>
+        <textarea id="ideaInput" class="w-full min-h-36 p-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100" placeholder="Paste a vague idea, feature request, or issue numbers like #5368. Comments can be fetched when a compatible Git plugin is selected..."></textarea>
 
         <div class="grid md:grid-cols-2 gap-3 mt-3">
           <input id="runTitleInput" class="p-3 rounded-xl bg-slate-950 border border-slate-700" placeholder="Run title optional">
           <select id="templateSelect" class="p-3 rounded-xl bg-slate-950 border border-slate-700">
-            <option value="software-factory">Software Factory</option>
-            <option value="security-upgrade">Security / Upgrade</option>
+            <option value="software-factory">4-Step Factory</option>
+            <option value="security-upgrade">Security / Upgrade 4-Step</option>
             <option value="custom">Minimal Custom</option>
           </select>
         </div>
 
         <div class="flex flex-wrap gap-2 mt-3">
-          <button onclick="createRun()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-medium">Start Manual Run</button>
-          <button onclick="createRunFromGithubIssues()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 font-medium">Fetch GitHub Issues + Start</button>
+          <button onclick="createRun()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-medium">Start Factory Run</button>
+          <button onclick="createRunFromGithubIssues()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 font-medium">Fetch Issue + Start</button>
+          <button onclick="runFactoryPipeline(selectedSnapshotId)" class="px-4 py-2 rounded-xl bg-violet-700 hover:bg-violet-600">Resume From Selected</button>
           <button onclick="addSnapshotAfterSelected()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700">Add Snapshot</button>
           <button onclick="resetRun()" class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500">Reset</button>
         </div>
@@ -166,25 +271,448 @@
       </main>
     </section>
   </div>
+      </section>
+
+      <section id="chat-screen" class="tab-screen hidden flex-1 flex flex-col chat-container overflow-hidden">
+        <div id="welcome" class="flex-1 flex flex-col items-center justify-center text-center px-8 overflow-auto">
+          <div class="max-w-lg py-10">
+            <div class="text-7xl mb-8">🌸</div>
+            <h1 class="text-4xl md:text-5xl font-bold logo-font tracking-tighter mb-3">Good evening, Edward.</h1>
+            <p class="text-zinc-400 text-lg">Ask 4flo to control the factory, manage runs, or create automations.</p>
+            <div class="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
+              <button onclick="quickPrompt('Start a new factory run about improving auth security')" class="bg-zinc-900 hover:bg-zinc-800 p-5 rounded-3xl border border-zinc-700 text-left"><div class="text-pink-400 mb-2">🏭</div><div class="font-medium">Start Factory Run</div></button>
+              <button onclick="quickPrompt('Approve selected snapshot and show interop payload')" class="bg-zinc-900 hover:bg-zinc-800 p-5 rounded-3xl border border-zinc-700 text-left"><div class="text-blue-400 mb-2">✅</div><div class="font-medium">Approve + Payload</div></button>
+              <button onclick="quickPrompt('Run the full factory pipeline')" class="bg-zinc-900 hover:bg-zinc-800 p-5 rounded-3xl border border-zinc-700 text-left"><div class="text-violet-400 mb-2">⚙️</div><div class="font-medium">Run Pipeline</div></button>
+              <button onclick="openCreateFlowModal()" class="bg-zinc-900 hover:bg-zinc-800 p-5 rounded-3xl border border-zinc-700 text-left"><div class="text-emerald-400 mb-2">⚡</div><div class="font-medium">Create Automation</div></button>
+            </div>
+          </div>
+        </div>
+        <div id="messages" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 hidden thin-scroll"></div>
+        <div class="p-4 md:p-6 border-t border-zinc-800 bg-zinc-950 shrink-0">
+          <div class="max-w-4xl mx-auto relative">
+            <input id="user-input" onkeydown="if(event.key === 'Enter') sendMessage()" type="text" class="w-full bg-zinc-900 border border-zinc-700 focus:border-pink-500 rounded-3xl px-6 md:px-8 py-5 md:py-6 pr-20 text-base md:text-lg placeholder-zinc-500" placeholder="Ask 4flo to control the factory..." />
+            <button onclick="sendMessage()" data-tooltip="Send message" aria-label="Send message" class="absolute right-4 top-1/2 -translate-y-1/2 bg-pink-500 text-white h-12 w-12 rounded-2xl flex items-center justify-center hover:scale-105"><i class="fa-solid fa-paper-plane"></i></button>
+          </div>
+          <div class="text-center text-[10px] text-zinc-600 mt-4">4flo • Single HTML file • Factory runs, keys, automations, and history stored locally</div>
+        </div>
+      </section>
+
+      <section id="keys-screen" class="tab-screen hidden flex-1 overflow-auto p-5 md:p-8 bg-zinc-950">
+        <div class="max-w-2xl mx-auto">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+            <h2 class="text-3xl font-semibold flex items-center gap-3"><i class="fa-solid fa-key text-pink-400"></i>Secure Credentials Vault</h2>
+            <button onclick="toggleNewCredentialForm()" class="px-5 py-3 bg-white text-black rounded-2xl font-semibold"><i class="fa-solid fa-plus mr-2"></i>Create Credential</button>
+          </div>
+          <div id="new-credential-form" class="hidden bg-zinc-900 rounded-3xl p-6 border border-pink-500/40 mb-6">
+            <div class="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <div class="font-semibold text-lg">New Credential</div>
+                <div class="text-xs text-zinc-500">Saved locally in this browser. Use this for API keys, bridge tokens, Git tokens, webhooks, or notes.</div>
+              </div>
+              <button onclick="toggleNewCredentialForm(false)" class="text-zinc-400 hover:text-white">✕</button>
+            </div>
+            <div class="grid md:grid-cols-2 gap-3">
+              <input id="cred-name" class="bg-black border border-zinc-700 rounded-2xl px-5 py-4 text-sm" placeholder="Name, e.g. GitLab Token">
+              <select id="cred-kind" class="bg-black border border-zinc-700 rounded-2xl px-5 py-4 text-sm">
+                <option value="api-key">API Key / Token</option>
+                <option value="git">Git Provider</option>
+                <option value="local-bridge">Local Bridge</option>
+                <option value="webhook">Webhook</option>
+                <option value="model">Model Provider</option>
+                <option value="note">Secure Note</option>
+              </select>
+              <input id="cred-service" class="bg-black border border-zinc-700 rounded-2xl px-5 py-4 text-sm" placeholder="Service, e.g. github, gitlab, render">
+              <input id="cred-username" class="bg-black border border-zinc-700 rounded-2xl px-5 py-4 text-sm" placeholder="Username / owner optional">
+            </div>
+            <div class="relative mt-3">
+              <input id="cred-secret" type="password" class="w-full bg-black border border-zinc-700 rounded-2xl px-5 py-4 pr-14 text-sm" placeholder="Secret / token / URL">
+              <button onclick="toggleAppPassword('cred-secret')" class="absolute right-4 top-4 text-zinc-400">👁</button>
+            </div>
+            <textarea id="cred-notes" class="mt-3 w-full min-h-20 bg-black border border-zinc-700 rounded-2xl px-5 py-4 text-sm" placeholder="Notes optional"></textarea>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <button onclick="saveCustomCredential()" class="px-5 py-3 bg-gradient-to-r from-pink-500 to-blue-500 rounded-2xl text-sm font-semibold">Save Credential</button>
+              <button onclick="clearCredentialForm()" class="px-5 py-3 bg-zinc-800 rounded-2xl text-sm">Clear</button>
+            </div>
+          </div>
+          <div id="credentials-list" class="space-y-6"></div>
+          <div class="mt-8 flex flex-wrap gap-3">
+            <button onclick="testConfiguredModel()" class="px-6 py-3 bg-gradient-to-r from-pink-500 to-blue-500 rounded-2xl font-semibold">Test Active Model</button>
+            <button onclick="clearAllKeys()" class="px-6 py-3 bg-zinc-900 border border-zinc-700 rounded-2xl font-semibold">Clear Keys</button>
+          </div>
+          <div class="mt-10 text-xs text-zinc-500 border-l-2 border-pink-500 pl-4">⚠️ Keys are saved only in this browser's localStorage. For production, use a backend proxy instead of calling AI APIs directly from public HTML.</div>
+        </div>
+      </section>
+
+      <section id="history-screen" class="tab-screen hidden flex-1 p-5 md:p-8 bg-zinc-950 overflow-auto">
+        <div class="max-w-3xl mx-auto">
+          <div class="flex items-center justify-between mb-8 gap-3"><h2 class="text-3xl font-semibold">Session History</h2><button onclick="clearHistory()" class="text-sm px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-2xl">Clear</button></div>
+          <div id="history-list" class="space-y-3"></div>
+        </div>
+      </section>
+
+      <section id="flows-screen" class="tab-screen hidden flex-1 p-5 md:p-8 bg-zinc-950 overflow-auto">
+        <div class="max-w-3xl mx-auto">
+          <div class="flex items-center justify-between mb-8 gap-3"><h2 class="text-3xl font-semibold flex items-center gap-3"><i class="fa-solid fa-bolt text-pink-400"></i>Automations</h2><button onclick="openCreateFlowModal()" class="px-5 py-3 bg-white text-black rounded-2xl font-semibold"><i class="fa-solid fa-plus mr-2"></i>Create</button></div>
+          <div id="flows-list" class="space-y-4"></div>
+        </div>
+      </section>
+
+      <section id="plugins-screen" class="tab-screen hidden flex-1 p-5 md:p-8 bg-zinc-950 overflow-auto">
+        <div class="max-w-2xl mx-auto">
+          <h2 class="text-3xl font-semibold mb-8 flex items-center gap-3"><i class="fa-solid fa-plug text-emerald-400"></i>Plugins &amp; Extensions</h2>
+          <div id="plugins-list" class="space-y-6"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <button onclick="openModal('model-modal')" data-tooltip="Choose assistant model" aria-label="Choose assistant model" class="fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-br from-pink-500 to-blue-500 rounded-3xl flex items-center justify-center shadow-2xl shadow-pink-500/40 hover:scale-110 text-2xl z-[9000]">🤖</button>
+  <div id="toast" class="hidden fixed top-20 left-1/2 -translate-x-1/2 bg-zinc-900 border border-pink-400 text-pink-300 px-6 py-3 rounded-3xl text-sm font-medium shadow-xl z-[10000]"></div>
+
+  <div id="modal-root" onclick="closeModalOnBackdrop(event)" class="hidden fixed inset-0 modal-backdrop z-[9998] items-center justify-center p-4">
+    <div id="flow-modal" class="app-modal hidden w-full max-w-lg bg-zinc-950 border border-zinc-700 rounded-3xl p-6 shadow-2xl">
+      <div class="flex items-center justify-between mb-5"><h3 id="flow-modal-title" class="text-2xl font-semibold">Create Automation</h3><button onclick="closeModals()" class="text-zinc-400 hover:text-white">✕</button></div>
+      <input id="flow-edit-id" type="hidden" />
+      <div class="space-y-4">
+        <input id="flow-name" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3" placeholder="Automation name" />
+        <textarea id="flow-trigger" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 min-h-24" placeholder="Trigger: When this happens..."></textarea>
+        <textarea id="flow-action" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 min-h-24" placeholder="Action: Do this..."></textarea>
+        <select id="flow-status" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3"><option>Active</option><option>Paused</option><option>Draft</option></select>
+      </div>
+      <button onclick="saveFlowFromModal()" class="mt-6 w-full bg-gradient-to-r from-pink-500 to-blue-500 rounded-2xl py-3 font-semibold">Save Automation</button>
+    </div>
+
+    <div id="settings-modal" class="app-modal hidden w-full max-w-lg bg-zinc-950 border border-zinc-700 rounded-3xl p-6 shadow-2xl">
+      <div class="flex items-center justify-between mb-5"><h3 class="text-2xl font-semibold">Settings</h3><button onclick="closeModals()" class="text-zinc-400 hover:text-white">✕</button></div>
+      <div class="space-y-4">
+        <label class="block text-sm text-zinc-400">Assistant tone</label>
+        <select id="tone-select" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3"><option value="practical">Practical</option><option value="brief">Brief</option><option value="coach">Coach</option></select>
+        <label class="block text-sm text-zinc-400">Default automation status</label>
+        <select id="default-flow-status" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3"><option>Active</option><option>Paused</option><option>Draft</option></select>
+      </div>
+      <button onclick="saveSettings()" class="mt-6 w-full bg-white text-black rounded-2xl py-3 font-semibold">Save Settings</button>
+    </div>
+
+
+    <div id="github-tools-modal" class="app-modal hidden w-full max-w-3xl bg-zinc-950 border border-zinc-700 rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-auto thin-scroll">
+      <div class="flex items-start justify-between gap-4 mb-5">
+        <div>
+          <h3 class="text-2xl font-semibold">Git Tools</h3>
+          <p class="text-sm text-zinc-400 mt-1">Provider-aware tools driven by the selected Git Provider plugin, plus a local bridge for applying patches to a checked-out repo.</p>
+        </div>
+        <button onclick="closeModals()" class="text-zinc-400 hover:text-white">✕</button>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-3 mb-4">
+        <input id="gh-tools-owner" class="bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3" placeholder="Owner" />
+        <input id="gh-tools-repo" class="bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3" placeholder="Repo" />
+        <input id="gh-tools-base" class="bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3" placeholder="Base branch" value="main" />
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="space-y-3">
+          <label class="block text-sm text-zinc-400">Action</label>
+          <select id="gh-action" onchange="renderGithubActionFields()" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3">
+            <option value="listBranches">List branches</option>
+            <option value="createBranch">Create branch</option>
+            <option value="createCommit">Create commit</option>
+            <option value="createPR">Create pull request / merge request</option>
+            <option value="mergePR">Merge pull request</option>
+            <option value="addReviewComment">Add PR review comment</option>
+            <option value="listCheckRuns">List check runs</option>
+            <option value="createCommitStatus">Create commit status</option>
+            <option value="applyLocalPatch">Apply selected patch to local Git</option>
+            <option value="listReleases">List releases</option>
+            <option value="createRelease">Create release</option>
+          </select>
+
+          <div id="gh-action-fields" class="space-y-3"></div>
+
+          <div class="rounded-2xl bg-zinc-900 border border-zinc-800 p-4 text-xs text-zinc-400 space-y-2">
+            <div><b class="text-zinc-200">Safe first:</b> List Branches, List Releases, and List Check Runs do not write repo data.</div>
+            <div><b class="text-zinc-200">Write order:</b> Create Branch → Create Commit → use the returned commit SHA for review comments or statuses.</div>
+            <div>Your selected Git plugin token needs the provider permissions required for the chosen action. Tokens stay in browser localStorage.</div>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <label class="block text-sm text-zinc-400">Result</label>
+            <button onclick="copyText($4('gh-result').value || '')" class="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs">Copy Result</button>
+          </div>
+          <textarea id="gh-result" class="w-full min-h-[360px] bg-black border border-zinc-700 rounded-2xl px-4 py-3 text-xs font-mono thin-scroll" placeholder="Git/provider result appears here. Copy commit.sha for SHA fields..." readonly></textarea>
+        </div>
+      </div>
+
+      <button onclick="runGithubToolAction()" class="mt-5 w-full bg-gradient-to-r from-pink-500 to-violet-500 rounded-2xl py-3 font-semibold">Run Git Action</button>
+    </div>
+    <div id="model-modal" class="app-modal hidden w-full max-w-xl bg-zinc-950 border border-zinc-700 rounded-3xl p-6 shadow-2xl">
+      <div class="flex items-center justify-between mb-5"><h3 class="text-2xl font-semibold">Model Selector</h3><button onclick="closeModals()" class="text-zinc-400 hover:text-white">✕</button></div>
+      <div id="model-options" class="space-y-3"></div>
+    </div>
+  </div>
 
   <script>
-    const DEFAULT_STAGES = ["Idea", "Spec", "Plan", "Patch", "Test", "Preview", "Experience", "Approve"];
+// Four visible snapshot commits. Each commit feeds the next.
+    const DEFAULT_STAGES = ["Context", "Specification", "Implementation", "Proof"];
 
     const templates = {
       "software-factory": DEFAULT_STAGES,
-      "security-upgrade": ["Idea", "Repo Health", "Risk Spec", "Upgrade Plan", "Patch", "Validation", "Render Preview", "Approve"],
-      "custom": ["Idea", "Snapshot"]
+      "security-upgrade": ["Context", "Risk Specification", "Upgrade Implementation", "Proof"],
+      "custom": ["Context", "Snapshot"]
     };
 
-    let githubConfig = { owner: "superplanehq", repo: "superplane", token: "" };
+    const gitProviders = {
+      github: {
+        label: "GitHub",
+        apiBase: "https://api.github.com",
+        repoUrl: ({ owner, repo }) => `https://github.com/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,
+        headers: token => ({ "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", ...(token ? { Authorization: `Bearer ${token}` } : {}) })
+      },
+      gitlab: {
+        label: "GitLab",
+        apiBase: "https://gitlab.com/api/v4",
+        repoUrl: ({ owner, repo }) => `https://gitlab.com/${owner}/${repo}`,
+        headers: token => ({ "Accept": "application/json", ...(token ? { "PRIVATE-TOKEN": token } : {}) })
+      },
+      bitbucket: {
+        label: "Bitbucket",
+        apiBase: "https://api.bitbucket.org/2.0",
+        repoUrl: ({ owner, repo }) => `https://bitbucket.org/${owner}/${repo}`,
+        headers: token => ({ "Accept": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) })
+      }
+    };
+
+    // ==================== PLUGIN SYSTEM ====================
+    const PLUGINS = {
+      config: {
+        proxyUrl: "",
+        storage: { provider: "", url: "", key: "" },
+        enabled: [],
+        plugins: []
+      },
+      all() {
+        return Array.isArray(this.config.plugins) ? this.config.plugins : [];
+      },
+      get(idOrName) {
+        const target = String(idOrName || "").toLowerCase();
+        return this.all().find(p => String(p.id || "").toLowerCase() === target || String(p.name || "").toLowerCase() === target || String(p.provider || "").toLowerCase() === target);
+      },
+      isEnabled(name) {
+        const plugin = this.get(name);
+        return Boolean(plugin?.enabled) || (this.config.enabled || []).includes(name);
+      },
+      credentialFor(plugin) {
+        const credentialId = plugin?.credentialId || "";
+        if (!credentialId || credentialId === "none") return null;
+        try {
+          const custom = JSON.parse(localStorage.getItem("4flo-custom-credentials-v1") || "[]");
+          return custom.find(c => c.id === credentialId) || null;
+        } catch {
+          return null;
+        }
+      },
+      async call(path, options = {}) {
+        const base = (this.config.proxyUrl || this.get("proxy")?.endpoint || "").replace(/\/$/, "");
+        if (!base) return fetch(path, options);
+        const headers = { ...(options.headers || {}), "X-Client": "factory-4flo" };
+        return fetch(base + path, { ...options, headers });
+      }
+    };
+
+    function loadPluginConfig() {
+      try {
+        const saved = localStorage.getItem("factory-plugins");
+        if (saved) PLUGINS.config = { ...PLUGINS.config, ...JSON.parse(saved) };
+        PLUGINS.config.enabled = Array.from(new Set(PLUGINS.config.enabled || []));
+        PLUGINS.config.plugins = Array.isArray(PLUGINS.config.plugins) ? PLUGINS.config.plugins : [];
+
+        // Backward compatibility: turn the old hardcoded proxy/storage settings into first-class plugin objects.
+        if (PLUGINS.config.proxyUrl && !PLUGINS.get("proxy")) {
+          PLUGINS.config.plugins.push({
+            id: "proxy", name: "Proxy Backend", description: "Routes plugin, webhook, AI, deployment, and execute calls through your own backend.",
+            provider: "Custom REST API", type: "Tool", endpoint: PLUGINS.config.proxyUrl, command: "", arguments: "", credentialId: "none",
+            enabled: true, version: "1.0.0", permissions: { read: true, write: true, execute: true },
+            health: { status: "unknown", lastRun: "Never", latency: null }, logs: []
+          });
+        }
+        if (PLUGINS.config.storage?.provider && PLUGINS.config.storage?.url && !PLUGINS.get("storage")) {
+          PLUGINS.config.plugins.push({
+            id: "storage", name: "Cloud Storage", description: "Optional sync metadata while browser storage remains the source of truth.",
+            provider: PLUGINS.config.storage.provider, type: "Storage", endpoint: PLUGINS.config.storage.url, command: "", arguments: "", credentialId: "none",
+            enabled: true, version: "1.0.0", permissions: { read: true, write: true, execute: false },
+            health: { status: "unknown", lastRun: "Never", latency: null }, logs: []
+          });
+        }
+
+        if (!PLUGINS.config.plugins.length && typeof pluginTemplates === "function") {
+          PLUGINS.config.plugins = pluginTemplates().map(normalizePlugin);
+        }
+      } catch {}
+    }
+
+    function savePluginConfig() {
+      localStorage.setItem("factory-plugins", JSON.stringify(PLUGINS.config));
+      updatePluginStatus();
+    }
+
+    function pluginDirectPath(url) {
+      try {
+        const u = new URL(url);
+        return u.pathname + u.search;
+      } catch {
+        return url;
+      }
+    }
+
+    let factoryRunning = false;
+
+    let githubConfig = { provider: "github", owner: "your-org", repo: "platform", token: "", localRepoPath: "", localGitBridge: "http://localhost:4787" };
     let integrations = {
       renderApiKey: "",
       renderServiceId: "",
       renderPreviewUrl: "",
-      superplaneApiKey: "",
-      superplaneEndpoint: "",
+      platformApiKey: "",
+      platformEndpoint: "",
       genericWebhook: ""
     };
+
+    let localModelConfig = {
+      endpoint: "http://localhost:11434",
+      model: "llama3.1",
+      connected: false,
+      kind: "ollama"
+    };
+
+
+    let pluginSelections = { ai: "", git: "", deployment: "", execution: "" };
+
+    function pluginMatchesRole(plugin, role) {
+      const haystack = `${plugin.id || ""} ${plugin.name || ""} ${plugin.provider || ""} ${plugin.type || ""}`.toLowerCase();
+      if (role === "ai") return /ai|model|agent|local/.test(haystack);
+      if (role === "git") return /git|github|gitlab|bitbucket/.test(haystack);
+      if (role === "deployment") return /deploy|render|preview|hosting/.test(haystack);
+      if (role === "execution") return /webhook|rest|proxy|tool|action|command|execute|local/.test(haystack);
+      return true;
+    }
+
+    function pluginsForRole(role) {
+      return getPlugins().filter(p => p.enabled && pluginMatchesRole(p, role));
+    }
+
+    function selectedPlugin(role) {
+      const id = pluginSelections[role] || "";
+      return getPlugins().find(p => p.id === id) || pluginsForRole(role)[0] || null;
+    }
+
+    function pluginSetting(plugin, key, fallback = "") {
+      return plugin?.settings?.[key] ?? plugin?.[key] ?? fallback;
+    }
+
+    function pluginCredentialSecret(plugin) {
+      const cred = PLUGINS.credentialFor(plugin);
+      return cred?.secret || cred?.value || cred?.token || "";
+    }
+
+    function pluginOptions(role, selectedId) {
+      const options = pluginsForRole(role);
+      const selected = selectedId || options[0]?.id || "";
+      const empty = `<option value="">No ${role} plugin selected</option>`;
+      return empty + options.map(p => `<option value="${escapeAttr(p.id)}" ${p.id === selected ? "selected" : ""}>${escapeHtml(p.name)} · ${escapeHtml(p.type)}</option>`).join("");
+    }
+
+    function renderConnectionPluginSelectors() {
+      const roles = ["ai", "git", "deployment", "execution"];
+      roles.forEach(role => {
+        const select = document.getElementById(`${role}PluginSelect`);
+        if (!select) return;
+        select.innerHTML = pluginOptions(role, pluginSelections[role]);
+        if (!pluginSelections[role] && select.value) pluginSelections[role] = select.value;
+      });
+      updatePluginSelectionSummaries();
+    }
+
+    function setText(id, value) { const el = document.getElementById(id); if (el) el.textContent = value; }
+
+    function updatePluginSelectionSummaries() {
+      const label = (role) => {
+        const p = selectedPlugin(role);
+        if (!p) return "No enabled plugin for this role.";
+        const endpoint = p.endpoint || p.command || "configured via settings";
+        return `${p.name} · ${p.provider} · ${endpoint}`;
+      };
+      setText("aiPluginSummary", label("ai"));
+      setText("gitPluginSummary", label("git"));
+      setText("deploymentPluginSummary", label("deployment"));
+      setText("executionPluginSummary", label("execution"));
+    }
+
+    function savePluginSelections() {
+      ["ai", "git", "deployment", "execution"].forEach(role => {
+        const el = document.getElementById(`${role}PluginSelect`);
+        if (el) pluginSelections[role] = el.value || "";
+      });
+      localStorage.setItem("factory-plugin-selections", JSON.stringify(pluginSelections));
+      syncRuntimeFromSelectedPlugins();
+      if (run.id) { run.integrations = publicIntegrations(); saveRun(); renderInsights(); }
+      renderConnectionPluginSelectors();
+      updatePluginStatus();
+      showToast("Plugin roles saved");
+    }
+
+    function loadPluginSelections() {
+      try { pluginSelections = { ...pluginSelections, ...(JSON.parse(localStorage.getItem("factory-plugin-selections") || "{}")) }; } catch {}
+    }
+
+    function syncRuntimeFromSelectedPlugins() {
+      const ai = selectedPlugin("ai");
+      if (ai) {
+        localModelConfig.endpoint = ai.endpoint || localModelConfig.endpoint;
+        localModelConfig.model = pluginSetting(ai, "model", localModelConfig.model || "local-model");
+        localModelConfig.kind = pluginSetting(ai, "kind", ai.provider || "plugin").toLowerCase();
+        localModelConfig.connected = Boolean(ai.enabled);
+      }
+      const git = selectedPlugin("git");
+      if (git) {
+        githubConfig.provider = String(git.provider || git.name || "git").toLowerCase().replace(/\s+/g, "-");
+        githubConfig.owner = pluginSetting(git, "owner", githubConfig.owner || "your-org");
+        githubConfig.repo = pluginSetting(git, "repo", githubConfig.repo || "platform");
+        githubConfig.token = pluginCredentialSecret(git) || githubConfig.token || "";
+        githubConfig.apiBase = git.endpoint || pluginSetting(git, "apiBase", "");
+        githubConfig.repoUrlTemplate = pluginSetting(git, "repoUrlTemplate", "");
+        githubConfig.localRepoPath = pluginSetting(git, "localRepoPath", githubConfig.localRepoPath || "");
+        githubConfig.localGitBridge = pluginSetting(git, "localGitBridge", githubConfig.localGitBridge || "http://localhost:4787");
+      }
+      const deployment = selectedPlugin("deployment");
+      if (deployment) {
+        integrations.renderApiKey = pluginCredentialSecret(deployment) || integrations.renderApiKey || "";
+        integrations.renderServiceId = pluginSetting(deployment, "serviceId", integrations.renderServiceId || "");
+        integrations.renderPreviewUrl = pluginSetting(deployment, "previewUrl", integrations.renderPreviewUrl || "");
+        integrations.deploymentPluginId = deployment.id;
+      }
+      const execution = selectedPlugin("execution");
+      if (execution) {
+        integrations.genericWebhook = execution.endpoint || integrations.genericWebhook || "";
+        integrations.platformApiKey = pluginCredentialSecret(execution) || integrations.platformApiKey || "";
+        integrations.platformEndpoint = execution.endpoint || integrations.platformEndpoint || "";
+        integrations.executionPluginId = execution.id;
+      }
+    }
+
+    function serviceConfigured() {
+      return Boolean(
+        integrations.renderApiKey ||
+        integrations.renderServiceId ||
+        integrations.genericWebhook ||
+        PLUGINS.isEnabled("proxy") ||
+        PLUGINS.isEnabled("storage") ||
+        (typeof activeCloudModelConfigured === "function" && activeCloudModelConfigured())
+      );
+    }
+
+    function factoryMode() {
+      return serviceConfigured() ? "connected" : "local";
+    }
 
     let run = emptyRun();
     let selectedSnapshotId = null;
@@ -266,12 +794,12 @@
           githubPrUrl: "",
           renderPreviewUrl: "",
           renderDeployId: "",
-          superplaneRunId: "",
+          platformRunId: "",
           logsUrl: ""
         },
         interop: {
           kind: "snapshot",
-          accepts: ["manual", "webhook", "github", "render", "superplane"],
+          accepts: ["manual", "webhook", "github", "render", "platform"],
           emits: ["json", "url-hash", "webhook-payload"]
         }
       };
@@ -288,12 +816,16 @@
       stageList.forEach((stage, index) => {
         const snap = makeSnapshot({
           stage,
-          input: index === 0 ? "User input" : stageList[index - 1],
+          input: index === 0 ? "Raw intake: issue, comments, and human prompt" : "",
           output: index === 0 ? idea : "",
           parentId,
           source: index === 0 ? "Human" : "Factory",
-          status: index === 0 ? "approved" : "pending"
+          status: "pending"
         });
+
+        if (stage === "Context") {
+          snap.notes = "Root commit. Combines issue data, comments, and human prompt into one normalized context.";
+        }
 
         snapshots.push(snap);
         parentId = snap.id;
@@ -325,6 +857,9 @@
       addEvent("run.created", selectedSnapshotId, `Run created: ${title}`, { templateName });
       saveRun();
       render();
+
+      // One button starts the full factory. Humans can still pause, edit, fork, replay, or reject.
+      setTimeout(() => runFactoryPipeline(), 250);
     }
 
     async function createRunFromGithubIssues() {
@@ -333,30 +868,63 @@
       const issueNumbers = Array.from(raw.matchAll(/#?(\d{3,6})/g)).map(m => m[1]);
       if (!issueNumbers.length) return alert("Paste issue numbers like #5368 #5366 first.");
 
-      setFetchStatus("Fetching GitHub issues...");
+      if (!/github/i.test(selectedPlugin("git")?.provider || selectedPlugin("git")?.name || githubConfig.provider || "")) return alert("Issue fetch currently needs a GitHub-compatible plugin. Use raw issue text for other Git plugins, then create a PR/MR in Git Tools.");
+      setFetchStatus("Fetching issue details and comments through the selected Git plugin...");
       const headers = { "Accept": "application/vnd.github+json" };
       if (githubConfig.token) headers.Authorization = `Bearer ${githubConfig.token}`;
 
       const fetched = [];
       for (const n of issueNumbers) {
         try {
-          const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/issues/${n}`;
-          const res = await fetch(url, { headers });
-          if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-          const issue = await res.json();
-          fetched.push(`#${issue.number} - ${issue.title}\n${issue.html_url}\n\n${issue.body || ""}`);
+          const issueUrl = `${gitProvider().apiBase.replace(/\/$/, "")}/repos/${githubConfig.owner}/${githubConfig.repo}/issues/${n}`;
+          const issueRes = PLUGINS.isEnabled("proxy")
+            ? await PLUGINS.call(`/github/repos/${githubConfig.owner}/${githubConfig.repo}/issues/${n}`, { headers })
+            : await fetch(issueUrl, { headers });
+          if (!issueRes.ok) throw new Error(`${issueRes.status} ${issueRes.statusText}`);
+          const issue = await issueRes.json();
+
+          let commentsText = "No comments fetched.";
+          try {
+            const commentsRes = PLUGINS.isEnabled("proxy")
+              ? await PLUGINS.call(pluginDirectPath(issue.comments_url).replace(/^\/repos\//, "/github/repos/"), { headers })
+              : await fetch(issue.comments_url, { headers });
+            if (commentsRes.ok) {
+              const comments = await commentsRes.json();
+              commentsText = comments.length
+                ? comments.map((c, i) => `Comment ${i + 1} by ${c.user?.login || "unknown"}:\n${c.body || ""}`).join("\n\n")
+                : "No comments on this issue.";
+            } else {
+              commentsText = `Could not fetch comments: ${commentsRes.status} ${commentsRes.statusText}`;
+            }
+          } catch (commentErr) {
+            commentsText = `Could not fetch comments: ${commentErr.message}`;
+          }
+
+          fetched.push([
+            `#${issue.number} - ${issue.title}`,
+            issue.html_url,
+            "",
+            "Issue Body:",
+            issue.body || "(empty)",
+            "",
+            "Issue Comments:",
+            commentsText,
+            "",
+            "Human Prompt:",
+            raw
+          ].join("\n"));
         } catch (err) {
-          fetched.push(`#${n} - Could not fetch issue\nReason: ${err.message}`);
+          fetched.push(`#${n} - Could not fetch issue\nReason: ${err.message}\n\nHuman Prompt:\n${raw}`);
         }
       }
 
       document.getElementById("ideaInput").value = fetched.join("\n\n---\n\n");
-      setFetchStatus(`Fetched ${fetched.length} issue(s). Creating run...`);
+      setFetchStatus(`Fetched ${fetched.length} issue(s) with comments. Starting factory...`);
       createRun();
-      addEvent("github.issues.fetched", selectedSnapshotId, `Fetched ${fetched.length} GitHub issues`, { issueNumbers });
+      addEvent("git.issues.fetched", selectedSnapshotId, `Fetched ${fetched.length} issue(s) and comments`, { issueNumbers, pluginId: selectedPlugin("git")?.id || "" });
       saveRun();
       render();
-      setFetchStatus("Done.");
+      setFetchStatus("Factory started.");
     }
 
     function setFetchStatus(text) {
@@ -364,11 +932,18 @@
     }
 
     function publicIntegrations() {
+      const roles = {
+        ai: selectedPlugin("ai")?.id || "",
+        git: selectedPlugin("git")?.id || "",
+        deployment: selectedPlugin("deployment")?.id || "",
+        execution: selectedPlugin("execution")?.id || ""
+      };
       return {
-        github: { owner: githubConfig.owner, repo: githubConfig.repo, tokenConfigured: Boolean(githubConfig.token) },
-        render: { serviceId: integrations.renderServiceId, previewUrl: integrations.renderPreviewUrl, apiKeyConfigured: Boolean(integrations.renderApiKey) },
-        superplane: { endpoint: integrations.superplaneEndpoint, apiKeyConfigured: Boolean(integrations.superplaneApiKey) },
-        webhook: { url: integrations.genericWebhook }
+        pluginRoles: roles,
+        git: { pluginId: roles.git, provider: githubConfig.provider || "git", owner: githubConfig.owner, repo: githubConfig.repo, tokenConfigured: Boolean(githubConfig.token), localRepoPath: githubConfig.localRepoPath, localGitBridge: githubConfig.localGitBridge },
+        deployment: { pluginId: roles.deployment, serviceId: integrations.renderServiceId, previewUrl: integrations.renderPreviewUrl, credentialConfigured: Boolean(integrations.renderApiKey) },
+        execution: { pluginId: roles.execution, endpoint: integrations.genericWebhook || integrations.platformEndpoint, credentialConfigured: Boolean(integrations.platformApiKey) },
+        localModel: { pluginId: roles.ai, endpoint: localModelConfig.endpoint, model: localModelConfig.model, connected: Boolean(localModelConfig.connected), kind: localModelConfig.kind }
       };
     }
 
@@ -430,7 +1005,7 @@
           <textarea class="w-full mt-1 mb-3 min-h-20 p-2 rounded-xl bg-slate-950 border border-slate-700 text-sm" onchange="updateSnapshot('${snapshot.id}', 'input', this.value)">${escapeHtml(snapshot.input)}</textarea>
 
           <label class="text-xs text-slate-400">Output</label>
-          <textarea class="w-full mt-1 mb-3 min-h-28 p-2 rounded-xl bg-slate-950 border border-slate-700 text-sm" placeholder="Agent output, human edit, validation result, PR link, Render preview URL..." onchange="updateSnapshot('${snapshot.id}', 'output', this.value)">${escapeHtml(snapshot.output)}</textarea>
+          <textarea class="w-full mt-1 mb-3 min-h-28 p-2 rounded-xl bg-slate-950 border border-slate-700 text-sm" placeholder="AI-generated result, human edit, validation result, PR link, deployment preview URL..." onchange="updateSnapshot('${snapshot.id}', 'output', this.value)">${escapeHtml(snapshot.output)}</textarea>
 
           <div class="grid grid-cols-2 gap-2 mb-3">
             <input class="p-2 rounded-xl bg-slate-950 border border-slate-700 text-xs" placeholder="Confidence %" value="${escapeHtml(snapshot.confidence || "")}" onchange="updateSnapshot('${snapshot.id}', 'confidence', this.value, true)">
@@ -451,7 +1026,10 @@
             <button onclick="retrySnapshot('${snapshot.id}')" class="px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-sm">Retry</button>
             <button onclick="forkSnapshot('${snapshot.id}')" class="px-3 py-2 rounded-xl bg-indigo-700 hover:bg-indigo-600 text-sm">Fork</button>
             <button onclick="replayFromSnapshot('${snapshot.id}')" class="px-3 py-2 rounded-xl bg-cyan-700 hover:bg-cyan-600 text-sm">Replay</button>
-            <button onclick="sendSnapshotWebhook('${snapshot.id}')" class="px-3 py-2 rounded-xl bg-violet-700 hover:bg-violet-600 text-sm">Webhook</button>
+            <button onclick="executeSnapshot('${snapshot.id}')"
+                class="px-3 py-2 rounded-xl bg-violet-700 hover:bg-violet-600 text-sm">
+                Execute
+            </button>
           </div>
 
           <div class="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
@@ -466,12 +1044,12 @@
     }
 
     function stageOptions(current) {
-      const all = Array.from(new Set([...DEFAULT_STAGES, "Repo Health", "Risk Spec", "Validation", "Render Preview", "Experience", "Custom", current].filter(Boolean)));
+      const all = Array.from(new Set([...DEFAULT_STAGES, "Repo Health", "Risk Spec", "Validation", "Deployment Preview", "Experience", "Custom", current].filter(Boolean)));
       return all.map(s => `<option value="${escapeAttr(s)}" ${s === current ? "selected" : ""}>${escapeHtml(s)}</option>`).join("");
     }
 
     function sourceOptions(current) {
-      const all = ["Human", "AI Agent", "SuperPlane", "Render", "GitHub", "Factory", "Webhook", "CLI", "Other"];
+      const all = ["Human", "AI Agent", "Platform", "Deployment", "Git Provider", "Factory", "Webhook", "CLI", "Other"];
       return all.map(s => `<option value="${escapeAttr(s)}" ${s === current ? "selected" : ""}>${escapeHtml(s)}</option>`).join("");
     }
 
@@ -664,10 +1242,23 @@
     async function sendSnapshotWebhook(id) {
       const snap = findSnapshot(id);
       if (!snap) return;
-      const endpoint = integrations.genericWebhook || integrations.superplaneEndpoint;
-      if (!endpoint) {
-        copyInteropPayload(id);
-        return alert("No webhook endpoint configured. Interop payload copied instead.");
+      const execution = selectedPlugin("execution");
+      const endpoint = execution?.endpoint || integrations.genericWebhook || (hasPlatformConfig() ? integrations.platformEndpoint : "");
+      if (!endpoint && !PLUGINS.isEnabled("proxy")) {
+        snap.status = "pending";
+        snap.output = `${snap.output || ""}
+
+No execution service connected.
+
+Local-first state saved:
+- Snapshot preserved
+- Input/output editable
+- Ready to send to an execution plugin only when explicitly connected`.trim();
+        snap.updatedAt = now();
+        addEvent("snapshot.local_saved", snap.id, "Snapshot saved locally; no execution service connected");
+        saveRun();
+        render();
+        return false;
       }
 
       snap.status = "running";
@@ -677,12 +1268,19 @@
 
       try {
         const headers = { "Content-Type": "application/json" };
-        if (integrations.superplaneApiKey) headers.Authorization = `Bearer ${integrations.superplaneApiKey}`;
-        const res = await fetch(endpoint, {
-          method: "POST",
-          headers,
-          body: JSON.stringify(buildInteropPayload(snap))
-        });
+        const executionToken = pluginCredentialSecret(execution) || integrations.platformApiKey;
+        if (executionToken) headers.Authorization = `Bearer ${executionToken}`;
+        const res = PLUGINS.isEnabled("proxy")
+          ? await PLUGINS.call("/webhook", {
+              method: "POST",
+              headers,
+              body: JSON.stringify({ endpoint, payload: buildInteropPayload(snap) })
+            })
+          : await fetch(endpoint, {
+              method: "POST",
+              headers,
+              body: JSON.stringify(buildInteropPayload(snap))
+            });
         const text = await res.text();
         snap.output = `${snap.output || ""}\n\nWebhook response (${res.status}):\n${text}`.trim();
         snap.status = res.ok ? "approved" : "rejected";
@@ -701,51 +1299,606 @@
     async function triggerRenderSnapshot(id) {
       const snap = findSnapshot(id);
       if (!snap) return;
+      const deployment = selectedPlugin("deployment");
       snap.status = "running";
-      addEvent("render.deploy.started", id, `Render deploy requested for ${snap.stage}`);
+      addEvent("deployment.started", id, `Deployment requested for ${snap.stage}`, { pluginId: deployment?.id || "" });
       saveRun();
       render();
 
-      if (!integrations.renderApiKey || !integrations.renderServiceId) {
-        const demoUrl = integrations.renderPreviewUrl || `https://factory-passport-demo-${Date.now()}.onrender.com`;
-        snap.artifacts.renderPreviewUrl = demoUrl;
-        snap.output = `${snap.output || ""}\n\nRender Preview Snapshot:\nPreview URL: ${demoUrl}\nBuild: simulated\nStatus: live proof placeholder`.trim();
-        snap.status = "approved";
-        snap.validation.preview = true;
-        snap.validation.build = true;
+      if (!deployment?.enabled) {
+        snap.status = "pending";
+        snap.output = `${snap.output || ""}
+
+No deployment plugin connected yet.
+
+Local proof saved:
+- Snapshot is stored locally
+- Validation can be reviewed manually
+- Add or enable a Deployment plugin to deploy`.trim();
+        snap.validation ||= {};
+        snap.validation.preview = false;
+        snap.validation.build = false;
         snap.updatedAt = now();
-        addEvent("render.deploy.simulated", id, "Render preview recorded in demo mode", { demoUrl });
+        addEvent("deployment.not_configured", id, "No deployment plugin connected; saved proof locally");
         saveRun();
         render();
         return;
       }
 
-      try {
-        const res = await fetch(`https://api.render.com/v1/services/${integrations.renderServiceId}/deploys`, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${integrations.renderApiKey}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ clearCache: "do_not_clear" })
-        });
-        const data = await res.json().catch(() => ({}));
-        snap.artifacts.renderDeployId = data.id || data.deploy?.id || "";
-        snap.artifacts.renderPreviewUrl = integrations.renderPreviewUrl || snap.artifacts.renderPreviewUrl || "";
-        snap.output = `${snap.output || ""}\n\nRender deploy requested:\n${JSON.stringify(data, null, 2)}`.trim();
-        snap.status = res.ok ? "approved" : "rejected";
-        snap.validation.build = res.ok;
-        snap.validation.preview = Boolean(snap.artifacts.renderPreviewUrl);
-        addEvent("render.deploy.completed", id, `Render deploy API returned ${res.status}`);
-      } catch (err) {
-        snap.status = "rejected";
-        snap.output = `${snap.output || ""}\n\nRender API call failed, likely browser CORS or token issue:\n${err.message}`.trim();
-        addEvent("render.deploy.failed", id, err.message);
+      const providerName = String(deployment.provider || deployment.name || "Deployment");
+      const serviceId = pluginSetting(deployment, "serviceId", integrations.renderServiceId || "");
+      const previewUrl = pluginSetting(deployment, "previewUrl", integrations.renderPreviewUrl || "");
+      const token = pluginCredentialSecret(deployment) || integrations.renderApiKey || "";
+
+      // Render remains a built-in adapter example, but it is activated only through a Deployment plugin.
+      if (/render/i.test(providerName) && deployment.endpoint && serviceId && token) {
+        try {
+          const deployPath = `/services/${serviceId}/deploys`;
+          const renderOptions = {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ clearCache: "do_not_clear" })
+          };
+          const res = PLUGINS.isEnabled("proxy")
+            ? await PLUGINS.call(`/render${deployPath}`, renderOptions)
+            : await fetch(`${deployment.endpoint.replace(/\/$/, "")}${deployPath}`, renderOptions);
+          const data = await res.json().catch(() => ({}));
+          snap.artifacts.renderDeployId = data.id || data.deploy?.id || "";
+          snap.artifacts.renderPreviewUrl = previewUrl || snap.artifacts.renderPreviewUrl || "";
+          snap.output = `${snap.output || ""}
+
+Deployment requested via ${deployment.name}:
+${JSON.stringify(data, null, 2)}`.trim();
+          snap.status = res.ok ? "approved" : "rejected";
+          snap.validation.build = res.ok;
+          snap.validation.preview = Boolean(snap.artifacts.renderPreviewUrl);
+          addEvent("deployment.completed", id, `${deployment.name} API returned ${res.status}`);
+        } catch (err) {
+          snap.status = "rejected";
+          snap.output = `${snap.output || ""}
+
+Deployment plugin call failed, likely browser CORS or token issue:
+${err.message}`.trim();
+          addEvent("deployment.failed", id, err.message);
+        }
+      } else {
+        snap.status = "pending";
+        snap.output = `${snap.output || ""}
+
+Deployment plugin selected: ${deployment.name}
+Endpoint/command: ${deployment.endpoint || deployment.command || "configured in settings"}
+
+No provider-specific browser adapter is hardcoded for this plugin. Send the snapshot to an execution/webhook plugin or backend proxy to run it.`.trim();
+        snap.validation ||= {};
+        snap.validation.preview = Boolean(previewUrl);
+        snap.validation.build = false;
+        addEvent("deployment.handoff_saved", id, `Deployment handoff saved for ${deployment.name}`);
       }
 
       snap.updatedAt = now();
       saveRun();
       render();
+    }
+
+    function hasExecutionService() {
+      const execution = selectedPlugin("execution");
+      return Boolean(execution?.enabled || integrations.genericWebhook || PLUGINS.isEnabled("proxy"));
+    }
+
+    function hasPlatformConfig() {
+      const execution = selectedPlugin("execution");
+      return Boolean(execution?.enabled && execution.endpoint) || Boolean(integrations.platformApiKey && integrations.platformEndpoint);
+    }
+
+    function prepareLocalWorkItem(snapshot) {
+      snapshot.status = "pending";
+      snapshot.validation ||= {};
+      snapshot.validation.preview = false;
+      snapshot.validation.build = false;
+      snapshot.updatedAt = now();
+      snapshot.inputHash = hashText(snapshot.input);
+      snapshot.outputHash = hashText(snapshot.output);
+      snapshot.artifacts ||= {};
+      snapshot.artifacts.localWorkItemId ||= uid("work");
+      addEvent("snapshot.queued_local", snapshot.id, `${snapshot.stage} queued locally for execution`, {
+        localWorkItemId: snapshot.artifacts.localWorkItemId
+      });
+      return false;
+    }
+
+    function applyExecutionResult(snapshot, response, data, rawText) {
+      snapshot.status = response.ok && data.ok !== false ? "approved" : "rejected";
+      const aiOutput = data.output || data.message || rawText || "No output returned.";
+      snapshot.output = [
+        `=== ${snapshot.stage} Result ===`,
+        aiOutput,
+        "",
+        "=== Runner Metadata ===",
+        JSON.stringify({
+          ok: data.ok,
+          provider: data.provider,
+          stage: data.stage,
+          validation: data.validation,
+          artifacts: data.artifacts,
+          received_at: data.received_at
+        }, null, 2)
+      ].join("\n");
+      snapshot.source = data.provider ? `AI Agent (${data.provider})` : "AI Agent";
+      snapshot.confidence ||= data.ok === false ? "40" : "85";
+      snapshot.validation ||= {};
+      snapshot.validation.ai = true;
+      snapshot.validation.human = false;
+      if (Array.isArray(data.validation)) {
+        const text = data.validation.join(" ").toLowerCase();
+        if (text.includes("test") || text.includes("validation")) snapshot.validation.tests = true;
+        if (text.includes("build")) snapshot.validation.build = true;
+        if (text.includes("preview")) snapshot.validation.preview = true;
+        if (text.includes("security")) snapshot.validation.security = true;
+      }
+      if (data.artifacts) snapshot.artifacts = { ...(snapshot.artifacts || {}), ...data.artifacts };
+      snapshot.updatedAt = now();
+      snapshot.inputHash = hashText(snapshot.input);
+      snapshot.outputHash = hashText(snapshot.output);
+    }
+
+
+    function normalizeLocalEndpoint(endpoint) {
+      return String(endpoint || "http://localhost:11434").trim().replace(/\/$/, "");
+    }
+
+    function localChatUrl(endpoint) {
+      const base = normalizeLocalEndpoint(endpoint);
+      if (/\/v1\/?$/.test(base)) return base + "/chat/completions";
+      if (/\/chat\/completions$/.test(base) || /\/api\/chat$/.test(base)) return base;
+      return base + "/api/chat";
+    }
+
+    function isOpenAICompatibleLocal(endpoint) {
+      const url = localChatUrl(endpoint);
+      return url.includes("/v1/chat/completions") || url.endsWith("/chat/completions");
+    }
+
+    async function callLocalModel(messages, options = {}) {
+      const endpoint = normalizeLocalEndpoint(options.endpoint || localModelConfig.endpoint);
+      const model = options.model || localModelConfig.model || "llama3.1";
+      const url = localChatUrl(endpoint);
+      const payload = isOpenAICompatibleLocal(endpoint)
+        ? { model, messages, temperature: options.temperature ?? 0.3, stream: false }
+        : { model, messages, stream: false, options: { temperature: options.temperature ?? 0.3 } };
+      const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error?.message || data.message || `${res.status} ${res.statusText}`);
+      const content = data.choices?.[0]?.message?.content || data.message?.content || data.response || "";
+      if (!content.trim()) throw new Error("Local model returned an empty response");
+      localModelConfig.connected = true;
+      localModelConfig.kind = isOpenAICompatibleLocal(endpoint) ? "openai-compatible" : "ollama";
+      localStorage.setItem("factory-passport-local-model", JSON.stringify(localModelConfig));
+      updatePluginStatus();
+      return content;
+    }
+
+    function appLoadModelChain() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem('4flo-model-chain-v1') || '[]');
+        return Array.isArray(parsed) && parsed.length ? parsed : ['local'];
+      } catch { return ['local']; }
+    }
+
+    function appSaveModelChain() {
+      activeModelChain = Array.from(new Set((activeModelChain || []).filter(Boolean)));
+      if (!activeModelChain.length) activeModelChain = ['local'];
+      localStorage.setItem('4flo-model-chain-v1', JSON.stringify(activeModelChain));
+      activeModel = activeModelChain[0] || 'local';
+      localStorage.setItem(FOURFLO.activeModel, activeModel);
+      updateActiveModelLabel();
+      updatePluginStatus();
+      renderModelOptions?.();
+    }
+
+    function selectedModelProviders() {
+      const list = (activeModelChain && activeModelChain.length ? activeModelChain : [activeModel || 'local'])
+        .map(id => (typeof providers !== "undefined" ? providers.find(p => p.id === id) : null))
+        .filter(Boolean);
+      return list.length ? list : [{ id: "local", label: "Local Model", keyName: "", model: localModelConfig.model || "llama3.1" }];
+    }
+
+    function activeModelProvider() {
+      return selectedModelProviders()[0] || { id: "local", label: "Local Model", keyName: "", model: localModelConfig.model || "llama3.1" };
+    }
+
+    function shouldUseCloudModelForFactory() {
+      try {
+        const p = activeModelProvider();
+        const keys = appLoadJSON(FOURFLO.keys, {});
+        return Boolean(p && p.id !== "local" && p.keyName && keys[p.keyName]);
+      } catch {
+        return false;
+      }
+    }
+
+    async function callProviderMessages(provider, messages, options = {}) {
+      const p = provider || activeModelProvider();
+      const keys = (typeof appLoadJSON === "function") ? appLoadJSON(FOURFLO.keys, {}) : {};
+      const key = p.keyName ? keys[p.keyName] : "";
+
+      if (!p || p.id === "local") return await callLocalModel(messages, options);
+      if (!key) throw new Error(`${p.label || p.id} is selected but no API key is saved.`);
+
+      const payload = { model: p.model, messages, temperature: options.temperature ?? 0.35, stream: false };
+
+      if (PLUGINS.isEnabled("proxy")) {
+        const endpoint = p.id === "grok" ? "https://api.x.ai/v1/chat/completions" : p.id === "openai" ? "https://api.openai.com/v1/chat/completions" : "anthropic";
+        const res = await PLUGINS.call("/ai/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ provider: p.id, endpoint, payload }) });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error?.message || data.message || `${res.status} ${res.statusText}`);
+        return data.choices?.[0]?.message?.content || data.content?.[0]?.text || data.output || "";
+      }
+
+      if (p.id === "claude") throw new Error("Claude is configured for backend/proxy use. Enable a proxy to use it from this single HTML file.");
+
+      const endpoint = p.id === "grok" ? "https://api.x.ai/v1/chat/completions" : "https://api.openai.com/v1/chat/completions";
+      const res = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` }, body: JSON.stringify(payload) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error?.message || data.message || `${res.status} ${res.statusText}`);
+      const content = data.choices?.[0]?.message?.content || "";
+      if (!content.trim()) throw new Error(`${p.label || p.id} returned an empty response`);
+      return content;
+    }
+
+    async function callActiveModelMessages(messages, options = {}) {
+      const chain = selectedModelProviders();
+      let prior = "";
+      const trace = [];
+      let lastError = null;
+
+      for (let i = 0; i < chain.length; i++) {
+        const p = chain[i];
+        try {
+          const chainedMessages = prior
+            ? [
+                ...messages,
+                { role: "assistant", content: prior },
+                { role: "user", content: `You are model ${i + 1} of ${chain.length} in the Factory 4flo model route. Review, improve, and finalize the previous model output. Preserve useful details and fix gaps. Return the complete updated output.` }
+              ]
+            : messages;
+          prior = await callProviderMessages(p, chainedMessages, options);
+          trace.push(p.label || p.id);
+        } catch (err) {
+          lastError = err;
+          trace.push(`${p.label || p.id} failed`);
+          continue;
+        }
+      }
+
+      if (prior && prior.trim()) {
+        return chain.length > 1 ? `Model route: ${trace.join(" → ")}
+
+${prior}` : prior;
+      }
+      throw lastError || new Error("No selected model returned a usable response.");
+    }
+
+    function factoryStageMessages(snapshot) {
+      const context = buildFactoryContext(snapshot);
+      const allSnapshots = (run.snapshots || []).map((s, index) => ({
+        number: index + 1,
+        id: s.id,
+        stage: s.stage,
+        status: s.status,
+        notes: s.notes,
+        input: String(s.input || "").slice(0, 2000),
+        output: String(s.output || "").slice(0, 4000)
+      }));
+      return [
+        { role: "system", content: "You are the model powering Factory 4flo. Produce concrete, usable output for the current factory snapshot. Do not pretend to call services you cannot access. Keep the result structured and specific." },
+        { role: "user", content: [
+          `Run title: ${run.title || "Untitled"}`,
+          `Current stage: ${snapshot.stage}`,
+          `Current snapshot input:\n${snapshot.input || "(empty)"}`,
+          `Current snapshot notes:\n${snapshot.notes || "(none)"}`,
+          `Previous approved output:\n${context.previousApprovedOutput || "(none)"}`,
+          "All snapshots so far:",
+          JSON.stringify(allSnapshots, null, 2),
+          "Instruction: Generate only the current snapshot result. This output will become context for later stages."
+        ].join("\n\n") }
+      ];
+    }
+
+    async function executeSnapshotWithLocalModel(snapshot) {
+      selectedSnapshotId = snapshot.id;
+      snapshot.status = "running";
+      snapshot.source = "Local Model";
+      snapshot.updatedAt = now();
+      addEvent("snapshot.local_model.running", snapshot.id, `${snapshot.stage} running on local model`, { endpoint: localModelConfig.endpoint, model: localModelConfig.model });
+      saveRun();
+      render();
+      const output = await callLocalModel(factoryStageMessages(snapshot), { temperature: 0.25 });
+      snapshot.output = output;
+      snapshot.status = "approved";
+      snapshot.source = `Local Model (${localModelConfig.model || "configured"})`;
+      snapshot.confidence ||= "80";
+      snapshot.validation ||= {};
+      snapshot.validation.ai = true;
+      snapshot.validation.human = false;
+      snapshot.updatedAt = now();
+      snapshot.inputHash = hashText(snapshot.input);
+      snapshot.outputHash = hashText(snapshot.output);
+      addEvent("snapshot.local_model.completed", snapshot.id, `${snapshot.stage} completed by local model`, { endpoint: localModelConfig.endpoint, model: localModelConfig.model });
+      saveRun();
+      render();
+      return true;
+    }
+
+    async function executeSnapshotWithActiveModel(snapshot) {
+      const route = selectedModelProviders();
+      const routeLabel = route.map(p => p.label || p.id).join(" → ");
+      const usingCloud = route.some(p => p.id !== "local");
+      selectedSnapshotId = snapshot.id;
+      snapshot.status = "running";
+      snapshot.source = routeLabel || "Local Model";
+      snapshot.updatedAt = now();
+      addEvent(usingCloud ? "snapshot.model_route.running" : "snapshot.local_model.running", snapshot.id, `${snapshot.stage} running on ${routeLabel}`, { route: route.map(p => p.id), localFirst: route[0]?.id === "local" });
+      saveRun();
+      render();
+
+      const output = await callActiveModelMessages(factoryStageMessages(snapshot), { temperature: 0.25 });
+      snapshot.output = output;
+      snapshot.status = "approved";
+      snapshot.source = routeLabel;
+      snapshot.confidence ||= usingCloud ? "85" : "80";
+      snapshot.validation ||= {};
+      snapshot.validation.ai = true;
+      snapshot.validation.human = false;
+      snapshot.updatedAt = now();
+      snapshot.inputHash = hashText(snapshot.input);
+      snapshot.outputHash = hashText(snapshot.output);
+      addEvent(usingCloud ? "snapshot.model_route.completed" : "snapshot.local_model.completed", snapshot.id, `${snapshot.stage} completed by ${routeLabel}`, { route: route.map(p => p.id), localFirst: route[0]?.id === "local" });
+      saveRun();
+      render();
+      return true;
+    }
+
+    async function executeSnapshot(id, options = {}) {
+      const snapshot = run.snapshots.find(s => s.id === id);
+      const webhookUrl = integrations.genericWebhook;
+
+      if (!snapshot) return false;
+
+      // Normal Execute and Pipeline runs are local/model-first. Webhooks are explicit
+      // integrations for testing or handoff, not the default factory executor.
+      if (!options.useWebhook && !PLUGINS.isEnabled("proxyExecute")) {
+        try {
+          return await executeSnapshotWithActiveModel(snapshot);
+        } catch (error) {
+          const p = activeModelProvider();
+          const usingCloud = p.id !== "local";
+          if (usingCloud) {
+            addEvent("snapshot.cloud_model.failed", snapshot.id, `${snapshot.stage} ${p.label} failed: ${error.message}`);
+            try {
+              addEvent("snapshot.local_model.fallback", snapshot.id, `${snapshot.stage} falling back to local model after ${p.label} failure`);
+              return await executeSnapshotWithLocalModel(snapshot);
+            } catch (localError) {
+              error = new Error(`${p.label} failed: ${error.message}; local fallback failed: ${localError.message}`);
+            }
+          }
+          snapshot.status = "rejected";
+          snapshot.output = `${snapshot.output || ""}
+
+Model call failed:
+${error.message}
+
+Local-first is still the default. To use non-local models, select a configured model plugin; to use local, enable a local AI Model plugin.`.trim();
+          snapshot.updatedAt = now();
+          addEvent(usingCloud ? "snapshot.cloud_model.failed" : "snapshot.local_model.failed", snapshot.id, `${snapshot.stage} model failed: ${error.message}`);
+          saveRun();
+          render();
+          return false;
+        }
+      }
+
+      selectedSnapshotId = snapshot.id;
+      snapshot.status = "running";
+      snapshot.updatedAt = now();
+      addEvent("snapshot.running", snapshot.id, `${snapshot.stage} running`);
+      saveRun();
+      render();
+
+      try {
+        const executeOptions = {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ run, snapshot, context: buildFactoryContext(snapshot), endpoint: webhookUrl || null })
+        };
+        const response = PLUGINS.isEnabled("proxy")
+          ? await PLUGINS.call("/execute", executeOptions)
+          : await fetch(webhookUrl, executeOptions);
+
+        const rawText = await response.text();
+        let data;
+        try {
+          data = JSON.parse(rawText);
+        } catch {
+          data = { ok: response.ok, output: rawText };
+        }
+
+        applyExecutionResult(snapshot, response, data, rawText);
+
+        addEvent(
+          "snapshot.executed",
+          snapshot.id,
+          `${snapshot.stage} executed`,
+          { ok: data.ok !== false, provider: data.provider || "webhook" }
+        );
+
+        saveRun();
+        render();
+
+        return snapshot.status === "approved";
+      } catch(error) {
+        snapshot.status = "rejected";
+        snapshot.output = `${snapshot.output || ""}\n\nExecution failed:\n${error.message}`.trim();
+        snapshot.updatedAt = now();
+        addEvent("snapshot.failed", snapshot.id, `${snapshot.stage} failed: ${error.message}`);
+        saveRun();
+        render();
+        return false;
+      }
+    }
+
+    async function runFactoryPipeline(startSnapshotId = null) {
+      if (factoryRunning) return;
+      const connected = hasExecutionService();
+      if (!connected) {
+        addEvent("factory.local", selectedSnapshotId, "Pipeline will use the selected model plugin route. Keep a local AI Model plugin first for local execution; webhooks are explicit handoffs.");
+      }
+
+      factoryRunning = true;
+      addEvent("factory.started", selectedSnapshotId, "Factory pipeline started");
+      saveRun();
+      render();
+
+      let startIndex = startSnapshotId
+        ? Math.max(0, run.snapshots.findIndex(s => s.id === startSnapshotId))
+        : 0;
+
+      for (let i = startIndex; i < run.snapshots.length; i++) {
+        const snapshot = run.snapshots[i];
+
+        // Each commit consumes the previous approved commit output.
+        if (i > 0) {
+          const previous = run.snapshots[i - 1];
+          if (previous?.output) {
+            snapshot.input = previous.output;
+            snapshot.inputHash = hashText(snapshot.input);
+            snapshot.updatedAt = now();
+          }
+        }
+
+        if (snapshot.status === "approved" && snapshot.output) continue;
+
+        const ok = await executeSnapshot(snapshot.id, { silent: true });
+
+        if (!ok) {
+          addEvent(connected ? "factory.paused" : "factory.queued_local", snapshot.id, connected
+            ? `${snapshot.stage} needs human review before continuing`
+            : `${snapshot.stage} needs local model/webhook review before continuing`);
+          saveRun();
+          render();
+          factoryRunning = false;
+          return;
+        }
+      }
+
+      addEvent("factory.completed", run.snapshots.at(-1)?.id || null, "Factory pipeline completed");
+      factoryRunning = false;
+      saveRun();
+      render();
+    }
+
+
+    function localFactoryStageOutput(snapshot, context) {
+      const stage = String(snapshot?.stage || "Snapshot");
+      const source = snapshot?.input || context?.previousApprovedOutput || "No input provided.";
+      const trimmed = String(source).trim().slice(0, 1200);
+      const lower = stage.toLowerCase();
+      if (lower.includes("context")) {
+        return [
+          "Normalized intake:",
+          trimmed || "Manual factory run.",
+          "",
+          "Working assumptions:",
+          "- Preserve the single-file constraint.",
+          "- Keep each action visible, reversible, and exportable.",
+          "- Treat this snapshot as the root context for the next commit."
+        ].join("\n");
+      }
+      if (lower.includes("spec") || lower.includes("risk")) {
+        return [
+          "Specification:",
+          "1. User can create, import, export, share, and replay a run.",
+          "2. Each snapshot has status, validation, notes, artifacts, and lineage.",
+          "3. The browser can run locally without API keys, then upgrade to webhook, platform, or deployment plugins when configured.",
+          "",
+          "Acceptance checks:",
+          "- No dead buttons.",
+          "- localStorage persists work.",
+          "- Interop JSON can be copied or posted."
+        ].join("\n");
+      }
+      if (lower.includes("implementation") || lower.includes("upgrade")) {
+        return [
+          "Implementation patch draft:",
+          "```diff",
+          "diff --git a/factory-passport-notes.md b/factory-passport-notes.md",
+          "new file mode 100644",
+          "--- /dev/null",
+          "+++ b/factory-passport-notes.md",
+          "@@ -0,0 +1,12 @@",
+          "+# Factory 4flo Implementation Notes",
+          "+",
+          "+Context hash: " + hashText(trimmed),
+          "+",
+          "+- Add or edit the UI in one HTML file.",
+          "+- Wire controls to local state first.",
+          "+- Use webhook execution only when configured.",
+          "+- Save every mutation to localStorage and timeline events.",
+          "+- Review this generated patch before applying it to local Git.",
+          "+",
+          "+Source excerpt:",
+          "+" + (trimmed || "Use the selected snapshot input as implementation context.").replace(/\n/g, "\n+"),
+          "```",
+          "",
+          "Apply path:",
+          "1. Review the diff above.",
+          "2. Use Diff → Apply to local Git if your local bridge is running.",
+          "3. Create a provider PR/MR from Git Tools."
+        ].join("\n");
+      }
+      if (lower.includes("proof") || lower.includes("validation")) {
+        return [
+          "Proof checklist:",
+          "✅ Snapshot produced output",
+          "✅ Timeline event recorded",
+          "✅ Diff / interop views updated",
+          "✅ Run can be exported or shared",
+          "",
+          "Manual review still recommended before using the result in production."
+        ].join("\n");
+      }
+      return [
+        `${stage} local result:`,
+        trimmed || "No input supplied.",
+        "",
+        "Next: review, edit, approve, fork, retry, replay, or execute again."
+      ].join("\n");
+    }
+
+    function buildFactoryContext(currentSnapshot) {
+      const ancestors = [];
+      let cursor = currentSnapshot;
+      const seen = new Set();
+
+      while (cursor && !seen.has(cursor.id)) {
+        seen.add(cursor.id);
+        ancestors.unshift({
+          id: cursor.id,
+          stage: cursor.stage,
+          status: cursor.status,
+          input: cursor.input,
+          output: cursor.output,
+          notes: cursor.notes,
+          source: cursor.source
+        });
+        cursor = cursor.parentId ? findSnapshot(cursor.parentId) : null;
+      }
+
+      return {
+        currentStage: currentSnapshot?.stage,
+        pipeline: DEFAULT_STAGES,
+        lineage: ancestors,
+        previousApprovedOutput: ancestors.length > 1 ? ancestors[ancestors.length - 2].output : "",
+        instruction: "Generate only the current snapshot result. The browser will feed this output into the next snapshot."
+      };
     }
 
     function renderInsights() {
@@ -773,15 +1926,16 @@
         <div class="flex justify-between"><span>Human Edits</span><strong>${humanEdits}</strong></div>
         <div class="flex justify-between"><span>Most Edited</span><strong>${escapeHtml(mostEdited || "—")}</strong></div>
         <div class="flex justify-between"><span>Most Forked</span><strong>${escapeHtml(mostForked || "—")}</strong></div>
+        <div class="flex justify-between"><span>Mode</span><strong>${factoryMode()}</strong></div>
         <div class="flex justify-between"><span>Completion</span><strong>${completion}%</strong></div>
         <div class="mt-3 h-3 bg-slate-800 rounded-full overflow-hidden">
           <div class="h-full bg-emerald-500" style="width:${completion}%"></div>
         </div>
-        <div class="mt-4 text-xs ${integrations.renderApiKey || integrations.renderPreviewUrl ? "text-emerald-400" : "text-slate-500"}">
-          Render: ${integrations.renderApiKey || integrations.renderPreviewUrl ? "connected / ready" : "manual mode"}
+        <div class="mt-4 text-xs ${selectedPlugin("deployment")?.enabled ? "text-emerald-400" : "text-slate-500"}">
+          Deployment: ${selectedPlugin("deployment")?.enabled ? escapeHtml(selectedPlugin("deployment").name) : "local proof only"}
         </div>
-        <div class="text-xs ${integrations.superplaneEndpoint || integrations.genericWebhook ? "text-emerald-400" : "text-slate-500"}">
-          Interop: ${integrations.superplaneEndpoint || integrations.genericWebhook ? "webhook configured" : "copy payload mode"}
+        <div class="text-xs ${hasExecutionService() ? "text-emerald-400" : "text-slate-500"}">
+          Interop: ${hasExecutionService() ? "execution plugin configured" : "local saved / ready to send"}
         </div>
       `;
     }
@@ -850,9 +2004,62 @@
         <div class="pt-3 flex flex-wrap gap-2">
           <button onclick="copyShareUrl('snapshot')" class="px-3 py-2 rounded-xl bg-indigo-700 hover:bg-indigo-600 text-xs">Share</button>
           <button onclick="copyInteropPayload('${snap.id}')" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs">Copy Payload</button>
-          <button onclick="triggerRenderSnapshot('${snap.id}')" class="px-3 py-2 rounded-xl bg-violet-700 hover:bg-violet-600 text-xs">Render Proof</button>
+          <button onclick="triggerRenderSnapshot('${snap.id}')" class="px-3 py-2 rounded-xl bg-violet-700 hover:bg-violet-600 text-xs">Deployment Proof</button>
         </div>
       `;
+    }
+
+    function extractPatchFromSnapshot(snapshot = findSnapshot(selectedSnapshotId)) {
+      const text = String(snapshot?.output || "");
+      const fenced = text.match(/```(?:diff|patch)?\s*([\s\S]*?)```/i);
+      const body = fenced ? fenced[1].trim() : text.trim();
+      if (/^diff --git /m.test(body) || /^---\s+/m.test(body)) return body;
+      return getSelectedDiffText();
+    }
+
+    function getSelectedPatchText() {
+      return extractPatchFromSnapshot();
+    }
+
+    async function localGitBridge(action, payload = {}) {
+      syncGithubConfigFromInputs(true);
+      const bridge = (githubConfig.localGitBridge || "").replace(/\/$/, "");
+      if (!bridge) throw new Error("Add a Local Git Bridge URL first.");
+      const res = await fetch(`${bridge}/${action}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ repoPath: githubConfig.localRepoPath, runId: run.id, snapshotId: selectedSnapshotId, ...payload })
+      });
+      const raw = await res.text();
+      let data;
+      try { data = raw ? JSON.parse(raw) : {}; } catch { data = { output: raw }; }
+      if (!res.ok) throw new Error(data.error || data.message || raw || `Local bridge ${res.status}`);
+      return data;
+    }
+
+    async function syncLocalGit() {
+      try {
+        const data = await localGitBridge("sync", { provider: githubConfig.provider, owner: githubConfig.owner, repo: githubConfig.repo });
+        addEvent("git.local.synced", selectedSnapshotId, "Local Git synced", data);
+        saveRun();
+        renderTimeline();
+        showToast("Local Git synced");
+        return data;
+      } catch (err) {
+        showToast("Local Git sync failed");
+        alert(`Local Git sync failed:\n${err.message}\n\nRun a tiny local bridge, or wire this to isomorphic-git in an Electron/local app shell.`);
+      }
+    }
+
+    async function applyPatchToLocalGit() {
+      const patch = getSelectedPatchText();
+      if (!patch.trim()) throw new Error("No patch/diff found on the selected snapshot.");
+      const data = await localGitBridge("apply-patch", { patch, branch: githubFlowState().lastBranch || "factory/passport-local" });
+      addEvent("git.local.patch_applied", selectedSnapshotId, "Patch applied to local Git", data);
+      saveRun();
+      renderTimeline();
+      showToast("Patch applied to local Git");
+      return data;
     }
 
     function renderDiffView() {
@@ -871,7 +2078,7 @@
             <h3 class="text-xl font-semibold">Diff: ${escapeHtml(parent?.stage || "Input")} → ${escapeHtml(snap.stage)}</h3>
             <p class="text-sm text-slate-400">Simple line diff between parent output and selected output.</p>
           </div>
-          <button onclick="copyText(getSelectedDiffText())" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm">Copy Diff</button>
+          <div class="flex flex-wrap gap-2"><button onclick="copyText(getSelectedDiffText())" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm">Copy Diff</button><button onclick="copyText(getSelectedPatchText())" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm">Copy Patch</button><button onclick="applyPatchToLocalGit().catch(err => alert(err.message))" class="px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-sm">Apply to local Git</button></div>
         </div>
         <pre class="thin-scroll overflow-auto whitespace-pre-wrap rounded-xl bg-slate-950 border border-slate-800 p-4 text-sm leading-6">${simpleDiffHtml(before, after)}</pre>
       `;
@@ -885,7 +2092,7 @@
         <div class="flex items-start justify-between gap-3 mb-4">
           <div>
             <h3 class="text-xl font-semibold">Interop Payload</h3>
-            <p class="text-sm text-slate-400">This JSON can be sent to SuperPlane, GitHub Actions, Render scripts, CLI tools, or any webhook.</p>
+            <p class="text-sm text-slate-400">This JSON can be sent to platform plugins, git automation, deployment scripts, CLI tools, or any webhook.</p>
           </div>
           <button onclick="copyInteropPayload('${snap?.id || ""}')" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm">Copy JSON</button>
         </div>
@@ -942,24 +2149,451 @@
       }
     }
 
-    function saveGithubConfig() {
-      githubConfig = {
-        owner: document.getElementById("githubOwner").value.trim(),
-        repo: document.getElementById("githubRepo").value.trim(),
-        token: document.getElementById("githubToken").value.trim()
-      };
+
+    // === PLUGIN-AWARE GIT HELPERS ===
+    function syncGithubConfigFromInputs(silent = true) {
+      syncRuntimeFromSelectedPlugins();
       localStorage.setItem("factory-passport-github", JSON.stringify(githubConfig));
-      alert("GitHub config saved.");
+      if (!silent) showToast(`${gitProvider().label} plugin saved`);
+      return githubConfig;
+    }
+
+    function gitProvider() {
+      const plugin = selectedPlugin("git");
+      if (plugin) {
+        const providerKey = String(plugin.provider || plugin.name || "git").toLowerCase().replace(/\s+/g, "-");
+        const fallback = gitProviders[providerKey] || gitProviders.github;
+        const apiBase = plugin.endpoint || githubConfig.apiBase || fallback.apiBase;
+        const repoUrlTemplate = pluginSetting(plugin, "repoUrlTemplate", githubConfig.repoUrlTemplate || "");
+        return {
+          label: plugin.name || fallback.label || "Git Provider",
+          apiBase,
+          repoUrl: ({ owner, repo }) => repoUrlTemplate
+            ? repoUrlTemplate.replaceAll("{owner}", encodeURIComponent(owner || "")).replaceAll("{repo}", encodeURIComponent(repo || ""))
+            : fallback.repoUrl({ owner, repo }),
+          headers: token => fallback.headers(token)
+        };
+      }
+      return gitProviders[githubConfig.provider] || gitProviders.github;
+    }
+
+    function onGitProviderChange() {
+      syncGithubConfigFromInputs(true);
+      renderGithubActionFields();
+    }
+
+    function githubFlowState() {
+      try { return JSON.parse(localStorage.getItem("factory-passport-github-flow") || "{}"); }
+      catch { return {}; }
+    }
+
+    function saveGithubFlowState(patch = {}) {
+      const state = { ...githubFlowState(), ...patch };
+      localStorage.setItem("factory-passport-github-flow", JSON.stringify(state));
+      return state;
+    }
+
+    function rememberGithubResult(action, data) {
+      const patch = { lastAction: action };
+      if (action === "createBranch") patch.lastBranch = data?.ref?.replace(/^refs\/heads\//, "") || $4("gh-branch-name")?.value?.trim() || patch.lastBranch;
+      if (action === "createCommit") {
+        patch.lastBranch = $4("gh-commit-branch")?.value?.trim() || githubFlowState().lastBranch || "main";
+        patch.lastCommitSha = data?.commit?.sha || data?.sha || "";
+      }
+      if (action === "createPR") patch.lastPrNumber = data?.number || githubFlowState().lastPrNumber || "";
+      return saveGithubFlowState(patch);
+    }
+
+    function requireFullGithubSha(sha, label = "Commit SHA") {
+      if (!/^[a-f0-9]{40}$/i.test(String(sha || "").trim())) throw new Error(`${label} must be the exact 40-character SHA returned by Create Commit or the selected Git provider.`);
+      return sha.trim();
+    }
+
+    async function githubApi(path, options = {}) {
+      syncGithubConfigFromInputs(true);
+      if (!githubConfig.owner || !githubConfig.repo) throw new Error("Add an owner/workspace and repo in the selected Git plugin settings first.");
+      const headers = {
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28"
+      };
+      if (githubConfig.token) headers.Authorization = `Bearer ${githubConfig.token}`;
+
+      const requestOptions = {
+        ...options,
+        headers: { ...headers, ...(options.headers || {}) }
+      };
+      const res = PLUGINS.isEnabled("proxy")
+        ? await PLUGINS.call(`/github${path}`, requestOptions)
+        : await fetch(`https://api.github.com${path}`, requestOptions);
+
+      if (res.status === 204) return { ok: true, status: 204 };
+      const raw = await res.text();
+      let data;
+      try { data = raw ? JSON.parse(raw) : {}; } catch { data = raw; }
+
+      if (!res.ok) {
+        const message = typeof data === "string" ? data : (data.message || JSON.stringify(data));
+        throw new Error(`${gitProvider().label} API ${res.status}: ${message}`);
+      }
+      return data;
+    }
+
+    async function gitApi(path, options = {}) {
+      syncGithubConfigFromInputs(true);
+      const providerKey = githubConfig.provider || "github";
+      if (providerKey === "github") return githubApi(path, options);
+      const provider = gitProvider();
+      const headers = provider.headers(githubConfig.token);
+      const res = await fetch(`${provider.apiBase}${path}`, { ...options, headers: { ...headers, ...(options.headers || {}) } });
+      if (res.status === 204) return { ok: true, status: 204 };
+      const raw = await res.text();
+      let data;
+      try { data = raw ? JSON.parse(raw) : {}; } catch { data = raw; }
+      if (!res.ok) throw new Error(`${provider.label} API ${res.status}: ${typeof data === "string" ? data : (data.message || JSON.stringify(data))}`);
+      return data;
+    }
+
+    function encodedGitlabProject() {
+      return encodeURIComponent(`${githubConfig.owner}/${githubConfig.repo}`);
+    }
+
+    async function createProviderPR(title, body, headBranch, baseBranch = "main") {
+      const providerKey = githubConfig.provider || "github";
+      if (providerKey === "github") return createPR(title, body, headBranch, baseBranch);
+      if (providerKey === "gitlab") {
+        const mr = await gitApi(`/projects/${encodedGitlabProject()}/merge_requests`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, description: body, source_branch: headBranch, target_branch: baseBranch })
+        });
+        addEvent("gitlab.mr.created", selectedSnapshotId, `Merge request created: ${title}`, { url: mr.web_url });
+        saveGithubFlowState({ lastBranch: headBranch, lastPrNumber: mr.iid });
+        saveRun(); render(); return mr;
+      }
+      if (providerKey === "bitbucket") {
+        const pr = await gitApi(`/repositories/${githubConfig.owner}/${githubConfig.repo}/pullrequests`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, description: body, source: { branch: { name: headBranch } }, destination: { branch: { name: baseBranch } } })
+        });
+        addEvent("bitbucket.pr.created", selectedSnapshotId, `Pull request created: ${title}`, { url: pr.links?.html?.href });
+        saveGithubFlowState({ lastBranch: headBranch, lastPrNumber: pr.id });
+        saveRun(); render(); return pr;
+      }
+      throw new Error(`Unsupported Git provider: ${providerKey}`);
+    }
+
+    async function listBranches() {
+      const providerKey = githubConfig.provider || "github";
+      if (providerKey === "github") return githubApi(`/repos/${githubConfig.owner}/${githubConfig.repo}/branches`);
+      if (providerKey === "gitlab") return gitApi(`/projects/${encodedGitlabProject()}/repository/branches`);
+      if (providerKey === "bitbucket") return gitApi(`/repositories/${githubConfig.owner}/${githubConfig.repo}/refs/branches`);
+    }
+
+    async function createBranch(name, fromShaOrBranch = "main") {
+      if (!name) throw new Error("Branch name is required.");
+      let sha;
+      if (/^[a-f0-9]{40}$/i.test(fromShaOrBranch)) sha = fromShaOrBranch;
+      else {
+        const b = await githubApi(`/repos/${githubConfig.owner}/${githubConfig.repo}/branches/${encodeURIComponent(fromShaOrBranch)}`);
+        sha = b.commit.sha;
+      }
+      const created = await githubApi(`/repos/${githubConfig.owner}/${githubConfig.repo}/git/refs`, {
+        method: "POST",
+        body: JSON.stringify({ ref: `refs/heads/${name}`, sha })
+      });
+      saveGithubFlowState({ lastBranch: name, lastBaseSha: sha });
+      addEvent("github.branch.created", selectedSnapshotId, `Branch created: ${name}`, { branch: name, sha });
+      saveRun();
+      renderTimeline();
+      return created;
+    }
+
+    async function createCommit(message, files = [], branch = "main") {
+      if (!message) throw new Error("Commit message is required.");
+      if (!Array.isArray(files) || !files.length) throw new Error("Files must be an array like [{path, content}].");
+
+      const ref = await githubApi(`/repos/${githubConfig.owner}/${githubConfig.repo}/git/ref/heads/${encodeURIComponent(branch)}`);
+      const baseSha = ref.object.sha;
+      const baseCommit = await githubApi(`/repos/${githubConfig.owner}/${githubConfig.repo}/git/commits/${baseSha}`);
+      const tree = await githubApi(`/repos/${githubConfig.owner}/${githubConfig.repo}/git/trees`, {
+        method: "POST",
+        body: JSON.stringify({
+          base_tree: baseCommit.tree.sha,
+          tree: files.map(file => ({
+            path: file.path,
+            mode: "100644",
+            type: "blob",
+            content: String(file.content ?? "")
+          }))
+        })
+      });
+      const commit = await githubApi(`/repos/${githubConfig.owner}/${githubConfig.repo}/git/commits`, {
+        method: "POST",
+        body: JSON.stringify({ message, tree: tree.sha, parents: [baseSha] })
+      });
+      const updated = await githubApi(`/repos/${githubConfig.owner}/${githubConfig.repo}/git/refs/heads/${encodeURIComponent(branch)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ sha: commit.sha, force: false })
+      });
+      saveGithubFlowState({ lastBranch: branch, lastCommitSha: commit.sha });
+      addEvent("github.commit.created", selectedSnapshotId, `Commit pushed: ${message}`, { branch, sha: commit.sha, files: files.map(f => f.path) });
+      saveRun();
+      renderTimeline();
+      return { commit, ref: updated };
+    }
+
+    async function createPR(title, body, headBranch, baseBranch = "main") {
+      if (!title || !headBranch) throw new Error("PR title and head branch are required.");
+      const pr = await githubApi(`/repos/${githubConfig.owner}/${githubConfig.repo}/pulls`, {
+        method: "POST",
+        body: JSON.stringify({ title, body, head: headBranch, base: baseBranch })
+      });
+      const snap = findSnapshot(selectedSnapshotId);
+      if (snap) {
+        snap.artifacts ||= {};
+        snap.artifacts.githubPrUrl = pr.html_url || snap.artifacts.githubPrUrl;
+      }
+      saveGithubFlowState({ lastBranch: headBranch, lastPrNumber: pr.number });
+      addEvent("github.pr.created", selectedSnapshotId, `PR created: ${title}`, { number: pr.number, url: pr.html_url });
+      saveRun();
+      render();
+      return pr;
+    }
+
+    async function mergePR(prNumber, method = "merge") {
+      if (!prNumber) throw new Error("PR number is required.");
+      const merged = await githubApi(`/repos/${githubConfig.owner}/${githubConfig.repo}/pulls/${prNumber}/merge`, {
+        method: "PUT",
+        body: JSON.stringify({ merge_method: method })
+      });
+      addEvent("github.pr.merged", selectedSnapshotId, `PR #${prNumber} merged`, { method });
+      saveRun();
+      renderTimeline();
+      return merged;
+    }
+
+    async function addReviewComment(prNumber, body, commitId, path, position) {
+      if (!prNumber || !body || !commitId || !path || !position) throw new Error("PR number, body, commit id, path, and position are required.");
+      commitId = requireFullGithubSha(commitId, "Review comment commit SHA");
+      const comment = await githubApi(`/repos/${githubConfig.owner}/${githubConfig.repo}/pulls/${prNumber}/comments`, {
+        method: "POST",
+        body: JSON.stringify({ body, commit_id: commitId, path, position: Number(position) })
+      });
+      addEvent("github.review_comment.created", selectedSnapshotId, `Review comment added to PR #${prNumber}`, { path, position: Number(position) });
+      saveRun();
+      renderTimeline();
+      return comment;
+    }
+
+    async function listCheckRuns(sha) {
+      sha = requireFullGithubSha(sha, "Check run commit SHA");
+      return githubApi(`/repos/${githubConfig.owner}/${githubConfig.repo}/commits/${sha}/check-runs`);
+    }
+
+    async function createCommitStatus(sha, state, description, context) {
+      sha = requireFullGithubSha(sha, "Status commit SHA");
+      if (!state || !context) throw new Error("State and context are required.");
+      const status = await githubApi(`/repos/${githubConfig.owner}/${githubConfig.repo}/statuses/${sha}`, {
+        method: "POST",
+        body: JSON.stringify({ state, description, context })
+      });
+      addEvent("github.status.created", selectedSnapshotId, `Status set: ${context} → ${state}`, { sha, state, context });
+      saveRun();
+      renderTimeline();
+      return status;
+    }
+
+    async function listReleases() {
+      return githubApi(`/repos/${githubConfig.owner}/${githubConfig.repo}/releases`);
+    }
+
+    async function createRelease(tag, name, body, draft = false) {
+      if (!tag || !name) throw new Error("Tag and release name are required.");
+      const release = await githubApi(`/repos/${githubConfig.owner}/${githubConfig.repo}/releases`, {
+        method: "POST",
+        body: JSON.stringify({ tag_name: tag, name, body, draft: Boolean(draft) })
+      });
+      addEvent("github.release.created", selectedSnapshotId, `Release created: ${tag}`, { url: release.html_url });
+      saveRun();
+      renderTimeline();
+      return release;
+    }
+
+    function openGithubToolsModal() {
+      syncGithubConfigFromInputs(true);
+      setValue("gh-tools-owner", githubConfig.owner);
+      setValue("gh-tools-repo", githubConfig.repo);
+      setValue("gh-tools-base", "main");
+      renderGithubActionFields();
+      openModal("github-tools-modal");
+    }
+
+    function syncGithubToolsToConfig() {
+      const owner = ($4("gh-tools-owner")?.value || githubConfig.owner || "").trim();
+      const repo = ($4("gh-tools-repo")?.value || githubConfig.repo || "").trim();
+      githubConfig.owner = owner || githubConfig.owner;
+      githubConfig.repo = repo || githubConfig.repo;
+      const git = selectedPlugin("git");
+      if (git) git.settings = { ...(git.settings || {}), owner: githubConfig.owner, repo: githubConfig.repo };
+      syncGithubConfigFromInputs(true);
+    }
+
+    function renderGithubActionFields() {
+      const action = $4("gh-action")?.value || "listBranches";
+      const base = $4("gh-tools-base")?.value || "main";
+      const flow = githubFlowState();
+      const lastBranch = flow.lastBranch || "factory/passport-local";
+      const lastSha = flow.lastCommitSha || "";
+      const lastPr = flow.lastPrNumber || "";
+      const field = (id, label, placeholder = "", value = "", type = "text") => `
+        <label class="block text-sm text-zinc-400">${label}</label>
+        <input id="${id}" type="${type}" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3" placeholder="${placeholder}" value="${escapeAttr(value)}" />`;
+      const area = (id, label, placeholder = "", value = "") => `
+        <label class="block text-sm text-zinc-400">${label}</label>
+        <textarea id="${id}" class="w-full min-h-28 bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-sm" placeholder="${placeholder}">${escapeHtml(value)}</textarea>`;
+      const select = (id, label, options) => `
+        <label class="block text-sm text-zinc-400">${label}</label>
+        <select id="${id}" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3">${options.map(([v,t])=>`<option value="${escapeAttr(v)}">${escapeHtml(t)}</option>`).join("")}</select>`;
+      let html = "";
+      if (action === "createBranch") html = field("gh-branch-name", "New branch", "factory/passport-local", lastBranch) + field("gh-from-ref", "From branch or SHA", "main", base);
+      if (action === "createCommit") html = field("gh-commit-branch", "Target branch", "main", base) + field("gh-commit-message", "Commit message", "Update from Factory 4flo") + area("gh-commit-files", "Files JSON", '[{"path":"factory-passport-notes.md","content":"Hello from 4flo"}]', '[\n  {"path":"factory-passport-notes.md","content":"Hello from 4flo"}\n]');
+      if (action === "createPR") html = field("gh-pr-title", "PR/MR title", "Factory Passport update") + area("gh-pr-body", "PR body", "Generated from Factory 4flo") + field("gh-pr-head", "Head branch", "Use the branch you committed to", lastBranch) + field("gh-pr-base", "Base branch", "main", base);
+      if (action === "mergePR") html = field("gh-pr-number", "PR number", "123", lastPr, "number") + select("gh-merge-method", "Merge method", [["merge","Merge commit"],["squash","Squash"],["rebase","Rebase"]]);
+      if (action === "addReviewComment") html = field("gh-comment-pr", "PR number", "123", lastPr, "number") + area("gh-comment-body", "Comment", "Suggested change from Factory 4flo") + field("gh-comment-commit", "Commit SHA from Create Commit", "exact 40-char SHA", lastSha) + field("gh-comment-path", "File path", "src/app.js") + field("gh-comment-position", "Diff position", "1", "1", "number");
+      if (action === "listCheckRuns") html = field("gh-check-sha", "Commit SHA", "exact 40-char SHA", lastSha);
+      if (action === "createCommitStatus") html = field("gh-status-sha", "Commit SHA", "exact 40-char SHA", lastSha) + select("gh-status-state", "State", [["pending","pending"],["success","success"],["failure","failure"],["error","error"]]) + field("gh-status-context", "Context", "factory/4flo") + field("gh-status-description", "Description", "Factory 4flo status");
+      if (action === "createRelease") html = field("gh-release-tag", "Tag", "v0.1.0") + field("gh-release-name", "Release name", "Factory Passport v0.1.0") + area("gh-release-body", "Release notes", "Created from Factory 4flo") + `<label class="flex items-center gap-2 text-sm text-zinc-300"><input id="gh-release-draft" type="checkbox" class="accent-pink-500"> Draft release</label>`;
+      if (action === "applyLocalPatch") html = `<div class="rounded-2xl bg-zinc-900 border border-zinc-800 p-4 text-sm text-zinc-400">Applies the selected snapshot patch through your local bridge. Browser-only mode cannot write to disk directly; use Electron/isomorphic-git or the tiny bridge endpoint.</div>`;
+      if (action === "listBranches" || action === "listReleases") html = `<div class="rounded-2xl bg-zinc-900 border border-zinc-800 p-4 text-sm text-zinc-400">No extra fields needed. These are safe read-only checks.</div>`;
+      $4("gh-action-fields").innerHTML = html;
+    }
+
+    function parseGithubFilesJson() {
+      const raw = $4("gh-commit-files")?.value || "[]";
+      const files = JSON.parse(raw);
+      if (!Array.isArray(files)) throw new Error("Files JSON must be an array.");
+      files.forEach(file => {
+        if (!file.path) throw new Error("Each file needs a path.");
+        if (file.content === undefined) throw new Error(`File ${file.path} needs content.`);
+      });
+      return files;
+    }
+
+    async function runGithubToolAction() {
+      syncGithubToolsToConfig();
+      const action = $4("gh-action").value;
+      const result = $4("gh-result");
+      result.value = "Running " + action + "...";
+      try {
+        let data;
+        if (action === "listBranches") data = await listBranches();
+        if (action === "createBranch") data = await createBranch($4("gh-branch-name").value.trim(), $4("gh-from-ref").value.trim() || "main");
+        if (action === "createCommit") data = await createCommit($4("gh-commit-message").value.trim(), parseGithubFilesJson(), $4("gh-commit-branch").value.trim() || "main");
+        if (action === "createPR") data = await createProviderPR($4("gh-pr-title").value.trim(), $4("gh-pr-body").value, $4("gh-pr-head").value.trim(), $4("gh-pr-base").value.trim() || "main");
+        if (action === "mergePR") data = await mergePR($4("gh-pr-number").value.trim(), $4("gh-merge-method").value);
+        if (action === "addReviewComment") data = await addReviewComment($4("gh-comment-pr").value.trim(), $4("gh-comment-body").value, $4("gh-comment-commit").value.trim(), $4("gh-comment-path").value.trim(), $4("gh-comment-position").value.trim());
+        if (action === "listCheckRuns") data = await listCheckRuns($4("gh-check-sha").value.trim());
+        if (action === "createCommitStatus") data = await createCommitStatus($4("gh-status-sha").value.trim(), $4("gh-status-state").value, $4("gh-status-description").value.trim(), $4("gh-status-context").value.trim());
+        if (action === "applyLocalPatch") data = await applyPatchToLocalGit();
+        if (action === "listReleases") data = await listReleases();
+        if (action === "createRelease") data = await createRelease($4("gh-release-tag").value.trim(), $4("gh-release-name").value.trim(), $4("gh-release-body").value, $4("gh-release-draft").checked);
+        const flow = rememberGithubResult(action, data);
+        const shaNote = flow.lastCommitSha ? `
+
+Next SHA to reuse: ${flow.lastCommitSha}` : "";
+        result.value = JSON.stringify(data, null, 2) + shaNote;
+        showToast("Git action complete");
+        renderTimeline();
+      } catch (err) {
+        console.error(err);
+        result.value = String(err.stack || err.message || err);
+        showToast("Git action failed");
+      }
+    }
+
+    function saveGithubConfig() {
+      syncGithubConfigFromInputs(false);
+    }
+
+
+    function saveLocalModelConfig() {
+      localModelConfig.endpoint = normalizeLocalEndpoint(document.getElementById("localModelEndpoint")?.value || localModelConfig.endpoint);
+      localModelConfig.model = (document.getElementById("localModelName")?.value || localModelConfig.model || "llama3.1").trim();
+      localStorage.setItem("factory-passport-local-model", JSON.stringify(localModelConfig));
+      if (run.id) {
+        run.integrations = publicIntegrations();
+        saveRun();
+      }
+      updatePluginStatus();
+      showToast("Local model settings saved");
+    }
+
+    async function testLocalModelConnection(endpoint, model) {
+      const old = { ...localModelConfig };
+      localModelConfig.endpoint = normalizeLocalEndpoint(endpoint || old.endpoint);
+      localModelConfig.model = model || old.model || "llama3.1";
+      try {
+        await callLocalModel([{ role: "user", content: "Reply with exactly: local model connected" }], { temperature: 0 });
+        return true;
+      } catch (err) {
+        localModelConfig = old;
+        return false;
+      }
+    }
+
+    async function connectOllama() {
+      localModelConfig.endpoint = "http://localhost:11434";
+      localModelConfig.kind = "ollama";
+      setValue("localModelEndpoint", localModelConfig.endpoint);
+      setValue("localModelName", localModelConfig.model || "llama3.1");
+      saveLocalModelConfig();
+      showToast("Local model plugin endpoint selected. Run a test or pipeline to verify.");
+    }
+
+    async function connectLMStudio() {
+      localModelConfig.endpoint = "http://localhost:1234/v1";
+      localModelConfig.kind = "openai-compatible";
+      localModelConfig.model = localModelConfig.model || "local-model";
+      setValue("localModelEndpoint", localModelConfig.endpoint);
+      setValue("localModelName", localModelConfig.model);
+      saveLocalModelConfig();
+      showToast("LM Studio endpoint selected. Enable the local server in LM Studio.");
+    }
+
+    async function detectLocalModelEndpoint() {
+      const candidates = [
+        { endpoint: "http://localhost:11434", model: localModelConfig.model || "llama3.1", kind: "ollama" },
+        { endpoint: "http://127.0.0.1:11434", model: localModelConfig.model || "llama3.1", kind: "ollama" },
+        { endpoint: "http://localhost:1234/v1", model: localModelConfig.model || "local-model", kind: "openai-compatible" },
+        { endpoint: "http://127.0.0.1:1234/v1", model: localModelConfig.model || "local-model", kind: "openai-compatible" }
+      ];
+      for (const c of candidates) {
+        localModelConfig.endpoint = c.endpoint;
+        localModelConfig.model = c.model;
+        localModelConfig.kind = c.kind;
+        setValue("localModelEndpoint", c.endpoint);
+        setValue("localModelName", c.model);
+        try {
+          await callLocalModel([{ role: "user", content: "Reply with exactly: ok" }], { temperature: 0 });
+          saveLocalModelConfig();
+          showToast(`Detected local model at ${c.endpoint}`);
+          return;
+        } catch {}
+      }
+      showToast("Could not auto-detect a local model. Check your local model plugin endpoint and CORS.");
     }
 
     function saveIntegrations() {
+      syncRuntimeFromSelectedPlugins();
       integrations = {
-        renderApiKey: document.getElementById("renderApiKey").value.trim(),
-        renderServiceId: document.getElementById("renderServiceId").value.trim(),
-        renderPreviewUrl: document.getElementById("renderPreviewUrl").value.trim(),
-        superplaneApiKey: document.getElementById("superplaneApiKey").value.trim(),
-        superplaneEndpoint: document.getElementById("superplaneEndpoint").value.trim(),
-        genericWebhook: document.getElementById("genericWebhook").value.trim()
+        ...integrations,
+        renderApiKey: document.getElementById("renderApiKey")?.value.trim() || integrations.renderApiKey || "",
+        renderServiceId: document.getElementById("renderServiceId")?.value.trim() || integrations.renderServiceId || "",
+        renderPreviewUrl: document.getElementById("renderPreviewUrl")?.value.trim() || integrations.renderPreviewUrl || "",
+        platformApiKey: document.getElementById("platformApiKey")?.value.trim() || integrations.platformApiKey || "",
+        platformEndpoint: document.getElementById("platformEndpoint")?.value.trim() || integrations.platformEndpoint || "",
+        genericWebhook: document.getElementById("genericWebhook")?.value.trim() || integrations.genericWebhook || ""
       };
       localStorage.setItem("factory-passport-integrations", JSON.stringify(integrations));
       if (run.id) {
@@ -967,7 +2601,8 @@
         saveRun();
         renderInsights();
       }
-      alert("Integrations saved.");
+      updatePluginStatus();
+      showToast("Plugin-backed integrations saved");
     }
 
     function loadConfigs() {
@@ -981,20 +2616,33 @@
         if (ints) integrations = { ...integrations, ...JSON.parse(ints) };
       } catch {}
 
+      try {
+        const local = localStorage.getItem("factory-passport-local-model");
+        if (local) localModelConfig = { ...localModelConfig, ...JSON.parse(local) };
+      } catch {}
+
       setValue("githubOwner", githubConfig.owner);
       setValue("githubRepo", githubConfig.repo);
       setValue("githubToken", githubConfig.token);
+      setValue("gitProvider", githubConfig.provider || "github");
+      setValue("localRepoPath", githubConfig.localRepoPath || "");
+      setValue("localGitBridge", githubConfig.localGitBridge || "http://localhost:4787");
       setValue("renderApiKey", integrations.renderApiKey);
       setValue("renderServiceId", integrations.renderServiceId);
       setValue("renderPreviewUrl", integrations.renderPreviewUrl);
-      setValue("superplaneApiKey", integrations.superplaneApiKey);
-      setValue("superplaneEndpoint", integrations.superplaneEndpoint);
+      setValue("platformApiKey", integrations.platformApiKey);
+      setValue("platformEndpoint", integrations.platformEndpoint);
       setValue("genericWebhook", integrations.genericWebhook);
+      setValue("localModelEndpoint", localModelConfig.endpoint || "http://localhost:11434");
+      setValue("localModelName", localModelConfig.model || "llama3.1");
+      loadPluginSelections();
+      syncRuntimeFromSelectedPlugins();
+      renderConnectionPluginSelectors();
     }
 
     function openRepo() {
       saveGithubConfig();
-      window.open(`https://github.com/${encodeURIComponent(githubConfig.owner)}/${encodeURIComponent(githubConfig.repo)}`, "_blank");
+      window.open(gitProvider().repoUrl(githubConfig), "_blank");
     }
 
     function exportRun() {
@@ -1079,9 +2727,46 @@
       return false;
     }
 
+    function queueRunSync(reason = "run.updated") {
+      if (!PLUGINS.isEnabled("storage") && !PLUGINS.config.storage?.url) return;
+      const pending = JSON.parse(localStorage.getItem("factory-passport-sync-queue") || "[]");
+      pending.push({ reason, runId: run.id, queuedAt: new Date().toISOString(), run });
+      localStorage.setItem("factory-passport-sync-queue", JSON.stringify(pending.slice(-25)));
+      localStorage.setItem("factory-passport-sync-pending", "true");
+    }
+
+    async function syncRunNow() {
+      const endpoint = PLUGINS.config.storage?.url;
+      if (!endpoint) {
+        showToast("Add a storage URL or proxy to sync runs");
+        return false;
+      }
+      const queue = JSON.parse(localStorage.getItem("factory-passport-sync-queue") || "[]");
+      const payload = { schema: "factory-passport/sync/v1", run, queue };
+      const res = await PLUGINS.call(pluginDirectPath(endpoint), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(PLUGINS.config.storage?.key ? { Authorization: `Bearer ${PLUGINS.config.storage.key}` } : {})
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      localStorage.removeItem("factory-passport-sync-queue");
+      localStorage.removeItem("factory-passport-sync-pending");
+      addEvent("run.synced", selectedSnapshotId, "Run synced to configured storage");
+      localStorage.setItem("factory-passport-run", JSON.stringify(run));
+      updatePluginStatus();
+      showToast("Run synced");
+      return true;
+    }
+
     function saveRun() {
       run = normalizeRun(run);
+      run.updatedAt ||= now();
       localStorage.setItem("factory-passport-run", JSON.stringify(run));
+      queueRunSync("run.saved");
+      updatePluginStatus();
     }
 
     function loadRun() {
@@ -1276,13 +2961,656 @@
       document.getElementById(id)?.classList.toggle("hidden");
     }
 
+    function pluginId() { return 'plugin-' + (crypto?.randomUUID?.() || Date.now() + '-' + Math.random().toString(16).slice(2)); }
+
+    function pluginTemplates() {
+      return [
+        { id: 'github', name: 'GitHub', description: 'Git provider plugin. Set owner/repo in settings.', provider: 'GitHub', type: 'Git Provider', endpoint: 'https://api.github.com', command: '', arguments: '', credentialId: 'none', enabled: true, version: '1.0.0', permissions: { read: true, write: true, execute: false }, settings: { owner: 'your-org', repo: 'platform', repoUrlTemplate: 'https://github.com/{owner}/{repo}' } },
+        { id: 'gitlab', name: 'GitLab', description: 'Git provider plugin. Set owner/repo in settings.', provider: 'GitLab', type: 'Git Provider', endpoint: 'https://gitlab.com/api/v4', command: '', arguments: '', credentialId: 'none', enabled: false, version: '1.0.0', permissions: { read: true, write: true, execute: false }, settings: { owner: 'your-group', repo: 'platform', repoUrlTemplate: 'https://gitlab.com/{owner}/{repo}' } },
+        { id: 'bitbucket', name: 'Bitbucket', description: 'Git provider plugin. Set workspace/repo in settings.', provider: 'Bitbucket', type: 'Git Provider', endpoint: 'https://api.bitbucket.org/2.0', command: '', arguments: '', credentialId: 'none', enabled: false, version: '1.0.0', permissions: { read: true, write: true, execute: false }, settings: { owner: 'your-workspace', repo: 'platform', repoUrlTemplate: 'https://bitbucket.org/{owner}/{repo}' } },
+        { id: 'render', name: 'Render', description: 'Deployment provider plugin. Put serviceId and previewUrl in settings.', provider: 'Render', type: 'Deployment', endpoint: 'https://api.render.com/v1', command: '', arguments: '', credentialId: 'none', enabled: false, version: '1.0.0', permissions: { read: true, write: true, execute: true }, settings: { serviceId: '', previewUrl: '' } },
+        { id: 'ollama', name: 'Ollama', description: 'Local AI model endpoint.', provider: 'Local', type: 'AI Model', endpoint: 'http://localhost:11434', command: '', arguments: '', credentialId: 'none', enabled: true, version: '1.0.0', permissions: { read: true, write: false, execute: true }, settings: { model: 'llama3.1', kind: 'ollama' } },
+        { id: 'lm-studio', name: 'LM Studio', description: 'OpenAI-compatible local model endpoint.', provider: 'Local', type: 'AI Model', endpoint: 'http://localhost:1234/v1', command: '', arguments: '', credentialId: 'none', enabled: false, version: '1.0.0', permissions: { read: true, write: false, execute: true }, settings: { model: 'local-model', kind: 'openai-compatible' } },
+        { id: 'claude-code', name: 'Claude Code', description: 'Local command-line tool adapter.', provider: 'Local', type: 'Tool', endpoint: '', command: 'claude', arguments: '--print', credentialId: 'none', enabled: false, version: '1.0.0', permissions: { read: true, write: true, execute: true }, settings: {} },
+        { id: 'generic-webhook', name: 'Generic Webhook', description: 'HTTP endpoint for factory handoffs.', provider: 'Custom REST API', type: 'Webhook', endpoint: '', command: '', arguments: '', credentialId: 'none', enabled: false, version: '1.0.0', permissions: { read: true, write: true, execute: true }, settings: {} },
+        { id: 'proxy', name: 'Proxy Backend', description: 'Routes provider calls through your own backend.', provider: 'Custom REST API', type: 'Tool', endpoint: '', command: '', arguments: '', credentialId: 'none', enabled: false, version: '1.0.0', permissions: { read: true, write: true, execute: true }, settings: {} },
+        { id: 'storage', name: 'Cloud Storage', description: 'Optional sync metadata while browser storage remains source of truth.', provider: 'Custom REST API', type: 'Storage', endpoint: '', command: '', arguments: '', credentialId: 'none', enabled: false, version: '1.0.0', permissions: { read: true, write: true, execute: false }, settings: {} }
+      ];
+    }
+
+    function normalizePlugin(plugin = {}) {
+      const permissions = plugin.permissions || {};
+      return {
+        id: plugin.id || pluginId(),
+        name: plugin.name || 'Untitled Plugin',
+        description: plugin.description || '',
+        provider: plugin.provider || 'Custom REST API',
+        type: plugin.type || 'Tool',
+        endpoint: plugin.endpoint || plugin.url || '',
+        command: plugin.command || '',
+        arguments: plugin.arguments || '',
+        credentialId: plugin.credentialId || 'none',
+        enabled: Boolean(plugin.enabled),
+        version: plugin.version || '1.0.0',
+        permissions: {
+          read: Boolean(permissions.read),
+          write: Boolean(permissions.write),
+          execute: Boolean(permissions.execute)
+        },
+        health: plugin.health || { status: 'unknown', lastRun: 'Never', latency: null },
+        settings: plugin.settings || {},
+        logs: Array.isArray(plugin.logs) ? plugin.logs : []
+      };
+    }
+
+    function getPlugins() {
+      PLUGINS.config.plugins = (PLUGINS.config.plugins || []).map(normalizePlugin);
+      return PLUGINS.config.plugins;
+    }
+
+    function setPlugins(plugins) {
+      PLUGINS.config.plugins = plugins.map(normalizePlugin);
+      PLUGINS.config.enabled = PLUGINS.config.plugins.filter(p => p.enabled).map(p => p.id);
+      const proxy = PLUGINS.get('proxy');
+      PLUGINS.config.proxyUrl = proxy?.enabled ? (proxy.endpoint || '') : (PLUGINS.config.proxyUrl || '');
+      const storage = PLUGINS.get('storage');
+      if (storage) PLUGINS.config.storage = { ...(PLUGINS.config.storage || {}), provider: storage.provider || '', url: storage.endpoint || '' };
+      savePluginConfig();
+      renderConnectionPluginSelectors();
+    }
+
+    function credentialOptions(selected = 'none') {
+      let credentials = [];
+      try { credentials = JSON.parse(localStorage.getItem('4flo-custom-credentials-v1') || '[]'); } catch {}
+      const base = `<option value="none" ${selected === 'none' || !selected ? 'selected' : ''}>None</option>`;
+      return base + credentials.map(c => `<option value="${escapeAttr(c.id)}" ${selected === c.id ? 'selected' : ''}>${escapeHtml(c.name || 'Unnamed Credential')}</option>`).join('');
+    }
+
+    function renderPlugins() {
+      const el = document.getElementById("plugins-list");
+      if (!el) return;
+      const plugins = getPlugins();
+      const enabledCount = plugins.filter(p => p.enabled).length;
+      el.innerHTML = `
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
+          <div>
+            <p class="text-sm text-zinc-400">First-class plugin objects saved locally. Factory Runs, Git Providers, AI Models, Deployments, PR creation, and storage can resolve integrations through <code class="text-pink-300">PluginManager.get()</code>.</p>
+            <div class="mt-2 text-xs text-zinc-500">${enabledCount} enabled · ${plugins.length} installed · localStorage key: factory-plugins</div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="toggleCreatePluginForm()" class="px-5 py-3 bg-white text-black rounded-2xl font-semibold"><i class="fa-solid fa-plus mr-2"></i>Create Plugin</button>
+            <label class="px-5 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-2xl font-semibold cursor-pointer">Import Plugin<input type="file" accept="application/json" class="hidden" onchange="importPlugin(event)"></label>
+            <button onclick="installPluginFromUrl()" class="px-5 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-2xl font-semibold">Marketplace URL</button>
+          </div>
+        </div>
+
+        <div id="new-plugin-form" class="hidden bg-zinc-900 rounded-3xl p-6 border border-emerald-500/40 mb-6">
+          <div class="flex items-start justify-between gap-4 mb-4">
+            <div><div class="font-semibold text-lg">New Plugin</div><div class="text-xs text-zinc-500">Create a provider, tool, model, webhook, deployment, storage, or local script adapter.</div></div>
+            <button onclick="toggleCreatePluginForm(false)" class="text-zinc-400 hover:text-white">✕</button>
+          </div>
+          ${pluginFormFields('new', normalizePlugin({ enabled: true, permissions: { read: true } }))}
+          <div class="mt-4 flex flex-wrap gap-2">
+            <button onclick="savePluginFromForm('new')" class="px-5 py-3 bg-gradient-to-r from-pink-500 to-blue-500 rounded-2xl text-sm font-semibold">Save Plugin</button>
+            ${pluginTemplates().slice(0, 8).map(t => `<button onclick="fillPluginExample('${escapeAttr(t.id)}')" class="px-5 py-3 bg-zinc-800 rounded-2xl text-sm">${escapeHtml(t.name)} Example</button>`).join('')}
+          </div>
+        </div>
+
+        <div class="grid gap-4">
+          ${plugins.length ? plugins.map(renderPluginCard).join('') : `
+            <div class="bg-zinc-900 rounded-3xl p-8 border border-dashed border-zinc-700 text-center text-zinc-400">
+              No plugins yet. Create one, import JSON, or install from a URL/Git repository.
+            </div>`}
+        </div>
+
+        <div class="bg-zinc-900 rounded-3xl p-6 border border-zinc-700 text-sm text-zinc-400 mt-6">
+          <strong class="text-zinc-200">Architecture:</strong> plugins are stored as JSON objects: <code class="text-pink-300">{ id, name, provider, type, endpoint, credentialId, enabled, settings }</code>. The compatibility layer still supports existing proxy and storage behavior.
+        </div>`;
+    }
+
+    function pluginFormFields(prefix, plugin) {
+      const providers = Array.from(new Set(['Local','GitHub','GitLab','Bitbucket','Render','Custom Platform','Custom REST API', ...pluginTemplates().map(p => p.provider)]));
+      const types = ['Action','Tool','AI Agent','AI Model','Webhook','Git Provider','Deployment','Storage'];
+      return `
+        <input id="${prefix}-plugin-id" type="hidden" value="${escapeAttr(plugin.id)}">
+        <div class="grid md:grid-cols-2 gap-3">
+          <input id="${prefix}-plugin-name" class="bg-black border border-zinc-700 rounded-2xl px-5 py-4 text-sm" placeholder="Plugin Name" value="${escapeAttr(plugin.name)}">
+          <input id="${prefix}-plugin-version" class="bg-black border border-zinc-700 rounded-2xl px-5 py-4 text-sm" placeholder="Version" value="${escapeAttr(plugin.version)}">
+          <select id="${prefix}-plugin-provider" class="bg-black border border-zinc-700 rounded-2xl px-5 py-4 text-sm">${providers.map(x => `<option value="${escapeAttr(x)}" ${plugin.provider === x ? 'selected' : ''}>${escapeHtml(x)}</option>`).join('')}</select>
+          <select id="${prefix}-plugin-type" class="bg-black border border-zinc-700 rounded-2xl px-5 py-4 text-sm">${types.map(x => `<option value="${escapeAttr(x)}" ${plugin.type === x ? 'selected' : ''}>${escapeHtml(x)}</option>`).join('')}</select>
+          <input id="${prefix}-plugin-endpoint" class="bg-black border border-zinc-700 rounded-2xl px-5 py-4 text-sm" placeholder="Endpoint / Base URL" value="${escapeAttr(plugin.endpoint)}">
+          <input id="${prefix}-plugin-command" class="bg-black border border-zinc-700 rounded-2xl px-5 py-4 text-sm" placeholder="Local Script / Command" value="${escapeAttr(plugin.command)}">
+          <input id="${prefix}-plugin-arguments" class="bg-black border border-zinc-700 rounded-2xl px-5 py-4 text-sm" placeholder="Arguments" value="${escapeAttr(plugin.arguments)}">
+          <select id="${prefix}-plugin-credential" class="bg-black border border-zinc-700 rounded-2xl px-5 py-4 text-sm">${credentialOptions(plugin.credentialId)}</select>
+        </div>
+        <textarea id="${prefix}-plugin-description" class="mt-3 w-full min-h-20 bg-black border border-zinc-700 rounded-2xl px-5 py-4 text-sm" placeholder="Description">${escapeHtml(plugin.description)}</textarea>
+        <div class="grid md:grid-cols-4 gap-3 mt-3 text-sm">
+          <label class="flex items-center gap-2 bg-black border border-zinc-700 rounded-2xl px-4 py-3"><input id="${prefix}-plugin-enabled" type="checkbox" ${plugin.enabled ? 'checked' : ''}> Enabled</label>
+          <label class="flex items-center gap-2 bg-black border border-zinc-700 rounded-2xl px-4 py-3"><input id="${prefix}-plugin-read" type="checkbox" ${plugin.permissions?.read ? 'checked' : ''}> Read</label>
+          <label class="flex items-center gap-2 bg-black border border-zinc-700 rounded-2xl px-4 py-3"><input id="${prefix}-plugin-write" type="checkbox" ${plugin.permissions?.write ? 'checked' : ''}> Write</label>
+          <label class="flex items-center gap-2 bg-black border border-zinc-700 rounded-2xl px-4 py-3"><input id="${prefix}-plugin-execute" type="checkbox" ${plugin.permissions?.execute ? 'checked' : ''}> Execute</label>
+        </div>`;
+    }
+
+    function renderPluginCard(plugin) {
+      const credential = PLUGINS.credentialFor(plugin);
+      const health = plugin.health || {};
+      const permText = Object.entries(plugin.permissions || {}).filter(([,v]) => v).map(([k]) => k[0].toUpperCase() + k.slice(1)).join(', ') || 'None';
+      return `
+        <div class="bg-zinc-900 rounded-3xl p-6 border ${plugin.enabled ? 'border-emerald-500/40' : 'border-zinc-700'}">
+          <div class="flex items-start justify-between gap-4 mb-4">
+            <div class="min-w-0">
+              <h3 class="font-semibold text-lg truncate">${escapeHtml(plugin.name)}</h3>
+              <p class="text-xs text-zinc-500 truncate">${escapeHtml(plugin.provider)} · ${escapeHtml(plugin.type)} · v${escapeHtml(plugin.version)}</p>
+            </div>
+            <button onclick="togglePluginEnabled('${escapeAttr(plugin.id)}')" class="text-xs px-3 py-1 rounded-full ${plugin.enabled ? 'bg-emerald-900 text-emerald-300' : 'bg-zinc-800 text-zinc-400'}">${plugin.enabled ? '✓ Enabled' : 'Disabled'}</button>
+          </div>
+          ${plugin.description ? `<p class="text-sm text-zinc-400 mb-4">${escapeHtml(plugin.description)}</p>` : ''}
+          <div class="grid md:grid-cols-2 gap-3 text-sm mb-4">
+            <div class="bg-black/60 rounded-2xl p-3 border border-zinc-800"><div class="text-xs text-zinc-500">Endpoint</div><div class="truncate">${escapeHtml(plugin.endpoint || '—')}</div></div>
+            <div class="bg-black/60 rounded-2xl p-3 border border-zinc-800"><div class="text-xs text-zinc-500">Command</div><div class="truncate">${escapeHtml([plugin.command, plugin.arguments].filter(Boolean).join(' ') || '—')}</div></div>
+            <div class="bg-black/60 rounded-2xl p-3 border border-zinc-800"><div class="text-xs text-zinc-500">Credential</div><div class="truncate">${escapeHtml(credential?.name || 'None')}</div></div>
+            <div class="bg-black/60 rounded-2xl p-3 border border-zinc-800"><div class="text-xs text-zinc-500">Permissions</div><div class="truncate">${escapeHtml(permText)}</div></div>
+          </div>
+          <div class="bg-black/60 rounded-2xl p-3 border border-zinc-800 text-xs text-zinc-400 mb-4">
+            <span class="text-zinc-200">Health:</span> ${escapeHtml(health.status || 'unknown')} · Last run: ${escapeHtml(health.lastRun || 'Never')} · Latency: ${health.latency == null ? '—' : escapeHtml(health.latency + 'ms')}
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="editPlugin('${escapeAttr(plugin.id)}')" class="px-4 py-2 bg-white text-black rounded-2xl text-sm font-semibold">Edit</button>
+            <button onclick="testPlugin('${escapeAttr(plugin.id)}')" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 rounded-2xl text-sm">Test</button>
+            <button onclick="duplicatePlugin('${escapeAttr(plugin.id)}')" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-sm">Duplicate</button>
+            <button onclick="exportPlugin('${escapeAttr(plugin.id)}')" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-sm">Export</button>
+            <button onclick="showPluginLogs('${escapeAttr(plugin.id)}')" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-sm">Logs</button>
+            <button onclick="deletePlugin('${escapeAttr(plugin.id)}')" class="px-4 py-2 bg-red-900/70 hover:bg-red-800 rounded-2xl text-sm">Delete</button>
+          </div>
+          <div id="edit-plugin-${escapeAttr(plugin.id)}" class="hidden mt-5 pt-5 border-t border-zinc-800">
+            ${pluginFormFields(`edit-${plugin.id}`, plugin)}
+            <button onclick="savePluginFromForm('edit-${escapeAttr(plugin.id)}')" class="mt-4 px-5 py-3 bg-gradient-to-r from-pink-500 to-blue-500 rounded-2xl text-sm font-semibold">Save Changes</button>
+          </div>
+        </div>`;
+    }
+
+    function readPluginFromForm(prefix) {
+      return normalizePlugin({
+        id: document.getElementById(`${prefix}-plugin-id`)?.value || pluginId(),
+        name: document.getElementById(`${prefix}-plugin-name`)?.value.trim() || 'Untitled Plugin',
+        description: document.getElementById(`${prefix}-plugin-description`)?.value.trim() || '',
+        provider: document.getElementById(`${prefix}-plugin-provider`)?.value || 'Custom REST API',
+        type: document.getElementById(`${prefix}-plugin-type`)?.value || 'Tool',
+        endpoint: document.getElementById(`${prefix}-plugin-endpoint`)?.value.trim() || '',
+        command: document.getElementById(`${prefix}-plugin-command`)?.value.trim() || '',
+        arguments: document.getElementById(`${prefix}-plugin-arguments`)?.value.trim() || '',
+        credentialId: document.getElementById(`${prefix}-plugin-credential`)?.value || 'none',
+        enabled: Boolean(document.getElementById(`${prefix}-plugin-enabled`)?.checked),
+        version: document.getElementById(`${prefix}-plugin-version`)?.value.trim() || '1.0.0',
+        permissions: {
+          read: Boolean(document.getElementById(`${prefix}-plugin-read`)?.checked),
+          write: Boolean(document.getElementById(`${prefix}-plugin-write`)?.checked),
+          execute: Boolean(document.getElementById(`${prefix}-plugin-execute`)?.checked)
+        },
+        health: { status: 'unknown', lastRun: 'Never', latency: null },
+        settings: {},
+        logs: []
+      });
+    }
+
+    function toggleCreatePluginForm(force) {
+      const form = document.getElementById('new-plugin-form');
+      if (!form) return;
+      const shouldShow = typeof force === 'boolean' ? force : form.classList.contains('hidden');
+      form.classList.toggle('hidden', !shouldShow);
+    }
+
+    function savePluginFromForm(prefix) {
+      const plugin = readPluginFromForm(prefix);
+      const plugins = getPlugins();
+      const index = plugins.findIndex(p => p.id === plugin.id);
+      if (index >= 0) plugins[index] = { ...plugins[index], ...plugin, health: plugins[index].health, logs: plugins[index].logs || [] };
+      else plugins.unshift(plugin);
+      setPlugins(plugins);
+      renderPlugins();
+      showToast('Plugin saved');
+    }
+
+    function fillPluginExample(exampleId) {
+      const template = pluginTemplates().find(p => p.id === exampleId);
+      if (!template) return;
+      const plugin = normalizePlugin({ ...template, id: pluginId() });
+      ['name','version','provider','type','endpoint','command','arguments','credential'].forEach(field => {
+        const value = field === 'credential' ? plugin.credentialId : plugin[field];
+        const el = document.getElementById(`new-plugin-${field}`);
+        if (el) el.value = value || '';
+      });
+      const desc = document.getElementById('new-plugin-description'); if (desc) desc.value = plugin.description || '';
+      ['enabled','read','write','execute'].forEach(field => {
+        const el = document.getElementById(`new-plugin-${field}`);
+        if (el) el.checked = field === 'enabled' ? plugin.enabled : Boolean(plugin.permissions?.[field]);
+      });
+      showToast('Example loaded');
+    }
+
+    function editPlugin(id) { document.getElementById(`edit-plugin-${id}`)?.classList.toggle('hidden'); }
+    function togglePluginEnabled(id) {
+      const plugins = getPlugins();
+      const plugin = plugins.find(p => p.id === id);
+      if (!plugin) return;
+      plugin.enabled = !plugin.enabled;
+      plugin.logs = plugin.logs || [];
+      plugin.logs.unshift(`${now()} · ${plugin.enabled ? 'Enabled' : 'Disabled'}`);
+      setPlugins(plugins); renderPlugins(); showToast(plugin.enabled ? 'Plugin enabled' : 'Plugin disabled');
+    }
+    function deletePlugin(id) { setPlugins(getPlugins().filter(p => p.id !== id)); renderPlugins(); showToast('Plugin deleted'); }
+    function duplicatePlugin(id) {
+      const plugin = getPlugins().find(p => p.id === id); if (!plugin) return;
+      setPlugins([{ ...plugin, id: pluginId(), name: `${plugin.name} Copy`, enabled: false }, ...getPlugins()]); renderPlugins(); showToast('Plugin duplicated');
+    }
+    function exportPlugin(id) {
+      const plugin = getPlugins().find(p => p.id === id); if (!plugin) return;
+      const blob = new Blob([JSON.stringify(plugin, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${plugin.name.replace(/[^a-z0-9]+/gi,'-').toLowerCase()}-plugin.json`; a.click(); URL.revokeObjectURL(a.href);
+    }
+    function importPlugin(event) {
+      const file = event.target.files?.[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => { try { const imported = normalizePlugin(JSON.parse(reader.result)); imported.id ||= pluginId(); setPlugins([imported, ...getPlugins().filter(p => p.id !== imported.id)]); renderPlugins(); showToast('Plugin imported'); } catch (err) { alert('Import failed: ' + err.message); } };
+      reader.readAsText(file); event.target.value = '';
+    }
+    async function installPluginFromUrl() {
+      const url = prompt('Install plugin from JSON URL or Git repository raw URL:');
+      if (!url) return;
+      try { const res = await fetch(url); if (!res.ok) throw new Error(`${res.status} ${res.statusText}`); const plugin = normalizePlugin(await res.json()); plugin.id ||= pluginId(); setPlugins([plugin, ...getPlugins().filter(p => p.id !== plugin.id)]); renderPlugins(); showToast('Plugin installed'); }
+      catch (err) { alert('Install failed: ' + err.message); }
+    }
+    async function testPlugin(id) {
+      const plugins = getPlugins(); const plugin = plugins.find(p => p.id === id); if (!plugin) return;
+      const started = performance.now(); let status = 'ok'; let detail = 'Configuration test passed';
+      try {
+        if (plugin.endpoint && /^https?:\/\//i.test(plugin.endpoint)) {
+          const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 3000);
+          const res = await fetch(plugin.endpoint, { method: 'HEAD', signal: controller.signal }); clearTimeout(timer);
+          status = res.ok || res.type === 'opaque' ? 'ok' : `http ${res.status}`; detail = `HEAD ${status}`;
+        } else if (plugin.command) detail = `Local command configured: ${plugin.command}`;
+        else detail = 'No endpoint or command configured';
+      } catch (err) { status = 'warning'; detail = err.name === 'AbortError' ? 'Timed out' : err.message; }
+      plugin.health = { status, lastRun: now(), latency: Math.round(performance.now() - started) };
+      plugin.logs = plugin.logs || []; plugin.logs.unshift(`${plugin.health.lastRun} · Test · ${detail}`);
+      setPlugins(plugins); renderPlugins(); showToast(`Plugin test: ${status}`);
+    }
+    function showPluginLogs(id) {
+      const plugin = getPlugins().find(p => p.id === id); if (!plugin) return;
+      alert((plugin.logs || []).slice(0, 10).join('\n') || 'No plugin logs yet.');
+    }
+
+    function saveProxyUrl() {
+      const existing = PLUGINS.get('proxy') || normalizePlugin({ id: 'proxy', name: 'Proxy Backend', provider: 'Custom REST API', type: 'Tool', permissions: { read: true, write: true, execute: true } });
+      existing.endpoint = document.getElementById("proxy-url")?.value.trim() || existing.endpoint || "";
+      existing.enabled = Boolean(existing.endpoint);
+      setPlugins([existing, ...getPlugins().filter(p => p.id !== existing.id)]);
+      renderPlugins();
+      showToast(PLUGINS.isEnabled("proxy") ? "Proxy configured" : "Proxy disabled");
+    }
+
+    function saveStoragePlugin() {
+      const existing = PLUGINS.get('storage') || normalizePlugin({ id: 'storage', name: 'Cloud Storage', provider: 'supabase', type: 'Storage', permissions: { read: true, write: true, execute: false } });
+      existing.provider = document.getElementById("storage-provider")?.value || existing.provider || "";
+      existing.endpoint = document.getElementById("storage-url")?.value.trim() || existing.endpoint || "";
+      existing.credentialId = document.getElementById("storage-credential")?.value || existing.credentialId || "none";
+      existing.enabled = Boolean(existing.provider && existing.endpoint);
+      setPlugins([existing, ...getPlugins().filter(p => p.id !== existing.id)]);
+      renderPlugins();
+      showToast(PLUGINS.isEnabled("storage") ? "Storage plugin saved" : "Storage plugin disabled");
+    }
+
+    async function syncNow() {
+      if (!PLUGINS.isEnabled("storage")) return showToast("Configure storage first");
+      localStorage.setItem("factory-passport-last-sync", now());
+      localStorage.removeItem("factory-passport-sync-pending");
+      updatePluginStatus();
+      showToast("Local sync checkpoint saved");
+    }
+
+    function updatePluginStatus() {
+      const connected = serviceConfigured();
+      const remoteExecution = hasExecutionService();
+      const storage = PLUGINS.isEnabled("storage");
+      const offline = !navigator.onLine;
+      const label = offline ? "Offline · local-first" : remoteExecution ? "Remote execution connected" : connected ? "Connected adapters" : "Local Model Mode";
+      const badge = document.getElementById("connection-status");
+      if (badge) {
+        badge.textContent = label;
+        badge.className = `hide-mobile px-3 py-1 rounded-xl border text-xs ${connected ? "bg-blue-500/15 text-blue-300 border-blue-500/30" : "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"}`;
+      }
+      const side = document.getElementById("sidebar-plugin-status");
+      if (side) side.textContent = storage ? `${label} · storage ready` : label;
+      document.getElementById("sync-now-btn")?.classList.toggle("hidden", !storage);
+      document.getElementById("local-mode-banner")?.classList.toggle("hidden", remoteExecution);
+    }
+
     window.addEventListener("hashchange", () => {
       if (loadFromHash()) render();
     });
 
+    loadPluginConfig();
     loadConfigs();
     if (!loadFromHash()) loadRun();
     render();
+    updatePluginStatus();
+    window.addEventListener("online", updatePluginStatus);
+    window.addEventListener("offline", updatePluginStatus);
+  </script>
+
+  <script>
+    const FOURFLO = {
+      keys: '4flo-keys-v2', customCredentials: '4flo-custom-credentials-v1', sessions: '4flo-sessions-v2', flows: '4flo-flows-v2', settings: '4flo-settings-v2', activeModel: '4flo-active-model-v2', modelChain: '4flo-model-chain-v1'
+    };
+    const providers = [
+      { id:'local', label:'Local Model', keyName:'', model:'local-model', hint:'Calls the selected local AI Model plugin endpoint' },
+      { id:'openai', label:'OpenAI', keyName:'openai', model:'gpt-4.1-mini', hint:'Optional non-local model. Uses /v1/chat/completions when selected and keyed.' },
+      { id:'grok', label:'xAI Grok', keyName:'grok', model:'grok-3-mini', hint:'Optional non-local model. Uses xAI chat completions when selected and keyed.' },
+      { id:'claude', label:'Anthropic Claude', keyName:'claude', model:'claude-3-5-sonnet-latest', hint:'Optional non-local model via backend/proxy.' }
+    ];
+    let activeModel = localStorage.getItem(FOURFLO.activeModel) || 'local';
+    let activeModelChain = appLoadModelChain();
+    let currentSession = [];
+    const $4 = id => document.getElementById(id);
+    function appLoadJSON(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } }
+    function appSaveJSON(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+    function appEsc(value) { return String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
+    function showToast(message) {
+      const t=$4('toast');
+      if(!t) return;
+      if (t.parentElement !== document.body) document.body.appendChild(t);
+      t.textContent=message;
+      t.style.zIndex = '10000';
+      t.classList.remove('hidden');
+      clearTimeout(showToast.timer);
+      showToast.timer=setTimeout(()=>t.classList.add('hidden'),3000);
+    }
+    window.alert = message => showToast(String(message || 'Done'));
+
+    function switchTab(tab) {
+      ['factory','chat','keys','history','flows','plugins'].forEach(name => {
+        $4(name + '-screen')?.classList.toggle('hidden', name !== tab);
+        $4('nav-' + name)?.classList.toggle('active', name === tab);
+      });
+      const titles = { factory:'Factory Passport', chat:'4flo Assistant', keys:'Credentials', history:'History', flows:'Automations', plugins:'Plugins' };
+      $4('tab-title').textContent = titles[tab] || 'Factory 4flo';
+      if (tab === 'keys') renderCredentials();
+      if (tab === 'history') renderHistory();
+      if (tab === 'flows') renderFlows();
+      if (tab === 'plugins') renderPlugins();
+    }
+
+    function renderCredentials() {
+      const keys = appLoadJSON(FOURFLO.keys, {});
+      const customCredentials = appLoadJSON(FOURFLO.customCredentials, []);
+      const customCards = renderCustomCredentialCards(customCredentials);
+      const localCard = `
+        <div class="bg-zinc-900 rounded-3xl p-6 border border-amber-500/40">
+          <div class="flex justify-between items-start mb-4"><div><div class="font-semibold">Local Model Endpoint</div><div class="text-xs text-zinc-500">Examples: http://localhost:11434 · http://localhost:1234/v1</div></div><div class="text-xs px-3 py-1 rounded-full bg-amber-900 text-amber-300">Local</div></div>
+          <input id="key-local-endpoint" value="${appEsc(localModelConfig.endpoint || 'http://localhost:11434')}" class="w-full bg-black border border-zinc-700 rounded-2xl px-5 py-4 text-sm mb-3">
+          <input id="key-local-model" value="${appEsc(localModelConfig.model || 'llama3.1')}" placeholder="Model name" class="w-full bg-black border border-zinc-700 rounded-2xl px-5 py-4 text-sm">
+          <div class="mt-4 flex flex-wrap gap-2"><button onclick="localModelConfig.endpoint=$4('key-local-endpoint').value; localModelConfig.model=$4('key-local-model').value; setValue('localModelEndpoint', localModelConfig.endpoint); setValue('localModelName', localModelConfig.model); saveLocalModelConfig(); selectModel('local')" class="px-5 py-3 bg-white text-black rounded-2xl text-sm font-semibold">Save + Use Local</button><button onclick="toggleModelInRoute('local')" class="px-5 py-3 bg-zinc-800 rounded-2xl text-sm">Add / Remove Local</button><button onclick="setLocalFirstRoute()" class="px-5 py-3 bg-zinc-800 rounded-2xl text-sm">Keep Local First</button><button onclick="detectLocalModelEndpoint()" class="px-5 py-3 bg-zinc-800 rounded-2xl text-sm">Auto-detect</button></div>
+        </div>`;
+      $4('credentials-list').innerHTML = customCards + localCard + providers.filter(p=>p.id!=='local').map(p => `
+        <div class="bg-zinc-900 rounded-3xl p-6 border border-zinc-700">
+          <div class="flex justify-between items-start mb-4"><div><div class="font-semibold">${p.label}</div><div class="text-xs text-zinc-500">${p.model}</div></div><div class="text-xs px-3 py-1 rounded-full ${keys[p.keyName]?'bg-emerald-900 text-emerald-400':'bg-zinc-800 text-zinc-400'}">${keys[p.keyName]?'✓ Configured':'Not configured'}</div></div>
+          <div class="relative"><input id="key-${p.keyName}" type="password" value="${appEsc(keys[p.keyName] || '')}" placeholder="Paste ${p.label} key" class="w-full bg-black border border-zinc-700 rounded-2xl px-5 py-4 pr-14 text-sm"><button onclick="toggleAppPassword('key-${p.keyName}')" class="absolute right-4 top-4 text-zinc-400">👁</button></div>
+          <div class="mt-4 flex flex-wrap gap-2"><button onclick="saveModelKey('${p.keyName}')" class="px-5 py-3 bg-white text-black rounded-2xl text-sm font-semibold">Save Key</button><button onclick="toggleModelInRoute('${p.id}')" class="px-5 py-3 bg-zinc-800 rounded-2xl text-sm">Add / Remove Route</button><button onclick="selectModel('${p.id}')" class="px-5 py-3 bg-zinc-800 rounded-2xl text-sm">Use Only</button></div>
+        </div>`).join('');
+      updateActiveModelLabel();
+    }
+
+    function credentialId() { return 'cred-' + (crypto?.randomUUID?.() || Date.now() + '-' + Math.random().toString(16).slice(2)); }
+    function toggleNewCredentialForm(force) {
+      const form = $4('new-credential-form');
+      if (!form) return;
+      const shouldShow = typeof force === 'boolean' ? force : form.classList.contains('hidden');
+      form.classList.toggle('hidden', !shouldShow);
+      if (shouldShow) setTimeout(() => $4('cred-name')?.focus(), 50);
+    }
+    function clearCredentialForm() {
+      ['cred-name','cred-service','cred-username','cred-secret','cred-notes'].forEach(id => { const el=$4(id); if(el) el.value=''; });
+      if ($4('cred-kind')) $4('cred-kind').value = 'api-key';
+    }
+    function saveCustomCredential() {
+      const name = ($4('cred-name')?.value || '').trim();
+      const secret = ($4('cred-secret')?.value || '').trim();
+      if (!name) return alert('Give the credential a name.');
+      if (!secret) return alert('Add the secret, token, URL, or value.');
+      const items = appLoadJSON(FOURFLO.customCredentials, []);
+      items.unshift({
+        id: credentialId(),
+        name,
+        kind: ($4('cred-kind')?.value || 'api-key').trim(),
+        service: ($4('cred-service')?.value || '').trim(),
+        username: ($4('cred-username')?.value || '').trim(),
+        secret,
+        notes: ($4('cred-notes')?.value || '').trim(),
+        createdAt: new Date().toLocaleString(),
+        updatedAt: new Date().toLocaleString()
+      });
+      appSaveJSON(FOURFLO.customCredentials, items);
+      clearCredentialForm();
+      toggleNewCredentialForm(false);
+      showToast('Credential saved');
+      renderCredentials();
+    }
+    function renderCustomCredentialCards(items) {
+      const list = Array.isArray(items) ? items : [];
+      const intro = `
+        <div class="bg-zinc-900 rounded-3xl p-6 border border-pink-500/30">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div><div class="font-semibold">Custom Credentials</div><div class="text-xs text-zinc-500">Create your own saved credentials for Git providers, local bridge tokens, webhooks, or service keys.</div></div>
+            <div class="text-xs px-3 py-1 rounded-full bg-zinc-800 text-zinc-300">${list.length} saved</div>
+          </div>
+        </div>`;
+      if (!list.length) return intro;
+      return intro + list.map(item => `
+        <div class="bg-zinc-900 rounded-3xl p-6 border border-zinc-700">
+          <div class="flex justify-between items-start gap-4 mb-4">
+            <div class="min-w-0">
+              <div class="font-semibold truncate">${appEsc(item.name)}</div>
+              <div class="text-xs text-zinc-500 truncate">${appEsc(item.kind || 'api-key')}${item.service ? ' · ' + appEsc(item.service) : ''}${item.username ? ' · ' + appEsc(item.username) : ''}</div>
+            </div>
+            <div class="text-xs px-3 py-1 rounded-full bg-emerald-900 text-emerald-400">Saved</div>
+          </div>
+          <div class="relative">
+            <input id="custom-${appEsc(item.id)}" type="password" value="${appEsc(item.secret || '')}" class="w-full bg-black border border-zinc-700 rounded-2xl px-5 py-4 pr-14 text-sm" readonly>
+            <button onclick="toggleAppPassword('custom-${appEsc(item.id)}')" class="absolute right-4 top-4 text-zinc-400">👁</button>
+          </div>
+          ${item.notes ? `<div class="mt-3 text-sm text-zinc-400 whitespace-pre-wrap">${appEsc(item.notes)}</div>` : ''}
+          <div class="mt-4 flex flex-wrap gap-2">
+            <button onclick="copyCustomCredential('${appEsc(item.id)}')" class="px-5 py-3 bg-white text-black rounded-2xl text-sm font-semibold">Copy Value</button>
+            <button onclick="deleteCustomCredential('${appEsc(item.id)}')" class="px-5 py-3 bg-red-900/70 hover:bg-red-800 rounded-2xl text-sm">Delete</button>
+          </div>
+        </div>`).join('');
+    }
+    function copyCustomCredential(id) {
+      const item = appLoadJSON(FOURFLO.customCredentials, []).find(x => x.id === id);
+      if (!item) return alert('Credential not found.');
+      copyText(item.secret || '');
+      showToast('Credential copied');
+    }
+    function deleteCustomCredential(id) {
+      if (!confirm('Delete this credential from localStorage?')) return;
+      const items = appLoadJSON(FOURFLO.customCredentials, []).filter(x => x.id !== id);
+      appSaveJSON(FOURFLO.customCredentials, items);
+      showToast('Credential deleted');
+      renderCredentials();
+    }
+    function saveModelKey(name) { const keys=appLoadJSON(FOURFLO.keys,{}); keys[name]=$4('key-'+name).value.trim(); appSaveJSON(FOURFLO.keys,keys); showToast(name.toUpperCase()+' key saved'); renderCredentials(); updatePluginStatus(); }
+    function clearAllKeys() { localStorage.removeItem(FOURFLO.keys); showToast('Keys cleared'); renderCredentials(); }
+    function connectNonLocalAI() {
+      switchTab('keys');
+      renderCredentials();
+      openModal('model-modal');
+      showToast('Add a cloud key in Credentials, then add one or more non-local providers to the model route. Local stays available as the default/fallback.');
+    }
+
+    function selectModel(id) { activeModelChain=[id]; appSaveModelChain(); showToast('Model route set to '+modelRouteLabel()); }
+    function toggleModelInRoute(id) { const idx=activeModelChain.indexOf(id); if(idx>-1) activeModelChain.splice(idx,1); else activeModelChain.push(id); appSaveModelChain(); showToast('Model route: '+modelRouteLabel()); }
+    function moveRouteModel(id, dir) { const i=activeModelChain.indexOf(id); if(i<0) return; const j=i+dir; if(j<0 || j>=activeModelChain.length) return; [activeModelChain[i], activeModelChain[j]]=[activeModelChain[j], activeModelChain[i]]; appSaveModelChain(); }
+    function setLocalFirstRoute() { activeModelChain=['local', ...activeModelChain.filter(id=>id!=='local')]; appSaveModelChain(); showToast('Local-first route: '+modelRouteLabel()); }
+    function modelRouteLabel() { return selectedModelProviders().map(p=>p.label).join(' → '); }
+    function updateActiveModelLabel() { if($4('active-model-label')) $4('active-model-label').textContent=modelRouteLabel(); }
+    function toggleAppPassword(id) { const el=$4(id); if(!el) return; el.type = el.type === 'password' ? 'text' : 'password'; }
+    async function testConfiguredModel() { switchTab('chat'); $4('welcome').classList.add('hidden'); $4('messages').classList.remove('hidden'); addMessage('Test active model', 'user'); const loadingId=addLoading(); const reply=await callAI('Reply with a short confirmation that 4flo is working.'); $4(loadingId)?.remove(); addMessage(reply,'ai'); }
+
+    function activeCloudModelConfigured() {
+      try {
+        const p = providers.find(x => x.id === activeModel);
+        const keys = appLoadJSON(FOURFLO.keys, {});
+        return Boolean(p && p.keyName && keys[p.keyName]);
+      } catch {
+        return false;
+      }
+    }
+
+    async function callAI(prompt) {
+      const p = providers.find(x=>x.id===activeModel) || providers[0];
+      const keys = appLoadJSON(FOURFLO.keys, {});
+      const key = p.keyName ? keys[p.keyName] : '';
+      if (p.id !== 'local' && !key) return await localAssistantReply(prompt, p, false);
+      try {
+        return await callActiveModelMessages([
+          {role:'system', content:'You are 4flo, a practical local-first factory automation assistant that can control this Factory Passport app. Be concise and concrete.'},
+          {role:'user', content: prompt}
+        ], { temperature: .4 });
+      } catch(err) {
+        const fallback = await localAssistantReply(prompt,p,Boolean(key));
+        return 'I could not reach '+(p.id === 'local' ? 'the local model at '+(localModelConfig.endpoint || 'http://localhost:11434') : p.label)+' from this browser. Reason: '+err.message+'\n\n'+fallback;
+      }
+    }
+    async function localAssistantReply(prompt, provider, hasKey) {
+      const text = String(prompt || '');
+      const lower = text.toLowerCase();
+      const label = provider?.label || 'Selected model';
+      if(lower.includes('automation') || lower.includes('automate')) return 'Automation draft ready. Save it from the Automations tab with a trigger, action, and status.';
+      if(lower.includes('credential') || lower.includes('key') || lower.includes('non local') || lower.includes('cloud model') || lower.includes('remote model')) {
+        return hasKey
+          ? `${label} is selected and stored locally. Factory execution will use it when selected; Local Model remains the default.`
+          : 'Local-first is active. Add a cloud key and select that provider only when you want non-local model calls.';
+      }
+      if(lower.includes('factory') || lower.includes('snapshot') || lower.includes('pipeline')) return 'Factory command handled locally. Local Model is the default executor; your selected model route can mix local and keyed cloud providers in any order.';
+      return 'I received your request. Local-first Assistant is ready. Try: “start a new factory run,” “approve selected snapshot,” “show diff,” “run pipeline,” or “export run.”';
+    }
+
+    async function sendMessage() {
+      const input=$4('user-input'); const text=input.value.trim(); if(!text) return;
+      $4('welcome').classList.add('hidden'); $4('messages').classList.remove('hidden'); addMessage(text,'user'); currentSession.push({role:'user',content:text,at:new Date().toISOString()}); input.value='';
+      const handled = await handleFactoryCommand(text);
+      if (handled) { addMessage(handled,'ai'); currentSession.push({role:'assistant',content:handled,at:new Date().toISOString()}); persistCurrentSession(); return; }
+      const loadingId=addLoading(); const reply=await callAI(text); $4(loadingId)?.remove(); addMessage(reply,'ai'); currentSession.push({role:'assistant',content:reply,at:new Date().toISOString()}); persistCurrentSession();
+    }
+    async function handleFactoryCommand(text) {
+      const lower=text.toLowerCase();
+      if(lower.includes('new factory') || lower.includes('start') && lower.includes('run') || lower.includes('new run')) {
+        const idea = text.replace(/^(please\s*)?(start|create|new)\s+(a\s+)?(new\s+)?(factory\s+)?run\s*(about|for|:)?/i,'').trim() || text;
+        $4('ideaInput').value = idea;
+        if(!$4('runTitleInput').value) $4('runTitleInput').value = firstLine(idea).slice(0,70) || '4flo Factory Run';
+        createRun(); switchTab('factory'); return 'Started a Factory Passport run and generated the first snapshot chain. It will save locally first; connected services can execute when configured.';
+      }
+      if(lower.includes('fetch issue')) { createRunFromGithubIssues(); switchTab('factory'); return 'Fetching issue details through the selected Git plugin and starting the run.'; }
+      if(lower.includes('approve')) { if(selectedSnapshotId) approveSnapshot(selectedSnapshotId); switchTab('factory'); return 'Approved the selected snapshot.'; }
+      if(lower.includes('reject')) { if(selectedSnapshotId) rejectSnapshot(selectedSnapshotId); switchTab('factory'); return 'Rejected the selected snapshot.'; }
+      if(lower.includes('retry')) { if(selectedSnapshotId) retrySnapshot(selectedSnapshotId); switchTab('factory'); return 'Marked the selected snapshot for retry.'; }
+      if(lower.includes('fork')) { if(selectedSnapshotId) forkSnapshot(selectedSnapshotId); switchTab('factory'); return 'Forked the selected snapshot.'; }
+      if(lower.includes('replay')) { if(selectedSnapshotId) replayFromSnapshot(selectedSnapshotId); switchTab('factory'); return 'Replayed from the selected snapshot.'; }
+      if(lower.includes('security review') || lower.includes('security stage')) {
+        const parent = findSnapshot(selectedSnapshotId) || run.snapshots.at(-1);
+        if (!run.id) { $4('ideaInput').value = text; createRun(); }
+        const base = findSnapshot(selectedSnapshotId) || run.snapshots.at(-1);
+        const snap = makeSnapshot({ stage:'Security Review', input: base?.output || base?.input || text, output:'', parentId: base?.id || null, source:'Local Model', status:'pending' });
+        run.snapshots.splice(base ? run.snapshots.indexOf(base) + 1 : run.snapshots.length, 0, snap);
+        selectedSnapshotId = snap.id; addEvent('snapshot.created', snap.id, 'Security review stage added by assistant', { parentId:snap.parentId }); saveRun(); await executeSnapshot(snap.id); switchTab('factory'); return 'Added a Security Review stage and ran it with the configured local/remote executor.';
+      }
+      if(lower.includes('improve') && lower.includes('snapshot')) {
+        const n = Number((text.match(/snapshot\s*(\d+)/i)||[])[1] || 0);
+        const snap = n ? run.snapshots[n-1] : findSnapshot(selectedSnapshotId);
+        if(!snap) return 'I could not find that snapshot to improve.';
+        selectedSnapshotId = snap.id;
+        snap.input = ['Improve this snapshot based on the assistant request:', text, '', 'Existing output:', snap.output || '(empty)', '', 'Existing input:', snap.input || '(empty)'].join('\n');
+        snap.status = 'pending'; snap.updatedAt = now(); addEvent('snapshot.improve_requested', snap.id, 'Assistant requested snapshot improvement'); saveRun(); await executeSnapshot(snap.id); switchTab('factory'); return `Improved snapshot ${n || ''} (${snap.stage}) using the configured executor.`;
+      }
+      if(lower.includes('add snapshot')) { addSnapshotAfterSelected(); switchTab('factory'); return 'Added a snapshot after the selected item.'; }
+      if(lower.includes('execute')) { await executeSnapshot(selectedSnapshotId); switchTab('factory'); return 'Executed the selected snapshot. With no webhook/proxy configured, this uses the selected model route; Local Model remains the default.'; }
+      if(lower.includes('pipeline') || lower.includes('resume')) { await runFactoryPipeline(selectedSnapshotId); switchTab('factory'); return 'Ran the factory pipeline from the selected snapshot. With no webhook/proxy configured, each stage uses the selected model route; Local Model remains the default.'; }
+      if(lower.includes('deployment proof') || lower.includes('preview')) { await triggerRenderSnapshot(selectedSnapshotId); switchTab('factory'); return 'Requested deployment proof/preview for the selected snapshot. Without a deployment plugin, local proof was saved as pending.'; }
+      if(lower.includes('diff')) { setView('diff'); switchTab('factory'); return 'Switched to the Diff view.'; }
+      if(lower.includes('interop') || lower.includes('payload') || lower.includes('json')) { setView('interop'); if(lower.includes('copy')) copyInteropPayload(selectedSnapshotId); switchTab('factory'); return 'Switched to the Interop Payload view.'; }
+      if(lower.includes('cards')) { setView('cards'); switchTab('factory'); return 'Switched back to Snapshot Cards.'; }
+      if(lower.includes('share')) { copyShareUrl(lower.includes('snapshot')?'snapshot':'run'); return 'Copied a share URL.'; }
+      if(lower.includes('export')) { exportRun(); return 'Exported the current run as JSON.'; }
+      if(lower.includes('open repo')) { openRepo(); return 'Opening the repository from the selected Git plugin.'; }
+      if(lower.includes('automation') || lower.includes('automate')) return 'Automation draft ready. Save it from the Automations tab with a trigger, action, and status.';
+      if(lower.includes('credential') || lower.includes('key') || lower.includes('non local') || lower.includes('cloud model')) return hasKey ? (provider.label+' is selected and stored locally. Factory execution will use it when selected; local remains the default.') : 'Local-first is active. Add a cloud key and select that provider only when you want non-local model calls.';
+      if(lower.includes('factory') || lower.includes('snapshot') || lower.includes('pipeline')) return 'Factory command handled locally. Local Model is the default executor; your selected model route can mix local and keyed cloud providers in any order.';
+      return 'I received your request. Local-first Assistant is ready. Try: “start a new factory run,” “approve selected snapshot,” “show diff,” “run pipeline,” or “export run.”';
+    }
+    function quickPrompt(text) { switchTab('chat'); $4('user-input').value=text; sendMessage(); }
+    function addMessage(text,sender) { const div=document.createElement('div'); div.className='flex '+(sender==='user'?'justify-end':'justify-start'); div.innerHTML=sender==='user'?`<div class="message-bubble user-bubble">${appEsc(text)}</div>`:`<div class="flex gap-3"><div class="w-8 h-8 bg-gradient-to-br from-pink-400 to-blue-400 rounded-2xl flex-shrink-0 flex items-center justify-center text-lg">🌸</div><div class="message-bubble ai-bubble">${appEsc(text)}</div></div>`; $4('messages').appendChild(div); $4('messages').scrollTop=$4('messages').scrollHeight; }
+    function addLoading() { const id='loading-'+Date.now(); const div=document.createElement('div'); div.id=id; div.className='flex justify-start'; div.innerHTML='<div class="flex gap-3"><div class="w-8 h-8 bg-gradient-to-br from-pink-400 to-blue-400 rounded-2xl flex-shrink-0 flex items-center justify-center text-lg animate-pulse">🌸</div><div class="message-bubble ai-bubble">Thinking...</div></div>'; $4('messages').appendChild(div); return id; }
+    function newChat() { if(currentSession.length) persistCurrentSession(); currentSession=[]; $4('messages').innerHTML=''; $4('welcome').classList.remove('hidden'); $4('messages').classList.add('hidden'); switchTab('chat'); showToast('New session started'); }
+    function persistCurrentSession() { if(!currentSession.length) return; const sessions=appLoadJSON(FOURFLO.sessions,[]); const title=currentSession.find(m=>m.role==='user')?.content?.slice(0,70)||'Untitled session'; const existing=sessions.findIndex(s=>s.id===currentSession._id); if(!currentSession._id) currentSession._id=Date.now(); const record={id:currentSession._id,title,messages:[...currentSession],createdAt:new Date().toISOString()}; if(existing>-1) sessions[existing]=record; else sessions.unshift(record); appSaveJSON(FOURFLO.sessions,sessions.slice(0,40)); }
+    function renderHistory() { const sessions=appLoadJSON(FOURFLO.sessions,[]); $4('history-list').innerHTML=sessions.length?sessions.map(s=>`<button onclick="loadSession(${s.id})" class="w-full text-left bg-zinc-900 hover:bg-zinc-800 rounded-3xl p-6 border border-zinc-800"><div class="flex justify-between gap-4"><div><div class="font-medium">${appEsc(s.title)}</div><div class="text-xs text-zinc-500 mt-1">${new Date(s.createdAt).toLocaleString()} • ${s.messages.length} messages</div></div><div class="text-pink-400 text-sm">→</div></div></button>`).join(''):'<div class="bg-zinc-900 rounded-3xl p-8 text-center text-zinc-400">No saved sessions yet.</div>'; }
+    function loadSession(id) { const s=appLoadJSON(FOURFLO.sessions,[]).find(x=>x.id===id); if(!s) return; currentSession=[...s.messages]; currentSession._id=s.id; $4('messages').innerHTML=''; $4('welcome').classList.add('hidden'); $4('messages').classList.remove('hidden'); currentSession.forEach(m=>addMessage(m.content,m.role==='user'?'user':'ai')); switchTab('chat'); showToast('Session loaded'); }
+    function clearHistory() { localStorage.removeItem(FOURFLO.sessions); renderHistory(); showToast('History cleared'); }
+
+    function renderFlows() { const flows=appLoadJSON(FOURFLO.flows,[]); $4('flows-list').innerHTML=flows.length?flows.map(f=>`<div class="bg-zinc-900 rounded-3xl p-6 border border-zinc-800"><div class="flex justify-between gap-4"><div><div class="flex items-center gap-3"><div class="font-semibold text-lg">${appEsc(f.name)}</div><span class="text-xs px-3 py-1 rounded-full ${f.status==='Active'?'bg-emerald-900 text-emerald-400':f.status==='Paused'?'bg-yellow-900 text-yellow-300':'bg-zinc-800 text-zinc-400'}">${appEsc(f.status)}</span></div><div class="text-sm text-zinc-400 mt-3"><b>Trigger:</b> ${appEsc(f.trigger)}</div><div class="text-sm text-zinc-400 mt-1"><b>Action:</b> ${appEsc(f.action)}</div><div class="text-xs text-zinc-600 mt-3">Last run: ${appEsc(f.lastRun||'Never')}</div></div><div class="flex flex-col gap-2"><button onclick="runFlow(${f.id})" class="px-4 py-2 bg-white text-black rounded-xl text-sm font-semibold">Run</button><button onclick="editFlow(${f.id})" class="px-4 py-2 bg-zinc-800 rounded-xl text-sm">Edit</button><button onclick="deleteFlow(${f.id})" class="px-4 py-2 bg-zinc-800 rounded-xl text-sm text-red-300">Delete</button></div></div></div>`).join(''):'<div class="bg-zinc-900 rounded-3xl p-8 text-center"><p class="text-zinc-400 mb-5">No automations yet. Create your first one.</p><button onclick="openCreateFlowModal()" class="bg-gradient-to-r from-pink-500 to-blue-500 px-6 py-3 rounded-2xl font-semibold">Create New Automation</button></div>'; }
+    function openCreateFlowModal() { $4('flow-modal-title').textContent='Create Automation'; $4('flow-edit-id').value=''; $4('flow-name').value=''; $4('flow-trigger').value=''; $4('flow-action').value=''; $4('flow-status').value=appLoadJSON(FOURFLO.settings,{defaultStatus:'Active'}).defaultStatus||'Active'; openModal('flow-modal'); }
+    function editFlow(id) { const f=appLoadJSON(FOURFLO.flows,[]).find(x=>x.id===id); if(!f) return; $4('flow-modal-title').textContent='Edit Automation'; $4('flow-edit-id').value=f.id; $4('flow-name').value=f.name; $4('flow-trigger').value=f.trigger; $4('flow-action').value=f.action; $4('flow-status').value=f.status; openModal('flow-modal'); }
+    function saveFlowFromModal() { const name=$4('flow-name').value.trim(), trigger=$4('flow-trigger').value.trim(), action=$4('flow-action').value.trim(), status=$4('flow-status').value; if(!name||!trigger||!action) return showToast('Name, trigger, and action are required'); const flows=appLoadJSON(FOURFLO.flows,[]); const id=Number($4('flow-edit-id').value); if(id){ const idx=flows.findIndex(f=>f.id===id); if(idx>-1) flows[idx]={...flows[idx],name,trigger,action,status}; } else flows.unshift({id:Date.now(),name,trigger,action,status,lastRun:'Never'}); appSaveJSON(FOURFLO.flows,flows); closeModals(); renderFlows(); switchTab('flows'); showToast('Automation saved'); }
+    function runFlow(id) { const flows=appLoadJSON(FOURFLO.flows,[]); const f=flows.find(x=>x.id===id); if(!f) return; f.lastRun=new Date().toLocaleString(); appSaveJSON(FOURFLO.flows,flows); renderFlows(); switchTab('chat'); $4('welcome').classList.add('hidden'); $4('messages').classList.remove('hidden'); addMessage('Run automation: '+f.name,'user'); addMessage('✅ Automation run complete.\nTrigger: '+f.trigger+'\nAction: '+f.action,'ai'); showToast('Automation ran'); }
+    function deleteFlow(id) { appSaveJSON(FOURFLO.flows, appLoadJSON(FOURFLO.flows,[]).filter(f=>f.id!==id)); renderFlows(); showToast('Automation deleted'); }
+
+    function renderModelOptions() {
+      const route = activeModelChain || ['local'];
+      $4('model-options').innerHTML = `
+        <div class="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-100 mb-4">
+          <div class="font-semibold">Factory model route</div>
+          <div class="text-xs mt-1">${appEsc(modelRouteLabel())}</div>
+          <div class="flex flex-wrap gap-2 mt-3">
+            <button onclick="setLocalFirstRoute()" class="px-3 py-2 rounded-xl bg-amber-400 text-black font-semibold text-xs">Keep Local First</button>
+            <button onclick="activeModelChain=['local']; appSaveModelChain();" class="px-3 py-2 rounded-xl bg-zinc-800 text-xs">Local Only</button>
+          </div>
+        </div>` + providers.map(p=>{
+          const inRoute = route.includes(p.id);
+          const pos = route.indexOf(p.id);
+          return `<div class="w-full text-left p-5 rounded-2xl border ${inRoute?'border-pink-400 bg-pink-500/10':'border-zinc-700 bg-zinc-900'} mb-3">
+            <div class="flex justify-between gap-3">
+              <div><div class="font-semibold">${p.label}</div><div class="text-xs text-zinc-500 mt-1">${p.hint}</div>${inRoute?`<div class="text-xs text-pink-300 mt-2">Route position ${pos+1}</div>`:''}</div>
+              <div>${inRoute?'✓':''}</div>
+            </div>
+            <div class="flex flex-wrap gap-2 mt-4">
+              <button onclick="toggleModelInRoute('${p.id}')" class="px-3 py-2 rounded-xl ${inRoute?'bg-red-900 text-red-200':'bg-zinc-800'} text-xs">${inRoute?'Remove':'Add to Route'}</button>
+              <button onclick="selectModel('${p.id}')" class="px-3 py-2 rounded-xl bg-zinc-800 text-xs">Use Only</button>
+              <button onclick="moveRouteModel('${p.id}', -1)" class="px-3 py-2 rounded-xl bg-zinc-800 text-xs">↑</button>
+              <button onclick="moveRouteModel('${p.id}', 1)" class="px-3 py-2 rounded-xl bg-zinc-800 text-xs">↓</button>
+            </div>
+          </div>`;
+        }).join('');
+    }
+    function openModal(id) {
+      renderModelOptions();
+      const root = $4('modal-root');
+      if (!root) return;
+      if (root.parentElement !== document.body) document.body.appendChild(root);
+      root.style.zIndex = '9998';
+      root.classList.remove('hidden');
+      root.classList.add('flex');
+      document.querySelectorAll('.app-modal').forEach(m=>m.classList.add('hidden'));
+      const modal = $4(id);
+      if (modal) modal.classList.remove('hidden');
+    }
+    function closeModals() { $4('modal-root').classList.add('hidden'); $4('modal-root').classList.remove('flex'); }
+    function closeModalOnBackdrop(e) { if(e.target.id==='modal-root') closeModals(); }
+    function saveSettings() { appSaveJSON(FOURFLO.settings, {tone:$4('tone-select').value, defaultStatus:$4('default-flow-status').value}); closeModals(); showToast('Settings saved'); }
+    function loadAppSettings() { const s=appLoadJSON(FOURFLO.settings,{tone:'practical',defaultStatus:'Active'}); if($4('tone-select')) $4('tone-select').value=s.tone||'practical'; if($4('default-flow-status')) $4('default-flow-status').value=s.defaultStatus||'Active'; }
+    function newFactoryRun() { switchTab('factory'); $4('ideaInput')?.focus(); showToast('Add an idea, then Start Factory Run'); }
+
+    document.addEventListener('keydown', e => { if(e.metaKey && e.key.toLowerCase()==='k') { e.preventDefault(); switchTab('chat'); $4('user-input').focus(); } if(e.key==='Escape') closeModals(); });
+    loadAppSettings(); renderCredentials(); renderHistory(); renderFlows(); renderPlugins(); updateActiveModelLabel(); switchTab('factory'); console.log('%cFactory 4flo ready 🚀','color:#ff8ec8;font-weight:bold');
   </script>
 </body>
 </html>
