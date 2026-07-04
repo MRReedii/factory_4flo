@@ -145,7 +145,7 @@
           </p>
         </div>
 
-        <div class="flex flex-wrap gap-2">
+        <div id="factory-share-actions" class="scroll-mt-6 flex flex-wrap gap-2">
           <button onclick="exportRun()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700">Export JSON</button>
           <label class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 cursor-pointer">
             Import JSON
@@ -157,63 +157,71 @@
       </div>
     </header>
 
-    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6">
+    <section id="setup-connections" class="scroll-mt-6 bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4">
         <div>
-          <h2 class="font-semibold text-xl">Plugin-Powered Connections</h2>
-          <p class="text-sm text-slate-400">Core screens no longer hardcode providers. Pick enabled plugins for model, git, deployment, and execution roles.</p>
+          <h2 class="font-semibold text-xl flex items-center gap-2">
+            <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            Currently Connected AI &amp; Plugins
+          </h2>
+          <p class="text-sm text-slate-400">Active roles driving the current software factory loop.</p>
         </div>
         <div class="flex flex-wrap gap-2">
-          <button onclick="switchTab('plugins')" class="px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-sm">Manage Plugins</button>
-          <button onclick="togglePanel('connectionsBody')" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm">Show / Hide</button>
+          <button onclick="switchTab('plugins')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-zinc-800 text-sm border border-slate-700">Configure Plugins</button>
+          <button onclick="togglePanel('connectionsBody')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-zinc-700 text-sm">Toggle Settings View</button>
         </div>
       </div>
 
-      <div id="connectionsBody" class="grid lg:grid-cols-4 gap-6">
+      <div id="activeConnectionsBadges" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 bg-slate-950/60 p-3 rounded-xl border border-slate-800 text-xs">
+        <div class="p-2 bg-slate-900/50 rounded-lg border border-slate-800">
+          <div class="text-slate-500 font-medium">AI Model</div>
+          <div id="badge-ai-connected" class="font-semibold text-pink-400 mt-0.5 truncate">Detecting...</div>
+        </div>
+        <div class="p-2 bg-slate-900/50 rounded-lg border border-slate-800">
+          <div class="text-slate-500 font-medium">Git Provider</div>
+          <div id="badge-git-connected" class="font-semibold text-blue-400 mt-0.5 truncate">Detecting...</div>
+        </div>
+        <div class="p-2 bg-slate-900/50 rounded-lg border border-slate-800">
+          <div class="text-slate-500 font-medium">Deployment</div>
+          <div id="badge-deploy-connected" class="font-semibold text-violet-400 mt-0.5 truncate">Detecting...</div>
+        </div>
+        <div class="p-2 bg-slate-900/50 rounded-lg border border-slate-800">
+          <div class="text-slate-500 font-medium">Execution Engine</div>
+          <div id="badge-exec-connected" class="font-semibold text-emerald-400 mt-0.5 truncate">Detecting...</div>
+        </div>
+      </div>
+
+      <div id="connectionRealityNote" class="mb-4 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
+        Demo defaults are labeled as examples. Configure a real repo, credential, endpoint, service ID, or local model test before treating a plugin as connected.
+      </div>
+
+      <div id="connectionsBody" class="hidden grid lg:grid-cols-4 gap-6 pt-4 border-t border-slate-800">
         <div>
-          <h3 class="font-semibold mb-2">AI Model Plugin</h3>
-          <select id="aiPluginSelect" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700"></select>
-          <p id="aiPluginSummary" class="text-xs text-slate-500 mt-2">Choose a Local, AI Model, or AI Agent plugin.</p>
-          <div class="flex flex-wrap gap-2 mt-3">
-            <button onclick="savePluginSelections()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500">Use Selected</button>
-            <button onclick="detectLocalModelEndpoint()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700">Auto-detect Local</button>
+          <h3 class="font-semibold mb-2 text-sm">AI Model Plugin</h3>
+          <select id="aiPluginSelect" class="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm" onchange="savePluginSelections()"></select>
+          <div class="flex gap-1.5 mt-2">
+            <button onclick="detectLocalModelEndpoint()" class="text-xs px-2.5 py-1.5 bg-slate-800 rounded-lg hover:bg-slate-700">Auto-detect Local</button>
           </div>
         </div>
-
         <div>
-          <h3 class="font-semibold mb-2">Git Provider Plugin</h3>
-          <select id="gitPluginSelect" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700"></select>
-          <p id="gitPluginSummary" class="text-xs text-slate-500 mt-2">Owner, repo, and API base live in the selected plugin settings.</p>
-          <div class="flex flex-wrap gap-2 mt-3">
-            <button onclick="savePluginSelections()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700">Save Role</button>
-            <button onclick="openRepo()" class="px-4 py-2 rounded-xl bg-indigo-700 hover:bg-indigo-600">Open Repo</button>
-            <button onclick="openGithubToolsModal()" class="px-4 py-2 rounded-xl bg-pink-700 hover:bg-pink-600">Git Tools</button>
+          <h3 class="font-semibold mb-2 text-sm">Git Provider Plugin</h3>
+          <select id="gitPluginSelect" class="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm" onchange="savePluginSelections()"></select>
+          <div class="flex gap-1.5 mt-2">
+            <button onclick="openGithubToolsModal()" class="text-xs px-2.5 py-1.5 bg-pink-900/40 text-pink-300 rounded-lg hover:bg-pink-900/60">Git Tools</button>
           </div>
         </div>
-
         <div>
-          <h3 class="font-semibold mb-2">Deployment Plugin</h3>
-          <select id="deploymentPluginSelect" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700"></select>
-          <p id="deploymentPluginSummary" class="text-xs text-slate-500 mt-2">Deployment and preview providers are now plugins.</p>
-          <div class="flex flex-wrap gap-2 mt-3">
-            <button onclick="savePluginSelections()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700">Save Role</button>
-            <button onclick="selectedSnapshotId && triggerRenderSnapshot(selectedSnapshotId)" class="px-4 py-2 rounded-xl bg-violet-700 hover:bg-violet-600">Run Deploy</button>
-          </div>
+          <h3 class="font-semibold mb-2 text-sm">Deployment Plugin</h3>
+          <select id="deploymentPluginSelect" class="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm" onchange="savePluginSelections()"></select>
         </div>
-
         <div>
-          <h3 class="font-semibold mb-2">Execution / Webhook Plugin</h3>
-          <select id="executionPluginSelect" class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700"></select>
-          <p id="executionPluginSummary" class="text-xs text-slate-500 mt-2">Webhook, custom REST API, proxy, and local command adapters are selectable plugins.</p>
-          <div class="flex flex-wrap gap-2 mt-3">
-            <button onclick="savePluginSelections()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500">Save Roles</button>
-            <button onclick="switchTab('plugins')" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700">Add Plugin</button>
-          </div>
+          <h3 class="font-semibold mb-2 text-sm">Execution / Webhook</h3>
+          <select id="executionPluginSelect" class="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm" onchange="savePluginSelections()"></select>
         </div>
       </div>
     </section>
 
-    <section class="grid lg:grid-cols-4 gap-4 mb-6">
+    <section id="setup-create-run" class="scroll-mt-6 grid lg:grid-cols-4 gap-4 mb-6">
       <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-4">
         <h2 class="font-semibold text-xl mb-3">Create Factory Run</h2>
         <textarea id="ideaInput" class="w-full min-h-36 p-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100" placeholder="Paste a vague idea, feature request, or issue numbers like #5368. Comments can be fetched when a compatible Git plugin is selected..."></textarea>
@@ -227,7 +235,7 @@
           </select>
         </div>
 
-        <div class="flex flex-wrap gap-2 mt-3">
+        <div id="factory-run-actions" class="scroll-mt-6 flex flex-wrap gap-2 mt-3">
           <button onclick="createRun()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-medium">Start Factory Run</button>
           <button onclick="createRunFromGithubIssues()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 font-medium">Fetch Issue + Start</button>
           <button onclick="runFactoryPipeline(selectedSnapshotId)" class="px-4 py-2 rounded-xl bg-violet-700 hover:bg-violet-600">Resume From Selected</button>
@@ -248,32 +256,50 @@
       </div>
     </section>
 
-    <section class="grid xl:grid-cols-4 gap-4">
+    <section id="setup-pipeline" class="scroll-mt-6 grid xl:grid-cols-4 gap-6">
       <aside class="xl:col-span-1 space-y-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <div id="setup-history" class="scroll-mt-6 bg-slate-900 border border-slate-800 rounded-2xl p-4">
           <div class="flex items-center justify-between mb-3">
-            <h2 class="font-semibold text-xl">Timeline</h2>
-            <span id="eventCount" class="text-xs text-slate-500"></span>
+            <h2 class="font-semibold text-base flex items-center gap-2">
+              <i class="fa-solid fa-folder-open text-amber-400"></i> Local Runs History
+            </h2>
+            <button onclick="switchTab('history')" class="text-xs text-slate-400 hover:text-white">View All</button>
           </div>
-          <div id="timeline" class="space-y-3 text-sm max-h-[520px] overflow-auto thin-scroll pr-1"></div>
+          <div id="passport-session-list" class="space-y-2 max-h-[180px] overflow-auto thin-scroll pr-1 text-xs">
+            <div class="text-slate-500 italic p-1">No other saved runs found...</div>
+          </div>
         </div>
 
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
-          <h2 class="font-semibold text-xl mb-3">Lineage</h2>
-          <div id="lineage" class="space-y-2 text-sm max-h-[420px] overflow-auto thin-scroll pr-1"></div>
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="font-semibold text-base">Timeline Graph</h2>
+            <span id="eventCount" class="text-xs text-slate-500"></span>
+          </div>
+          <div id="timeline" class="space-y-3 text-xs max-h-[220px] overflow-auto thin-scroll pr-1"></div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+          <h2 class="font-semibold text-base mb-3">Lineage Root</h2>
+          <div id="lineage" class="space-y-2 text-xs max-h-[160px] overflow-auto thin-scroll pr-1"></div>
         </div>
       </aside>
 
       <main class="xl:col-span-3">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-3">
           <div>
-            <h2 class="font-semibold text-xl">Snapshot Commits</h2>
-            <span id="runId" class="text-xs text-slate-500"></span>
+            <h2 class="font-semibold text-xl flex items-center gap-2">
+              Active Snapshot Commit Pipeline
+              <span id="commit-count-badge" class="text-xs bg-slate-800 px-2 py-0.5 rounded-full text-slate-400"></span>
+            </h2>
+            <span id="runId" class="text-xs text-slate-500 font-mono"></span>
           </div>
           <div class="flex flex-wrap gap-2">
-            <button onclick="setView('cards')" id="viewCardsBtn" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm">Cards</button>
-            <button onclick="setView('diff')" id="viewDiffBtn" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm">Diff</button>
-            <button onclick="setView('interop')" id="viewInteropBtn" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm">Interop Payload</button>
+            <button onclick="setCommitViewLimit(2)" id="btn-limit-2" class="view-limit-btn px-2.5 py-1 text-xs rounded-lg bg-zinc-800 text-white">Show 2</button>
+            <button onclick="setCommitViewLimit(0)" id="btn-limit-all" class="view-limit-btn px-2.5 py-1 text-xs rounded-lg bg-slate-950 text-slate-400">Show All</button>
+            <div class="h-5 w-[1px] bg-slate-800 mx-1 self-center"></div>
+            <button onclick="setView('cards')" id="viewCardsBtn" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm">Cards</button>
+            <button onclick="setView('diff')" id="viewDiffBtn" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm">Diff</button>
+            <button onclick="setView('interop')" id="viewInteropBtn" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm">Interop Payload</button>
           </div>
         </div>
 
@@ -476,7 +502,7 @@
       <button onclick="toggleWikiPopover()" class="text-zinc-400 hover:text-white">✕</button>
     </div>
 
-    <iframe src="wiki/index.html" class="w-full h-[calc(100%-48px)] border-0 bg-white"></iframe>
+    <iframe src="wiki/index.html#quick-start-section" class="w-full h-[calc(100%-48px)] border-0 bg-white"></iframe>
   </div>
   <script>
 // Four visible snapshot commits. Each commit feeds the next.
@@ -743,6 +769,7 @@
     let run = emptyRun();
     let selectedSnapshotId = null;
     let currentView = "cards";
+    let commitViewLimit = 2;
 
     function emptyRun() {
       return {
@@ -973,6 +1000,220 @@
       };
     }
 
+
+    function isExampleValue(value, examples = []) {
+      const v = String(value || '').trim().toLowerCase();
+      return !v || examples.map(x => String(x).toLowerCase()).includes(v) || /^(your-|example-|demo-|sample-|platform$)/.test(v);
+    }
+
+    function pluginIsExample(plugin, role = '') {
+      if (!plugin) return true;
+      const owner = pluginSetting(plugin, 'owner', '');
+      const repo = pluginSetting(plugin, 'repo', '');
+      const serviceId = pluginSetting(plugin, 'serviceId', '');
+      const hasCredential = plugin.credentialId && plugin.credentialId !== 'none' && Boolean(pluginCredentialSecret(plugin));
+
+      if (role === 'git') return isExampleValue(owner, ['your-org', 'your-group', 'your-workspace']) || isExampleValue(repo, ['platform']);
+      if (role === 'deployment') return !serviceId && !plugin.endpoint;
+      if (role === 'execution') return !plugin.endpoint && !plugin.command;
+      if (role === 'ai') return /local/i.test(plugin.provider || '') && !localModelConfig?.connected;
+      return !hasCredential && !plugin.endpoint && !plugin.command;
+    }
+
+    function roleStatus(role) {
+      const plugin = typeof selectedPlugin === 'function' ? selectedPlugin(role) : null;
+      const configuredClass = role === 'ai' ? 'text-pink-400' : role === 'git' ? 'text-blue-400' : role === 'deployment' ? 'text-violet-400' : 'text-emerald-400';
+
+      if (plugin?.enabled) {
+        const example = pluginIsExample(plugin, role);
+        return {
+          label: plugin.name || plugin.provider || 'Active Plugin',
+          detail: example ? 'Example default' : 'Configured',
+          className: `font-semibold ${example ? 'text-amber-300' : configuredClass} mt-0.5 truncate`
+        };
+      }
+
+      if (role === 'ai' && localModelConfig?.endpoint) {
+        return { label: `Local: ${localModelConfig.model || 'Core'}`, detail: localModelConfig.connected ? 'Detected' : 'Not tested', className: 'font-semibold text-amber-300 mt-0.5 truncate' };
+      }
+      if (role === 'git' && githubConfig && githubConfig.repo && githubConfig.repo !== 'platform') {
+        return { label: `${githubConfig.provider || 'GitHub'}: ${githubConfig.owner}/${githubConfig.repo}`, detail: 'Configured', className: 'font-semibold text-blue-400 mt-0.5 truncate' };
+      }
+      if (role === 'deployment' && integrations?.renderServiceId) {
+        return { label: 'Render Service', detail: 'Configured', className: 'font-semibold text-violet-400 mt-0.5 truncate' };
+      }
+
+      return { label: 'Not configured', detail: 'Local only', className: 'font-semibold text-slate-400 mt-0.5 truncate' };
+    }
+
+    function setupChecklistItems() {
+      const hasIdea = Boolean(document.getElementById('ideaInput')?.value.trim());
+      const hasRun = Boolean(run?.id && run?.snapshots?.length);
+      const git = roleStatus('git');
+      const ai = roleStatus('ai');
+      const deploy = roleStatus('deployment');
+      const execution = roleStatus('execution');
+      return [
+        { label: 'Add an idea or GitHub issue numbers', done: hasIdea || hasRun, action: "document.getElementById('ideaInput')?.focus()" },
+        { label: 'Choose a real AI model plugin', done: !/example|not tested|not configured/i.test(`${ai.detail} ${ai.label}`), action: "switchTab('plugins')" },
+        { label: 'Connect a real Git repo', done: !/example|not configured/i.test(`${git.detail} ${git.label}`), action: "openGithubToolsModal()" },
+        { label: 'Optional: configure deployment or execution', done: !/not configured|local only|example/i.test(`${deploy.detail} ${execution.detail}`), action: "switchTab('plugins')" }
+      ];
+    }
+
+    function renderFirstRunEmptyState() {
+      const items = setupChecklistItems();
+      return `
+        <section class="md:col-span-2 2xl:col-span-3 bg-slate-900 border border-dashed border-slate-700 rounded-2xl p-6 md:p-8">
+          <div class="max-w-3xl mx-auto">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-200 border border-amber-500/20 text-xs mb-4">
+              <i class="fa-solid fa-triangle-exclamation"></i> First-time setup · demo defaults may be active
+            </div>
+            <h3 class="text-2xl font-semibold text-white mb-2">Start your first real Factory Passport run</h3>
+            <p class="text-slate-400 mb-5">This app is local-first. Nothing becomes a real Git, AI, deployment, or webhook connection until you configure the matching plugin or credential.</p>
+
+            <div class="grid md:grid-cols-2 gap-3 mb-5">
+              ${items.map(item => `
+                <button onclick="${item.action}" class="text-left p-3 rounded-xl border ${item.done ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-100' : 'bg-slate-950/70 border-slate-800 text-slate-300 hover:border-slate-600'}">
+                  <div class="flex items-center gap-2 font-medium text-sm">
+                    <span class="w-5 h-5 rounded-full flex items-center justify-center ${item.done ? 'bg-emerald-500 text-black' : 'bg-slate-800 text-slate-400'}">${item.done ? '✓' : '•'}</span>
+                    ${escapeHtml(item.label)}
+                  </div>
+                </button>
+              `).join('')}
+            </div>
+
+            <div class="rounded-2xl bg-slate-950/80 border border-slate-800 p-4 text-left mb-5">
+              <div class="text-xs uppercase tracking-wide text-slate-500 mb-2">Starter prompt</div>
+              <button onclick="useStarterPrompt()" class="w-full text-left bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm text-slate-200">
+                #5368 Markdown view mode with Mermaid diagrams and node mention chips
+              </button>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              <button onclick="useStarterPrompt(); createRun();" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-medium">Use starter + create run</button>
+              <button onclick="switchTab('plugins')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700">Configure plugins</button>
+              <label class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 cursor-pointer">Import JSON<input type="file" accept="application/json" class="hidden" onchange="importRun(event)" /></label>
+            </div>
+          </div>
+        </section>`;
+    }
+
+    function useStarterPrompt() {
+      const el = document.getElementById('ideaInput');
+      if (!el) return;
+      if (!el.value.trim()) {
+        el.value = '#5368 Markdown view mode with Mermaid diagrams and node mention chips\n#5366 Canvas version diff highlighting\n#5164 Send execution to agent chat';
+      }
+      el.focus();
+      showToast('Starter prompt added');
+    }
+
+    function emptyPanel(title, body, actionLabel = '', action = '') {
+      return `<div class="rounded-xl bg-slate-950/70 border border-dashed border-slate-800 p-4 text-slate-400">
+        <div class="font-medium text-slate-200 mb-1">${escapeHtml(title)}</div>
+        <p class="text-xs leading-relaxed">${escapeHtml(body)}</p>
+        ${actionLabel ? `<button onclick="${action}" class="mt-3 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-white">${escapeHtml(actionLabel)}</button>` : ''}
+      </div>`;
+    }
+
+    function setCommitViewLimit(limit) {
+      commitViewLimit = limit;
+      const two = document.getElementById('btn-limit-2');
+      const all = document.getElementById('btn-limit-all');
+      if (two) two.className = limit === 2 ? 'view-limit-btn px-2.5 py-1 text-xs rounded-lg bg-zinc-800 text-white' : 'view-limit-btn px-2.5 py-1 text-xs rounded-lg bg-slate-950 text-slate-400';
+      if (all) all.className = limit === 0 ? 'view-limit-btn px-2.5 py-1 text-xs rounded-lg bg-zinc-800 text-white' : 'view-limit-btn px-2.5 py-1 text-xs rounded-lg bg-slate-950 text-slate-400';
+      render();
+    }
+
+    function getTruncatedSnapshots() {
+      if (!run || !Array.isArray(run.snapshots)) return [];
+      const totalCount = run.snapshots.length;
+      const badgeEl = document.getElementById('commit-count-badge');
+      if (badgeEl) badgeEl.textContent = `${totalCount} total`;
+      if (commitViewLimit > 0 && totalCount > commitViewLimit) return run.snapshots.slice(-commitViewLimit);
+      return run.snapshots;
+    }
+
+    function updatePassportConnectionsUI() {
+      const roles = ['ai', 'git', 'deployment', 'execution'];
+      roles.forEach(role => {
+        const badge = document.getElementById(`badge-${role}-connected`);
+        if (!badge) return;
+        const status = roleStatus(role);
+        badge.textContent = status.label;
+        badge.className = status.className;
+        badge.title = status.detail;
+      });
+    }
+
+    function renderPassportSessionHistory() {
+      const container = document.getElementById('passport-session-list');
+      if (!container) return;
+
+      try {
+        const currentRunId = run ? run.id : '';
+        const historicalRuns = [];
+        const savedMain = localStorage.getItem('factory-passport-run');
+        if (savedMain) {
+          const parsed = JSON.parse(savedMain);
+          if (parsed && parsed.id) historicalRuns.push(parsed);
+        }
+        const customHistory = localStorage.getItem('4flo-session-history-v1');
+        if (customHistory) {
+          const parsedHistory = JSON.parse(customHistory);
+          if (Array.isArray(parsedHistory)) {
+            parsedHistory.forEach(h => {
+              if (h?.id && !historicalRuns.some(r => r.id === h.id)) historicalRuns.push(h);
+            });
+          }
+        }
+
+        if (!historicalRuns.length) {
+          container.innerHTML = emptyPanel('No saved runs yet', 'Create your first Factory Passport run, or import a JSON export to see it here.', 'Add starter prompt', 'useStarterPrompt()');
+          return;
+        }
+
+        container.innerHTML = historicalRuns.map(session => {
+          const isCurrent = session.id === currentRunId;
+          const title = session.title || session.name || `Run: ${String(session.id).slice(0, 8)}`;
+          const timeStamp = session.updatedAt || session.createdAt || new Date().toLocaleDateString();
+          return `
+            <button onclick="loadPassportSessionById('${escapeAttr(session.id)}')" class="w-full text-left p-2 rounded-xl transition-all flex items-center justify-between border ${
+              isCurrent
+                ? 'bg-zinc-800/80 border-pink-500/30 text-white font-medium'
+                : 'bg-slate-950/40 border-slate-800 text-slate-400 hover:bg-slate-900 hover:text-white'
+            }">
+              <span class="truncate pr-2 flex items-center gap-1.5">
+                <span>${isCurrent ? '🌸' : '📄'}</span>
+                <span class="truncate">${escapeHtml(title)}</span>
+              </span>
+              <span class="text-[10px] text-slate-500 shrink-0">${escapeHtml(String(timeStamp).split(',')[0])}</span>
+            </button>
+          `;
+        }).join('');
+      } catch (e) {
+        console.error('Failed historical layout load', e);
+      }
+    }
+
+    function loadPassportSessionById(id) {
+      if (run && run.id === id) return;
+      showToast('Switching to run session...');
+      const savedMain = localStorage.getItem('factory-passport-run');
+      if (savedMain) {
+        const parsed = JSON.parse(savedMain);
+        if (parsed && parsed.id === id) {
+          run = normalizeRun(parsed);
+          selectedSnapshotId = run.snapshots[0]?.id || null;
+          if (typeof saveRun === 'function') saveRun();
+          render();
+          return;
+        }
+      }
+      switchTab('factory');
+    }
+
     function render() {
       document.getElementById("runId").textContent = run.id ? `${run.title || "Untitled"} · ${run.id}` : "No active run";
       renderBoard();
@@ -983,6 +1224,8 @@
       renderDiffView();
       renderInteropView();
       updateView();
+      updatePassportConnectionsUI();
+      renderPassportSessionHistory();
     }
 
     function renderBoard() {
@@ -990,15 +1233,11 @@
       board.innerHTML = "";
 
       if (!run.snapshots.length) {
-        board.innerHTML = `
-          <section class="md:col-span-2 2xl:col-span-3 bg-slate-900 border border-dashed border-slate-700 rounded-2xl p-8 text-center text-slate-400">
-            Create or import a run to start collecting snapshot commits.
-          </section>
-        `;
+        board.innerHTML = renderFirstRunEmptyState();
         return;
       }
 
-      run.snapshots.forEach((snapshot, index) => {
+      getTruncatedSnapshots().forEach((snapshot, index) => {
         const card = document.createElement("section");
         const selected = snapshot.id === selectedSnapshotId;
         card.className = `${selected ? "ring-2 ring-indigo-500 " : ""}bg-slate-900 border border-slate-800 rounded-2xl p-4 cursor-pointer`;
@@ -1941,6 +2180,11 @@ Local-first is still the default. To use non-local models, select a configured m
       const mostEdited = mostCommon((run.events || []).filter(e => e.type === "snapshot.edited").map(e => findSnapshot(e.snapshotId)?.stage).filter(Boolean));
       const mostForked = mostCommon((run.events || []).filter(e => e.type === "snapshot.forked").map(e => findSnapshot(e.snapshotId)?.stage).filter(Boolean));
 
+      if (!total) {
+        document.getElementById("insights").innerHTML = emptyPanel('No fingerprint yet', 'Your fingerprint will show snapshots, approvals, retries, forks, edits, mode, and completion after the first run starts.', 'Use starter prompt', 'useStarterPrompt()');
+        return;
+      }
+
       document.getElementById("insights").innerHTML = `
         <div class="flex justify-between"><span>Snapshots</span><strong>${total}</strong></div>
         <div class="flex justify-between"><span>Approved</span><strong>${approved}</strong></div>
@@ -1971,7 +2215,7 @@ Local-first is still the default. To use non-local models, select a configured m
       const events = run.events || [];
       document.getElementById("eventCount").textContent = `${events.length} events`;
       if (!events.length) {
-        timeline.innerHTML = `<p class="text-slate-500">No events yet.</p>`;
+        timeline.innerHTML = emptyPanel('No timeline events yet', 'Events appear after you create a run, approve a snapshot, retry, fork, replay, or execute a stage.');
         return;
       }
 
@@ -1990,7 +2234,7 @@ Local-first is still the default. To use non-local models, select a configured m
     function renderLineage() {
       const el = document.getElementById("lineage");
       if (!run.snapshots.length) {
-        el.innerHTML = `<p class="text-slate-500">No lineage yet.</p>`;
+        el.innerHTML = emptyPanel('No lineage yet', 'Lineage starts when the first snapshot commit is created. Each stage points back to its parent.');
         return;
       }
 
@@ -2013,7 +2257,7 @@ Local-first is still the default. To use non-local models, select a configured m
       const el = document.getElementById("selectedPanel");
       const snap = findSnapshot(selectedSnapshotId);
       if (!snap) {
-        el.innerHTML = `<p class="text-slate-500">No snapshot selected.</p>`;
+        el.innerHTML = emptyPanel('No snapshot selected', 'Create a run or select a snapshot card to inspect validation, hashes, payloads, and proof links.');
         return;
       }
 
@@ -3128,6 +3372,7 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
             <div class="min-w-0">
               <h3 class="font-semibold text-lg truncate">${escapeHtml(plugin.name)}</h3>
               <p class="text-xs text-zinc-500 truncate">${escapeHtml(plugin.provider)} · ${escapeHtml(plugin.type)} · v${escapeHtml(plugin.version)}</p>
+              ${pluginIsExample(plugin) ? '<div class="mt-2 inline-flex text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-200 border border-amber-500/20">Example/default config</div>' : '<div class="mt-2 inline-flex text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-200 border border-emerald-500/20">Configured values present</div>'}
             </div>
             <button onclick="togglePluginEnabled('${escapeAttr(plugin.id)}')" class="text-xs px-3 py-1 rounded-full ${plugin.enabled ? 'bg-emerald-900 text-emerald-300' : 'bg-zinc-800 text-zinc-400'}">${plugin.enabled ? '✓ Enabled' : 'Disabled'}</button>
           </div>
@@ -3366,6 +3611,19 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
       if (tab === 'flows') renderFlows();
       if (tab === 'plugins') renderPlugins();
     }
+
+    function gotoAppSection(sectionId, tab = 'factory') {
+      switchTab(tab);
+      setTimeout(() => {
+        const el = document.getElementById(sectionId);
+        if (!el) return;
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        el.classList.add('ring-2', 'ring-pink-400', 'ring-offset-2', 'ring-offset-slate-950');
+        clearTimeout(gotoAppSection._timer);
+        gotoAppSection._timer = setTimeout(() => el.classList.remove('ring-2', 'ring-pink-400', 'ring-offset-2', 'ring-offset-slate-950'), 1800);
+      }, 80);
+    }
+    window.gotoAppSection = gotoAppSection;
 
     function renderCredentials() {
       const keys = appLoadJSON(FOURFLO.keys, {});
@@ -3651,17 +3909,71 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
     function newFactoryRun() { switchTab('factory'); $4('ideaInput')?.focus(); showToast('Add an idea, then Start Factory Run'); }
 
     document.addEventListener('keydown', e => { if(e.metaKey && e.key.toLowerCase()==='k') { e.preventDefault(); switchTab('chat'); $4('user-input').focus(); } if(e.key==='Escape') closeModals(); });
-    loadAppSettings(); renderCredentials(); renderHistory(); renderFlows(); renderPlugins(); updateActiveModelLabel(); switchTab('factory'); console.log('%cFactory 4flo ready 🚀','color:#ff8ec8;font-weight:bold');
+
+
+    function gotoAppSection(targetId = 'factory-screen', tabName = 'factory') {
+      const tabForTarget = tabName || (
+        targetId === 'plugins-screen' ? 'plugins' :
+        targetId === 'keys-screen' ? 'keys' :
+        targetId === 'history-screen' ? 'history' :
+        targetId === 'flows-screen' ? 'flows' :
+        'factory'
+      );
+
+      if (typeof switchTab === 'function') switchTab(tabForTarget);
+
+      if (targetId === 'setup-connections') {
+        const body = document.getElementById('connectionsBody');
+        if (body) body.classList.remove('hidden');
+      }
+
+      window.setTimeout(() => {
+        const target = document.getElementById(targetId) || document.getElementById('factory-screen');
+        if (!target) return;
+
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.classList.add('ring-2', 'ring-pink-400', 'ring-offset-2', 'ring-offset-slate-950');
+        window.setTimeout(() => {
+          target.classList.remove('ring-2', 'ring-pink-400', 'ring-offset-2', 'ring-offset-slate-950');
+        }, 1800);
+
+        if (targetId === 'ideaInput' || targetId === 'templateSelect') target.focus?.();
+      }, 80);
+    }
+
+    window.gotoAppSection = gotoAppSection;
+
+    window.addEventListener('message', (event) => {
+      const data = event.data || {};
+      if (data.type !== 'factory4flo:navigate') return;
+      gotoAppSection(data.targetId, data.tabName);
+    });
+
+    function handleInitialAppHash() {
+      const raw = decodeURIComponent((window.location.hash || '').replace(/^#/, ''));
+      if (!raw) return;
+      const known = document.getElementById(raw);
+      if (!known) return;
+      gotoAppSection(raw);
+    }
+    loadAppSettings(); renderCredentials(); renderHistory(); renderFlows(); renderPlugins(); updateActiveModelLabel(); switchTab('factory'); handleInitialAppHash(); console.log('%cFactory 4flo ready 🚀','color:#ff8ec8;font-weight:bold');
   </script>
 
   <script>
     let wikiPopoverOpen = false;
 
-    function toggleWikiPopover() {
-      const popover = document.getElementById("wiki-popover");
-      wikiPopoverOpen = !wikiPopoverOpen;
-      popover.classList.toggle("hidden", !wikiPopoverOpen);
+function toggleWikiPopover() {
+    const popover = document.getElementById("wiki-popover");
+    const iframe = popover.querySelector("iframe");
+
+    const opening = popover.classList.contains("hidden");
+
+    popover.classList.toggle("hidden");
+
+    if (opening) {
+        iframe.src = "wiki/index.html#quick-start-section";
     }
+}
 
     (function makeWikiDraggable() {
       const popover = document.getElementById("wiki-popover");

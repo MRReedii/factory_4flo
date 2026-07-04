@@ -17,6 +17,10 @@
     .glass { background: rgba(24,24,27,.72); border:1px solid rgba(255,255,255,.08); box-shadow:0 22px 70px rgba(0,0,0,.35); }
     .card { background:#101014; border:1px solid #27272a; border-radius:24px; }
     .pill { border:1px solid #3f3f46; background:#18181b; border-radius:999px; padding:.4rem .75rem; font-size:.78rem; color:#d4d4d8; }
+    .app-step-link { display:inline-flex; align-items:center; gap:.45rem; margin-top:.8rem; border:1px solid rgba(255,142,200,.45); background:rgba(255,142,200,.1); color:#f9a8d4; border-radius:999px; padding:.45rem .8rem; font-size:.82rem; font-weight:700; text-decoration:none; }
+    .app-step-link:hover { background:rgba(255,142,200,.18); color:white; border-color:rgba(0,212,255,.65); }
+    .app-step-link.secondary { border-color:rgba(0,212,255,.45); background:rgba(0,212,255,.1); color:#67e8f9; }
+    .quick-note { border:1px solid rgba(0,212,255,.25); background:rgba(0,212,255,.07); border-radius:20px; padding:1rem; color:#cffafe; }
     .toc a { display:block; padding:.55rem .7rem; color:#d4d4d8; border-radius:14px; }
     .toc a:hover { background:#18181b; color:white; }
     .step-number { width:2.25rem; height:2.25rem; display:inline-flex; align-items:center; justify-content:center; border-radius:14px; background:linear-gradient(135deg,var(--pink),var(--blue)); color:#050509; font-weight:800; flex-shrink:0; }
@@ -103,14 +107,48 @@
           </div>
         </section>
 
-        <section id="quick-start" class="card p-6 md:p-8">
+        <section id="quick-start-section" class="card p-6 md:p-8">
           <h2 class="logo-font text-3xl font-bold mb-5">Quick start</h2>
+          <div class="quick-note mb-5 text-sm">
+            These buttons trigger the main Factory 4flo app when this wiki is opened inside the app wiki panel. If you open this wiki by itself, they fall back to normal section links.
+          </div>
           <div class="space-y-5">
-            <div class="flex gap-4"><span class="step-number">1</span><div><h3 class="font-semibold text-lg">Open Factory Passport</h3><p class="text-zinc-400">Use the left sidebar and choose <strong>Factory Passport</strong>.</p></div></div>
-            <div class="flex gap-4"><span class="step-number">2</span><div><h3 class="font-semibold text-lg">Paste your idea</h3><p class="text-zinc-400">Add a rough idea, task description, or GitHub issue numbers like <code class="bg-zinc-900 px-2 py-1 rounded">#5368 #5366</code>.</p></div></div>
-            <div class="flex gap-4"><span class="step-number">3</span><div><h3 class="font-semibold text-lg">Pick a template</h3><p class="text-zinc-400">Use <strong>4-Step Factory</strong> for normal product work, <strong>Security / Upgrade</strong> for risk-focused work, or <strong>Minimal Custom</strong> for a small run.</p></div></div>
-            <div class="flex gap-4"><span class="step-number">4</span><div><h3 class="font-semibold text-lg">Start the run</h3><p class="text-zinc-400">Click <strong>Start Factory Run</strong>. The page creates the first set of snapshots and timeline events.</p></div></div>
-            <div class="flex gap-4"><span class="step-number">5</span><div><h3 class="font-semibold text-lg">Review, edit, approve, export</h3><p class="text-zinc-400">Open each snapshot, improve the text, approve what looks right, then export or share the run.</p></div></div>
+            <div class="flex gap-4">
+              <span class="step-number">0</span>
+            
+              <div>
+                <h3 class="font-semibold text-lg">Review Connected AI &amp; Plugins</h3>
+            
+                <p class="text-zinc-400">
+                  Before starting a Factory Run, review your active AI model and connected
+                  plugins. Confirm your AI model, Git provider, deployment provider, and
+                  execution/webhook plugin are configured.
+                  <strong>Local-first Core</strong> is enough to get started.
+                </p>
+            
+                <button type="button" class="app-step-link secondary" onclick="triggerMainSection('factory', 'setup-connections')">
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                  Review Connected Plugins
+                </button>
+            
+                <div class="mt-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-100">
+                  <strong>Minimum working setup:</strong>
+                  Local-first Core is enough to use the app manually.
+                  Git, deployment, webhook, and cloud AI plugins are optional until you
+                  want automation.
+                </div>
+              </div>
+            </div>
+            <div class="mt-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-100">
+              <strong>Minimum working setup:</strong>
+              Local-first Core is enough to use the app manually.
+              Git, deployment, webhook, and cloud AI plugins are optional until you want automation.
+            </div>
+            <div class="flex gap-4"><span class="step-number">1</span><div><h3 class="font-semibold text-lg">Open Factory Passport</h3><p class="text-zinc-400">Use the left sidebar and choose <strong>Factory Passport</strong>.</p><button type="button" class="app-step-link" onclick="triggerMainSection('factory', 'factory-screen')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Factory Passport</button></div></div>
+            <div class="flex gap-4"><span class="step-number">2</span><div><h3 class="font-semibold text-lg">Paste your idea</h3><p class="text-zinc-400">Add a rough idea, task description, or GitHub issue numbers like <code class="bg-zinc-900 px-2 py-1 rounded">#5368 #5366</code>.</p><button type="button" class="app-step-link" onclick="triggerMainSection('factory', 'ideaInput')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Jump to Idea Input</button></div></div>
+            <div class="flex gap-4"><span class="step-number">3</span><div><h3 class="font-semibold text-lg">Pick a template</h3><p class="text-zinc-400">Use <strong>4-Step Factory</strong> for normal product work, <strong>Security / Upgrade</strong> for risk-focused work, or <strong>Minimal Custom</strong> for a small run.</p><button type="button" class="app-step-link secondary" onclick="triggerMainSection('factory', 'templateSelect')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Jump to Templates</button></div></div>
+            <div class="flex gap-4"><span class="step-number">4</span><div><h3 class="font-semibold text-lg">Start the run</h3><p class="text-zinc-400">Click <strong>Start Factory Run</strong>. The page creates the first set of snapshots and timeline events.</p><button type="button" class="app-step-link" onclick="triggerMainSection('factory', 'ideaInput')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Go Start a Run</button></div></div>
+            <div class="flex gap-4"><span class="step-number">5</span><div><h3 class="font-semibold text-lg">Review, edit, approve, export</h3><p class="text-zinc-400">Open each snapshot, improve the text, approve what looks right, then export or share the run.</p><button type="button" class="app-step-link secondary" onclick="triggerMainSection('factory', 'board')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Jump to Snapshots</button></div></div>
           </div>
         </section>
 
@@ -217,6 +255,19 @@
     document.addEventListener('keydown', function (event) {
       if (event.key === 'Escape') document.getElementById('infoWrap')?.classList.remove('open');
     });
+
+    window.addEventListener("load", () => {
+      document.getElementById("quick-start")?.scrollIntoView();
+    });
+    function triggerMainSection(tab, targetId) {
+      const message = { type: 'factory4flo:navigate', tab, targetId };
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage(message, '*');
+      } else if (targetId) {
+        const localTarget = document.getElementById(targetId) || document.getElementById(tab);
+        if (localTarget) localTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
   </script>
 </body>
 </html>
