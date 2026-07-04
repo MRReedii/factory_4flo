@@ -674,7 +674,7 @@
         <div class="space-y-3">
           <div class="flex items-center justify-between">
             <label class="block text-sm text-zinc-400">Result</label>
-            <button onclick="copyText($4('gh-result').value || '')" class="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs">Copy Result</button>
+            <button onclick="copyText(document.getElementById('gh-result').value || '')" class="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs">Copy Result</button>
           </div>
           <textarea id="gh-result" class="w-full min-h-[360px] bg-black border border-zinc-700 rounded-2xl px-4 py-3 text-xs font-mono thin-scroll" placeholder="Git/provider result appears here. Copy commit.sha for SHA fields..." readonly></textarea>
         </div>
@@ -2723,17 +2723,17 @@ Local-first is still the default. To use non-local models, select a configured m
     }
 
     function repoConfigFromInputs() {
-      const provider = ($4("repo-provider-select")?.value || githubConfig.provider || "github").trim() || "github";
-      const owner = ($4("repo-owner-input")?.value || $4("gh-tools-owner")?.value || githubConfig.owner || "").trim();
-      const repo = ($4("repo-name-input")?.value || $4("gh-tools-repo")?.value || githubConfig.repo || "").trim();
-      const base = ($4("repo-base-input")?.value || $4("gh-tools-base")?.value || githubConfig.base || "main").trim() || githubConfig.base || "main";
+      const provider = (document.getElementById("repo-provider-select")?.value || githubConfig.provider || "github").trim() || "github";
+      const owner = (document.getElementById("repo-owner-input")?.value || document.getElementById("gh-tools-owner")?.value || githubConfig.owner || "").trim();
+      const repo = (document.getElementById("repo-name-input")?.value || document.getElementById("gh-tools-repo")?.value || githubConfig.repo || "").trim();
+      const base = (document.getElementById("repo-base-input")?.value || document.getElementById("gh-tools-base")?.value || githubConfig.base || "main").trim() || githubConfig.base || "main";
       return { provider, owner, repo, base };
     }
 
     function localConfigFromInputs() {
       return {
-        localRepoPath: ($4("localRepoPath")?.value || githubConfig.localRepoPath || "").trim(),
-        localGitBridge: ($4("localGitBridge")?.value || githubConfig.localGitBridge || "http://localhost:4787").trim() || "http://localhost:4787"
+        localRepoPath: (document.getElementById("localRepoPath")?.value || githubConfig.localRepoPath || "").trim(),
+        localGitBridge: (document.getElementById("localGitBridge")?.value || githubConfig.localGitBridge || "http://localhost:4787").trim() || "http://localhost:4787"
       };
     }
 
@@ -2804,10 +2804,10 @@ Local-first is still the default. To use non-local models, select a configured m
 
     function renderGithubRepoState() {
       const configured = hasConfiguredGithubRepo();
-      const label = $4("repo-current-label");
-      const empty = $4("repo-empty-state");
-      const status = $4("repo-settings-status");
-      const ghEmpty = $4("gh-tools-empty");
+      const label = document.getElementById("repo-current-label");
+      const empty = document.getElementById("repo-empty-state");
+      const status = document.getElementById("repo-settings-status");
+      const ghEmpty = document.getElementById("gh-tools-empty");
       const providerLabel = (gitProviders[githubConfig.provider]?.label || githubConfig.provider || "Source Control");
       if (label) {
         label.textContent = configured
@@ -2822,15 +2822,15 @@ Local-first is still the default. To use non-local models, select a configured m
       if (status) status.textContent = configured
         ? `Issue fetch and Git Tools will use ${githubConfig.owner}/${githubConfig.repo}.`
         : "Source control settings are optional and saved in this browser.";
-      const badge = $4("badge-git-connected");
+      const badge = document.getElementById("badge-git-connected");
       if (badge && configured) badge.textContent = `${githubConfig.owner}/${githubConfig.repo}`;
     }
 
     function renderLocalDevState() {
       const configured = Boolean((githubConfig.localRepoPath || "").trim());
-      const label = $4("local-current-label");
-      const empty = $4("local-empty-state");
-      const status = $4("local-settings-status");
+      const label = document.getElementById("local-current-label");
+      const empty = document.getElementById("local-empty-state");
+      const status = document.getElementById("local-settings-status");
       if (label) {
         label.textContent = configured ? `Local project: ${githubConfig.localRepoPath}` : "No local project connected";
         label.className = configured
@@ -2845,7 +2845,7 @@ Local-first is still the default. To use non-local models, select a configured m
 
     async function testLocalDevConnection() {
       saveLocalDevSettings(true);
-      const status = $4("local-settings-status");
+      const status = document.getElementById("local-settings-status");
       if (status) status.textContent = "Testing local bridge connection...";
       try {
         const data = await localGitBridge("status", {});
@@ -2863,7 +2863,7 @@ Local-first is still the default. To use non-local models, select a configured m
 
     async function detectLocalProject() {
       saveLocalDevSettings(true);
-      const status = $4("local-settings-status");
+      const status = document.getElementById("local-settings-status");
       if (status) status.textContent = "Detecting local project...";
       try {
         const data = await localGitBridge("detect", {});
@@ -2884,7 +2884,7 @@ Local-first is still the default. To use non-local models, select a configured m
 
     async function openLocalFolder() {
       saveLocalDevSettings(true);
-      const status = $4("local-settings-status");
+      const status = document.getElementById("local-settings-status");
       if (!githubConfig.localRepoPath) {
         if (status) status.textContent = "Add a local repository path first.";
         showToast("Add a local repository path first");
@@ -2902,7 +2902,7 @@ Local-first is still the default. To use non-local models, select a configured m
 
     async function testGithubRepoConnection() {
       if (!saveGithubRepoSettings(true)) return;
-      const status = $4("repo-settings-status");
+      const status = document.getElementById("repo-settings-status");
       if (status) status.textContent = "Testing repository connection...";
       try {
         const providerKey = String(githubConfig.provider || "github").toLowerCase();
@@ -2930,9 +2930,9 @@ Local-first is still the default. To use non-local models, select a configured m
 
     function rememberGithubResult(action, data) {
       const patch = { lastAction: action };
-      if (action === "createBranch") patch.lastBranch = data?.ref?.replace(/^refs\/heads\//, "") || $4("gh-branch-name")?.value?.trim() || patch.lastBranch;
+      if (action === "createBranch") patch.lastBranch = data?.ref?.replace(/^refs\/heads\//, "") || document.getElementById("gh-branch-name")?.value?.trim() || patch.lastBranch;
       if (action === "createCommit") {
-        patch.lastBranch = $4("gh-commit-branch")?.value?.trim() || githubFlowState().lastBranch || githubConfig.base || "main";
+        patch.lastBranch = document.getElementById("gh-commit-branch")?.value?.trim() || githubFlowState().lastBranch || githubConfig.base || "main";
         patch.lastCommitSha = data?.commit?.sha || data?.sha || "";
       }
       if (action === "createPR") patch.lastPrNumber = data?.number || githubFlowState().lastPrNumber || "";
@@ -3165,9 +3165,9 @@ Local-first is still the default. To use non-local models, select a configured m
     }
 
     function syncGithubToolsToConfig() {
-      const owner = ($4("gh-tools-owner")?.value || githubConfig.owner || "").trim();
-      const repo = ($4("gh-tools-repo")?.value || githubConfig.repo || "").trim();
-      const base = ($4("gh-tools-base")?.value || githubConfig.base || "main").trim() || githubConfig.base || "main";
+      const owner = (document.getElementById("gh-tools-owner")?.value || githubConfig.owner || "").trim();
+      const repo = (document.getElementById("gh-tools-repo")?.value || githubConfig.repo || "").trim();
+      const base = (document.getElementById("gh-tools-base")?.value || githubConfig.base || "main").trim() || githubConfig.base || "main";
       githubConfig.owner = owner || githubConfig.owner;
       githubConfig.repo = repo || githubConfig.repo;
       githubConfig.base = base;
@@ -3177,8 +3177,8 @@ Local-first is still the default. To use non-local models, select a configured m
     }
 
     function renderGithubActionFields() {
-      const action = $4("gh-action")?.value || "listBranches";
-      const base = $4("gh-tools-base")?.value || githubConfig.base || "main";
+      const action = document.getElementById("gh-action")?.value || "listBranches";
+      const base = document.getElementById("gh-tools-base")?.value || githubConfig.base || "main";
       const flow = githubFlowState();
       const lastBranch = flow.lastBranch || "factory/passport-local";
       const lastSha = flow.lastCommitSha || "";
@@ -3203,11 +3203,11 @@ Local-first is still the default. To use non-local models, select a configured m
       if (action === "createRelease") html = field("gh-release-tag", "Tag", "v0.1.0") + field("gh-release-name", "Release name", "Factory Passport v0.1.0") + area("gh-release-body", "Release notes", "Created from Factory 4flo") + `<label class="flex items-center gap-2 text-sm text-zinc-300"><input id="gh-release-draft" type="checkbox" class="accent-pink-500"> Draft release</label>`;
       if (action === "applyLocalPatch") html = `<div class="rounded-2xl bg-zinc-900 border border-zinc-800 p-4 text-sm text-zinc-400">Applies the selected snapshot patch through your local bridge. Browser-only mode cannot write to disk directly; use Electron/isomorphic-git or the tiny bridge endpoint.</div>`;
       if (action === "listBranches" || action === "listReleases") html = `<div class="rounded-2xl bg-zinc-900 border border-zinc-800 p-4 text-sm text-zinc-400">No extra fields needed. These are safe read-only checks.</div>`;
-      $4("gh-action-fields").innerHTML = html;
+      document.getElementById("gh-action-fields").innerHTML = html;
     }
 
     function parseGithubFilesJson() {
-      const raw = $4("gh-commit-files")?.value || "[]";
+      const raw = document.getElementById("gh-commit-files")?.value || "[]";
       const files = JSON.parse(raw);
       if (!Array.isArray(files)) throw new Error("Files JSON must be an array.");
       files.forEach(file => {
@@ -3219,22 +3219,22 @@ Local-first is still the default. To use non-local models, select a configured m
 
     async function runGithubToolAction() {
       syncGithubToolsToConfig();
-      const action = $4("gh-action").value;
-      const result = $4("gh-result");
+      const action = document.getElementById("gh-action").value;
+      const result = document.getElementById("gh-result");
       result.value = "Running " + action + "...";
       try {
         let data;
         if (action === "listBranches") data = await listBranches();
-        if (action === "createBranch") data = await createBranch($4("gh-branch-name").value.trim(), $4("gh-from-ref").value.trim() || githubConfig.base || "main");
-        if (action === "createCommit") data = await createCommit($4("gh-commit-message").value.trim(), parseGithubFilesJson(), $4("gh-commit-branch").value.trim() || githubConfig.base || "main");
-        if (action === "createPR") data = await createProviderPR($4("gh-pr-title").value.trim(), $4("gh-pr-body").value, $4("gh-pr-head").value.trim(), $4("gh-pr-base").value.trim() || githubConfig.base || "main");
-        if (action === "mergePR") data = await mergePR($4("gh-pr-number").value.trim(), $4("gh-merge-method").value);
-        if (action === "addReviewComment") data = await addReviewComment($4("gh-comment-pr").value.trim(), $4("gh-comment-body").value, $4("gh-comment-commit").value.trim(), $4("gh-comment-path").value.trim(), $4("gh-comment-position").value.trim());
-        if (action === "listCheckRuns") data = await listCheckRuns($4("gh-check-sha").value.trim());
-        if (action === "createCommitStatus") data = await createCommitStatus($4("gh-status-sha").value.trim(), $4("gh-status-state").value, $4("gh-status-description").value.trim(), $4("gh-status-context").value.trim());
+        if (action === "createBranch") data = await createBranch(document.getElementById("gh-branch-name").value.trim(), document.getElementById("gh-from-ref").value.trim() || githubConfig.base || "main");
+        if (action === "createCommit") data = await createCommit(document.getElementById("gh-commit-message").value.trim(), parseGithubFilesJson(), document.getElementById("gh-commit-branch").value.trim() || githubConfig.base || "main");
+        if (action === "createPR") data = await createProviderPR(document.getElementById("gh-pr-title").value.trim(), document.getElementById("gh-pr-body").value, document.getElementById("gh-pr-head").value.trim(), document.getElementById("gh-pr-base").value.trim() || githubConfig.base || "main");
+        if (action === "mergePR") data = await mergePR(document.getElementById("gh-pr-number").value.trim(), document.getElementById("gh-merge-method").value);
+        if (action === "addReviewComment") data = await addReviewComment(document.getElementById("gh-comment-pr").value.trim(), document.getElementById("gh-comment-body").value, document.getElementById("gh-comment-commit").value.trim(), document.getElementById("gh-comment-path").value.trim(), document.getElementById("gh-comment-position").value.trim());
+        if (action === "listCheckRuns") data = await listCheckRuns(document.getElementById("gh-check-sha").value.trim());
+        if (action === "createCommitStatus") data = await createCommitStatus(document.getElementById("gh-status-sha").value.trim(), document.getElementById("gh-status-state").value, document.getElementById("gh-status-description").value.trim(), document.getElementById("gh-status-context").value.trim());
         if (action === "applyLocalPatch") data = await applyPatchToLocalGit();
         if (action === "listReleases") data = await listReleases();
-        if (action === "createRelease") data = await createRelease($4("gh-release-tag").value.trim(), $4("gh-release-name").value.trim(), $4("gh-release-body").value, $4("gh-release-draft").checked);
+        if (action === "createRelease") data = await createRelease(document.getElementById("gh-release-tag").value.trim(), document.getElementById("gh-release-name").value.trim(), document.getElementById("gh-release-body").value, document.getElementById("gh-release-draft").checked);
         const flow = rememberGithubResult(action, data);
         const shaNote = flow.lastCommitSha ? `
 
@@ -4054,12 +4054,11 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
     let activeModel = localStorage.getItem(FOURFLO.activeModel) || 'local';
     let activeModelChain = appLoadModelChain();
     let currentSession = [];
-    const $4 = id => document.getElementById(id);
     function appLoadJSON(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } }
     function appSaveJSON(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
     function appEsc(value) { return String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
     function showToast(message) {
-      const t=$4('toast');
+      const t=document.getElementById('toast');
       if(!t) return;
       if (t.parentElement !== document.body) document.body.appendChild(t);
       t.textContent=message;
@@ -4072,11 +4071,11 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
 
     function switchTab(tab) {
       ['factory','chat','keys','history','flows','plugins'].forEach(name => {
-        $4(name + '-screen')?.classList.toggle('hidden', name !== tab);
-        $4('nav-' + name)?.classList.toggle('active', name === tab);
+        document.getElementById(name + '-screen')?.classList.toggle('hidden', name !== tab);
+        document.getElementById('nav-' + name)?.classList.toggle('active', name === tab);
       });
       const titles = { factory:'Factory Passport', chat:'4flo Assistant', keys:'Credentials', history:'History', flows:'Automations', plugins:'Plugins' };
-      $4('tab-title').textContent = titles[tab] || 'Factory 4flo';
+      document.getElementById('tab-title').textContent = titles[tab] || 'Factory 4flo';
       if (tab === 'keys') renderCredentials();
       if (tab === 'history') renderHistory();
       if (tab === 'flows') renderFlows();
@@ -4105,9 +4104,9 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
           <div class="flex justify-between items-start mb-4"><div><div class="font-semibold">Local Model Endpoint</div><div class="text-xs text-zinc-500">Examples: http://localhost:11434 · http://localhost:1234/v1</div></div><div class="text-xs px-3 py-1 rounded-full bg-amber-900 text-amber-300">Local</div></div>
           <input id="key-local-endpoint" value="${appEsc(localModelConfig.endpoint || 'http://localhost:11434')}" class="w-full bg-black border border-zinc-700 rounded-2xl px-5 py-4 text-sm mb-3">
           <input id="key-local-model" value="${appEsc(localModelConfig.model || 'llama3.1')}" placeholder="Model name" class="w-full bg-black border border-zinc-700 rounded-2xl px-5 py-4 text-sm">
-          <div class="mt-4 flex flex-wrap gap-2"><button onclick="localModelConfig.endpoint=$4('key-local-endpoint').value; localModelConfig.model=$4('key-local-model').value; setValue('localModelEndpoint', localModelConfig.endpoint); setValue('localModelName', localModelConfig.model); saveLocalModelConfig(); selectModel('local')" class="px-5 py-3 bg-white text-black rounded-2xl text-sm font-semibold">Save + Use Local</button><button onclick="toggleModelInRoute('local')" class="px-5 py-3 bg-zinc-800 rounded-2xl text-sm">Add / Remove Local</button><button onclick="setLocalFirstRoute()" class="px-5 py-3 bg-zinc-800 rounded-2xl text-sm">Keep Local First</button><button onclick="detectLocalModelEndpoint()" class="px-5 py-3 bg-zinc-800 rounded-2xl text-sm">Auto-detect</button></div>
+          <div class="mt-4 flex flex-wrap gap-2"><button onclick="localModelConfig.endpoint=document.getElementById('key-local-endpoint').value; localModelConfig.model=document.getElementById('key-local-model').value; setValue('localModelEndpoint', localModelConfig.endpoint); setValue('localModelName', localModelConfig.model); saveLocalModelConfig(); selectModel('local')" class="px-5 py-3 bg-white text-black rounded-2xl text-sm font-semibold">Save + Use Local</button><button onclick="toggleModelInRoute('local')" class="px-5 py-3 bg-zinc-800 rounded-2xl text-sm">Add / Remove Local</button><button onclick="setLocalFirstRoute()" class="px-5 py-3 bg-zinc-800 rounded-2xl text-sm">Keep Local First</button><button onclick="detectLocalModelEndpoint()" class="px-5 py-3 bg-zinc-800 rounded-2xl text-sm">Auto-detect</button></div>
         </div>`;
-      $4('credentials-list').innerHTML = customCards + localCard + providers.filter(p=>p.id!=='local').map(p => `
+      document.getElementById('credentials-list').innerHTML = customCards + localCard + providers.filter(p=>p.id!=='local').map(p => `
         <div class="bg-zinc-900 rounded-3xl p-6 border border-zinc-700">
           <div class="flex justify-between items-start mb-4"><div><div class="font-semibold">${p.label}</div><div class="text-xs text-zinc-500">${p.model}</div></div><div class="text-xs px-3 py-1 rounded-full ${keys[p.keyName]?'bg-emerald-900 text-emerald-400':'bg-zinc-800 text-zinc-400'}">${keys[p.keyName]?'✓ Configured':'Not configured'}</div></div>
           <div class="relative"><input id="key-${p.keyName}" type="password" value="${appEsc(keys[p.keyName] || '')}" placeholder="Paste ${p.label} key" class="w-full bg-black border border-zinc-700 rounded-2xl px-5 py-4 pr-14 text-sm"><button onclick="toggleAppPassword('key-${p.keyName}')" class="absolute right-4 top-4 text-zinc-400">👁</button></div>
@@ -4118,30 +4117,30 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
 
     function credentialId() { return 'cred-' + (crypto?.randomUUID?.() || Date.now() + '-' + Math.random().toString(16).slice(2)); }
     function toggleNewCredentialForm(force) {
-      const form = $4('new-credential-form');
+      const form = document.getElementById('new-credential-form');
       if (!form) return;
       const shouldShow = typeof force === 'boolean' ? force : form.classList.contains('hidden');
       form.classList.toggle('hidden', !shouldShow);
-      if (shouldShow) setTimeout(() => $4('cred-name')?.focus(), 50);
+      if (shouldShow) setTimeout(() => document.getElementById('cred-name')?.focus(), 50);
     }
     function clearCredentialForm() {
-      ['cred-name','cred-service','cred-username','cred-secret','cred-notes'].forEach(id => { const el=$4(id); if(el) el.value=''; });
-      if ($4('cred-kind')) $4('cred-kind').value = 'api-key';
+      ['cred-name','cred-service','cred-username','cred-secret','cred-notes'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+      if (document.getElementById('cred-kind')) document.getElementById('cred-kind').value = 'api-key';
     }
     function saveCustomCredential() {
-      const name = ($4('cred-name')?.value || '').trim();
-      const secret = ($4('cred-secret')?.value || '').trim();
+      const name = (document.getElementById('cred-name')?.value || '').trim();
+      const secret = (document.getElementById('cred-secret')?.value || '').trim();
       if (!name) return alert('Give the credential a name.');
       if (!secret) return alert('Add the secret, token, URL, or value.');
       const items = appLoadJSON(FOURFLO.customCredentials, []);
       items.unshift({
         id: credentialId(),
         name,
-        kind: ($4('cred-kind')?.value || 'api-key').trim(),
-        service: ($4('cred-service')?.value || '').trim(),
-        username: ($4('cred-username')?.value || '').trim(),
+        kind: (document.getElementById('cred-kind')?.value || 'api-key').trim(),
+        service: (document.getElementById('cred-service')?.value || '').trim(),
+        username: (document.getElementById('cred-username')?.value || '').trim(),
         secret,
-        notes: ($4('cred-notes')?.value || '').trim(),
+        notes: (document.getElementById('cred-notes')?.value || '').trim(),
         createdAt: new Date().toLocaleString(),
         updatedAt: new Date().toLocaleString()
       });
@@ -4194,7 +4193,7 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
       showToast('Credential deleted');
       renderCredentials();
     }
-    function saveModelKey(name) { const keys=appLoadJSON(FOURFLO.keys,{}); keys[name]=$4('key-'+name).value.trim(); appSaveJSON(FOURFLO.keys,keys); showToast(name.toUpperCase()+' key saved'); renderCredentials(); updatePluginStatus(); }
+    function saveModelKey(name) { const keys=appLoadJSON(FOURFLO.keys,{}); keys[name]=document.getElementById('key-'+name).value.trim(); appSaveJSON(FOURFLO.keys,keys); showToast(name.toUpperCase()+' key saved'); renderCredentials(); updatePluginStatus(); }
     function clearAllKeys() { localStorage.removeItem(FOURFLO.keys); showToast('Keys cleared'); renderCredentials(); }
     function connectNonLocalAI() {
       switchTab('keys');
@@ -4207,9 +4206,9 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
     function moveRouteModel(id, dir) { const i=activeModelChain.indexOf(id); if(i<0) return; const j=i+dir; if(j<0 || j>=activeModelChain.length) return; [activeModelChain[i], activeModelChain[j]]=[activeModelChain[j], activeModelChain[i]]; appSaveModelChain(); }
     function setLocalFirstRoute() { activeModelChain=['local', ...activeModelChain.filter(id=>id!=='local')]; appSaveModelChain(); showToast('Local-first route: '+modelRouteLabel()); }
     function modelRouteLabel() { return selectedModelProviders().map(p=>p.label).join(' → '); }
-    function updateActiveModelLabel() { if($4('active-model-label')) $4('active-model-label').textContent=modelRouteLabel(); }
-    function toggleAppPassword(id) { const el=$4(id); if(!el) return; el.type = el.type === 'password' ? 'text' : 'password'; }
-    async function testConfiguredModel() { switchTab('chat'); $4('welcome').classList.add('hidden'); $4('messages').classList.remove('hidden'); addMessage('Test active model', 'user'); const loadingId=addLoading(); const reply=await callAI('Reply with a short confirmation that 4flo is working.'); $4(loadingId)?.remove(); addMessage(reply,'ai'); }
+    function updateActiveModelLabel() { if(document.getElementById('active-model-label')) document.getElementById('active-model-label').textContent=modelRouteLabel(); }
+    function toggleAppPassword(id) { const el=document.getElementById(id); if(!el) return; el.type = el.type === 'password' ? 'text' : 'password'; }
+    async function testConfiguredModel() { switchTab('chat'); document.getElementById('welcome').classList.add('hidden'); document.getElementById('messages').classList.remove('hidden'); addMessage('Test active model', 'user'); const loadingId=addLoading(); const reply=await callAI('Reply with a short confirmation that 4flo is working.'); document.getElementById(loadingId)?.remove(); addMessage(reply,'ai'); }
 
     function activeCloudModelConfigured() {
       try {
@@ -4251,18 +4250,18 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
     }
 
     async function sendMessage() {
-      const input=$4('user-input'); const text=input.value.trim(); if(!text) return;
-      $4('welcome').classList.add('hidden'); $4('messages').classList.remove('hidden'); addMessage(text,'user'); currentSession.push({role:'user',content:text,at:new Date().toISOString()}); input.value='';
+      const input=document.getElementById('user-input'); const text=input.value.trim(); if(!text) return;
+      document.getElementById('welcome').classList.add('hidden'); document.getElementById('messages').classList.remove('hidden'); addMessage(text,'user'); currentSession.push({role:'user',content:text,at:new Date().toISOString()}); input.value='';
       const handled = await handleFactoryCommand(text);
       if (handled) { addMessage(handled,'ai'); currentSession.push({role:'assistant',content:handled,at:new Date().toISOString()}); persistCurrentSession(); return; }
-      const loadingId=addLoading(); const reply=await callAI(text); $4(loadingId)?.remove(); addMessage(reply,'ai'); currentSession.push({role:'assistant',content:reply,at:new Date().toISOString()}); persistCurrentSession();
+      const loadingId=addLoading(); const reply=await callAI(text); document.getElementById(loadingId)?.remove(); addMessage(reply,'ai'); currentSession.push({role:'assistant',content:reply,at:new Date().toISOString()}); persistCurrentSession();
     }
     async function handleFactoryCommand(text) {
       const lower=text.toLowerCase();
       if(lower.includes('new factory') || lower.includes('start') && lower.includes('run') || lower.includes('new run')) {
         const idea = text.replace(/^(please\s*)?(start|create|new)\s+(a\s+)?(new\s+)?(factory\s+)?run\s*(about|for|:)?/i,'').trim() || text;
-        $4('ideaInput').value = idea;
-        if(!$4('runTitleInput').value) $4('runTitleInput').value = firstLine(idea).slice(0,70) || '4flo Factory Run';
+        document.getElementById('ideaInput').value = idea;
+        if(!document.getElementById('runTitleInput').value) document.getElementById('runTitleInput').value = firstLine(idea).slice(0,70) || '4flo Factory Run';
         createRun(); switchTab('factory'); return 'Started a Factory Passport run and generated the first snapshot chain. It will save locally first; connected services can execute when configured.';
       }
       if(lower.includes('fetch issue')) { createRunFromGithubIssues(); switchTab('factory'); return 'Fetching issue details through the selected Git plugin and starting the run.'; }
@@ -4273,7 +4272,7 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
       if(lower.includes('replay')) { if(selectedSnapshotId) replayFromSnapshot(selectedSnapshotId); switchTab('factory'); return 'Replayed from the selected snapshot.'; }
       if(lower.includes('security review') || lower.includes('security stage')) {
         const parent = findSnapshot(selectedSnapshotId) || run.snapshots.at(-1);
-        if (!run.id) { $4('ideaInput').value = text; createRun(); }
+        if (!run.id) { document.getElementById('ideaInput').value = text; createRun(); }
         const base = findSnapshot(selectedSnapshotId) || run.snapshots.at(-1);
         const snap = makeSnapshot({ stage:'Security Review', input: base?.output || base?.input || text, output:'', parentId: base?.id || null, source:'Local Model', status:'pending' });
         run.snapshots.splice(base ? run.snapshots.indexOf(base) + 1 : run.snapshots.length, 0, snap);
@@ -4302,34 +4301,34 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
       if(lower.includes('factory') || lower.includes('snapshot') || lower.includes('pipeline')) return 'Factory command handled locally. Local Model is the default executor; your selected model route can mix local and keyed cloud providers in any order.';
       return 'I received your request. Local-first Assistant is ready. Try: “start a new factory run,” “approve selected snapshot,” “show diff,” “run pipeline,” or “export run.”';
     }
-    function quickPrompt(text) { switchTab('chat'); $4('user-input').value=text; sendMessage(); }
-    function addMessage(text,sender) { const div=document.createElement('div'); div.className='flex '+(sender==='user'?'justify-end':'justify-start'); div.innerHTML=sender==='user'?`<div class="message-bubble user-bubble">${appEsc(text)}</div>`:`<div class="flex gap-3"><div class="w-8 h-8 bg-gradient-to-br from-pink-400 to-blue-400 rounded-2xl flex-shrink-0 flex items-center justify-center text-lg">🌸</div><div class="message-bubble ai-bubble">${appEsc(text)}</div></div>`; $4('messages').appendChild(div); $4('messages').scrollTop=$4('messages').scrollHeight; }
-    function addLoading() { const id='loading-'+Date.now(); const div=document.createElement('div'); div.id=id; div.className='flex justify-start'; div.innerHTML='<div class="flex gap-3"><div class="w-8 h-8 bg-gradient-to-br from-pink-400 to-blue-400 rounded-2xl flex-shrink-0 flex items-center justify-center text-lg animate-pulse">🌸</div><div class="message-bubble ai-bubble">Thinking...</div></div>'; $4('messages').appendChild(div); return id; }
-    function newChat() { if(currentSession.length) persistCurrentSession(); currentSession=[]; $4('messages').innerHTML=''; $4('welcome').classList.remove('hidden'); $4('messages').classList.add('hidden'); switchTab('chat'); showToast('New session started'); }
+    function quickPrompt(text) { switchTab('chat'); document.getElementById('user-input').value=text; sendMessage(); }
+    function addMessage(text,sender) { const div=document.createElement('div'); div.className='flex '+(sender==='user'?'justify-end':'justify-start'); div.innerHTML=sender==='user'?`<div class="message-bubble user-bubble">${appEsc(text)}</div>`:`<div class="flex gap-3"><div class="w-8 h-8 bg-gradient-to-br from-pink-400 to-blue-400 rounded-2xl flex-shrink-0 flex items-center justify-center text-lg">🌸</div><div class="message-bubble ai-bubble">${appEsc(text)}</div></div>`; document.getElementById('messages').appendChild(div); document.getElementById('messages').scrollTop=document.getElementById('messages').scrollHeight; }
+    function addLoading() { const id='loading-'+Date.now(); const div=document.createElement('div'); div.id=id; div.className='flex justify-start'; div.innerHTML='<div class="flex gap-3"><div class="w-8 h-8 bg-gradient-to-br from-pink-400 to-blue-400 rounded-2xl flex-shrink-0 flex items-center justify-center text-lg animate-pulse">🌸</div><div class="message-bubble ai-bubble">Thinking...</div></div>'; document.getElementById('messages').appendChild(div); return id; }
+    function newChat() { if(currentSession.length) persistCurrentSession(); currentSession=[]; document.getElementById('messages').innerHTML=''; document.getElementById('welcome').classList.remove('hidden'); document.getElementById('messages').classList.add('hidden'); switchTab('chat'); showToast('New session started'); }
     function persistCurrentSession() { if(!currentSession.length) return; const sessions=appLoadJSON(FOURFLO.sessions,[]); const title=currentSession.find(m=>m.role==='user')?.content?.slice(0,70)||'Untitled session'; const existing=sessions.findIndex(s=>s.id===currentSession._id); if(!currentSession._id) currentSession._id=Date.now(); const record={id:currentSession._id,title,messages:[...currentSession],createdAt:new Date().toISOString()}; if(existing>-1) sessions[existing]=record; else sessions.unshift(record); appSaveJSON(FOURFLO.sessions,sessions.slice(0,40)); }
-    function renderHistory() { const sessions=appLoadJSON(FOURFLO.sessions,[]); $4('history-list').innerHTML=sessions.length?sessions.map(s=>`<button onclick="loadSession(${s.id})" class="w-full text-left bg-zinc-900 hover:bg-zinc-800 rounded-3xl p-6 border border-zinc-800"><div class="flex justify-between gap-4"><div><div class="font-medium">${appEsc(s.title)}</div><div class="text-xs text-zinc-500 mt-1">${new Date(s.createdAt).toLocaleString()} • ${s.messages.length} messages</div></div><div class="text-pink-400 text-sm">→</div></div></button>`).join(''):'<div class="bg-zinc-900 rounded-3xl p-8 text-center text-zinc-400">No saved sessions yet.</div>'; }
-    function loadSession(id) { const s=appLoadJSON(FOURFLO.sessions,[]).find(x=>x.id===id); if(!s) return; currentSession=[...s.messages]; currentSession._id=s.id; $4('messages').innerHTML=''; $4('welcome').classList.add('hidden'); $4('messages').classList.remove('hidden'); currentSession.forEach(m=>addMessage(m.content,m.role==='user'?'user':'ai')); switchTab('chat'); showToast('Session loaded'); }
+    function renderHistory() { const sessions=appLoadJSON(FOURFLO.sessions,[]); document.getElementById('history-list').innerHTML=sessions.length?sessions.map(s=>`<button onclick="loadSession(${s.id})" class="w-full text-left bg-zinc-900 hover:bg-zinc-800 rounded-3xl p-6 border border-zinc-800"><div class="flex justify-between gap-4"><div><div class="font-medium">${appEsc(s.title)}</div><div class="text-xs text-zinc-500 mt-1">${new Date(s.createdAt).toLocaleString()} • ${s.messages.length} messages</div></div><div class="text-pink-400 text-sm">→</div></div></button>`).join(''):'<div class="bg-zinc-900 rounded-3xl p-8 text-center text-zinc-400">No saved sessions yet.</div>'; }
+    function loadSession(id) { const s=appLoadJSON(FOURFLO.sessions,[]).find(x=>x.id===id); if(!s) return; currentSession=[...s.messages]; currentSession._id=s.id; document.getElementById('messages').innerHTML=''; document.getElementById('welcome').classList.add('hidden'); document.getElementById('messages').classList.remove('hidden'); currentSession.forEach(m=>addMessage(m.content,m.role==='user'?'user':'ai')); switchTab('chat'); showToast('Session loaded'); }
     function clearHistory() { localStorage.removeItem(FOURFLO.sessions); renderHistory(); showToast('History cleared'); }
 
-    function renderFlows() { const flows=appLoadJSON(FOURFLO.flows,[]); $4('flows-list').innerHTML=flows.length?flows.map(f=>`<div class="bg-zinc-900 rounded-3xl p-6 border border-zinc-800"><div class="flex justify-between gap-4"><div><div class="flex items-center gap-3"><div class="font-semibold text-lg">${appEsc(f.name)}</div><span class="text-xs px-3 py-1 rounded-full ${f.status==='Active'?'bg-emerald-900 text-emerald-400':f.status==='Paused'?'bg-yellow-900 text-yellow-300':'bg-zinc-800 text-zinc-400'}">${appEsc(f.status)}</span></div><div class="text-sm text-zinc-400 mt-3"><b>Trigger:</b> ${appEsc(f.trigger)}</div><div class="text-sm text-zinc-400 mt-1"><b>Action:</b> ${appEsc(f.action)}</div><div class="text-xs text-zinc-600 mt-3">Last run: ${appEsc(f.lastRun||'Never')}</div></div><div class="flex flex-col gap-2"><button onclick="runFlow(${f.id})" class="px-4 py-2 bg-white text-black rounded-xl text-sm font-semibold">Run</button><button onclick="editFlow(${f.id})" class="px-4 py-2 bg-zinc-800 rounded-xl text-sm">Edit</button><button onclick="deleteFlow(${f.id})" class="px-4 py-2 bg-zinc-800 rounded-xl text-sm text-red-300">Delete</button></div></div></div>`).join(''):'<div class="bg-zinc-900 rounded-3xl p-8 text-center"><p class="text-zinc-400 mb-5">No automations yet. Create your first one.</p><button onclick="openCreateFlowModal()" class="bg-gradient-to-r from-pink-500 to-blue-500 px-6 py-3 rounded-2xl font-semibold">Create New Automation</button></div>'; }
-    function openCreateFlowModal() { $4('flow-modal-title').textContent='Create Automation'; $4('flow-edit-id').value=''; $4('flow-name').value=''; $4('flow-trigger').value=''; $4('flow-action').value=''; $4('flow-status').value=appLoadJSON(FOURFLO.settings,{defaultStatus:'Active'}).defaultStatus||'Active'; openModal('flow-modal'); }
-    function editFlow(id) { const f=appLoadJSON(FOURFLO.flows,[]).find(x=>x.id===id); if(!f) return; $4('flow-modal-title').textContent='Edit Automation'; $4('flow-edit-id').value=f.id; $4('flow-name').value=f.name; $4('flow-trigger').value=f.trigger; $4('flow-action').value=f.action; $4('flow-status').value=f.status; openModal('flow-modal'); }
-    function saveFlowFromModal() { const name=$4('flow-name').value.trim(), trigger=$4('flow-trigger').value.trim(), action=$4('flow-action').value.trim(), status=$4('flow-status').value; if(!name||!trigger||!action) return showToast('Name, trigger, and action are required'); const flows=appLoadJSON(FOURFLO.flows,[]); const id=Number($4('flow-edit-id').value); if(id){ const idx=flows.findIndex(f=>f.id===id); if(idx>-1) flows[idx]={...flows[idx],name,trigger,action,status}; } else flows.unshift({id:Date.now(),name,trigger,action,status,lastRun:'Never'}); appSaveJSON(FOURFLO.flows,flows); closeModals(); renderFlows(); switchTab('flows'); showToast('Automation saved'); }
-    function runFlow(id) { const flows=appLoadJSON(FOURFLO.flows,[]); const f=flows.find(x=>x.id===id); if(!f) return; f.lastRun=new Date().toLocaleString(); appSaveJSON(FOURFLO.flows,flows); renderFlows(); switchTab('chat'); $4('welcome').classList.add('hidden'); $4('messages').classList.remove('hidden'); addMessage('Run automation: '+f.name,'user'); addMessage('✅ Automation run complete.\nTrigger: '+f.trigger+'\nAction: '+f.action,'ai'); showToast('Automation ran'); }
+    function renderFlows() { const flows=appLoadJSON(FOURFLO.flows,[]); document.getElementById('flows-list').innerHTML=flows.length?flows.map(f=>`<div class="bg-zinc-900 rounded-3xl p-6 border border-zinc-800"><div class="flex justify-between gap-4"><div><div class="flex items-center gap-3"><div class="font-semibold text-lg">${appEsc(f.name)}</div><span class="text-xs px-3 py-1 rounded-full ${f.status==='Active'?'bg-emerald-900 text-emerald-400':f.status==='Paused'?'bg-yellow-900 text-yellow-300':'bg-zinc-800 text-zinc-400'}">${appEsc(f.status)}</span></div><div class="text-sm text-zinc-400 mt-3"><b>Trigger:</b> ${appEsc(f.trigger)}</div><div class="text-sm text-zinc-400 mt-1"><b>Action:</b> ${appEsc(f.action)}</div><div class="text-xs text-zinc-600 mt-3">Last run: ${appEsc(f.lastRun||'Never')}</div></div><div class="flex flex-col gap-2"><button onclick="runFlow(${f.id})" class="px-4 py-2 bg-white text-black rounded-xl text-sm font-semibold">Run</button><button onclick="editFlow(${f.id})" class="px-4 py-2 bg-zinc-800 rounded-xl text-sm">Edit</button><button onclick="deleteFlow(${f.id})" class="px-4 py-2 bg-zinc-800 rounded-xl text-sm text-red-300">Delete</button></div></div></div>`).join(''):'<div class="bg-zinc-900 rounded-3xl p-8 text-center"><p class="text-zinc-400 mb-5">No automations yet. Create your first one.</p><button onclick="openCreateFlowModal()" class="bg-gradient-to-r from-pink-500 to-blue-500 px-6 py-3 rounded-2xl font-semibold">Create New Automation</button></div>'; }
+    function openCreateFlowModal() { document.getElementById('flow-modal-title').textContent='Create Automation'; document.getElementById('flow-edit-id').value=''; document.getElementById('flow-name').value=''; document.getElementById('flow-trigger').value=''; document.getElementById('flow-action').value=''; document.getElementById('flow-status').value=appLoadJSON(FOURFLO.settings,{defaultStatus:'Active'}).defaultStatus||'Active'; openModal('flow-modal'); }
+    function editFlow(id) { const f=appLoadJSON(FOURFLO.flows,[]).find(x=>x.id===id); if(!f) return; document.getElementById('flow-modal-title').textContent='Edit Automation'; document.getElementById('flow-edit-id').value=f.id; document.getElementById('flow-name').value=f.name; document.getElementById('flow-trigger').value=f.trigger; document.getElementById('flow-action').value=f.action; document.getElementById('flow-status').value=f.status; openModal('flow-modal'); }
+    function saveFlowFromModal() { const name=document.getElementById('flow-name').value.trim(), trigger=document.getElementById('flow-trigger').value.trim(), action=document.getElementById('flow-action').value.trim(), status=document.getElementById('flow-status').value; if(!name||!trigger||!action) return showToast('Name, trigger, and action are required'); const flows=appLoadJSON(FOURFLO.flows,[]); const id=Number(document.getElementById('flow-edit-id').value); if(id){ const idx=flows.findIndex(f=>f.id===id); if(idx>-1) flows[idx]={...flows[idx],name,trigger,action,status}; } else flows.unshift({id:Date.now(),name,trigger,action,status,lastRun:'Never'}); appSaveJSON(FOURFLO.flows,flows); closeModals(); renderFlows(); switchTab('flows'); showToast('Automation saved'); }
+    function runFlow(id) { const flows=appLoadJSON(FOURFLO.flows,[]); const f=flows.find(x=>x.id===id); if(!f) return; f.lastRun=new Date().toLocaleString(); appSaveJSON(FOURFLO.flows,flows); renderFlows(); switchTab('chat'); document.getElementById('welcome').classList.add('hidden'); document.getElementById('messages').classList.remove('hidden'); addMessage('Run automation: '+f.name,'user'); addMessage('✅ Automation run complete.\nTrigger: '+f.trigger+'\nAction: '+f.action,'ai'); showToast('Automation ran'); }
     function deleteFlow(id) { appSaveJSON(FOURFLO.flows, appLoadJSON(FOURFLO.flows,[]).filter(f=>f.id!==id)); renderFlows(); showToast('Automation deleted'); }
 
     function openModal(id) {
-      const root = $4('modal-root');
+      const root = document.getElementById('modal-root');
       if (!root) return;
       if (root.parentElement !== document.body) document.body.appendChild(root);
       root.style.zIndex = '9998';
       root.classList.remove('hidden');
       root.classList.add('flex');
       document.querySelectorAll('.app-modal').forEach(m => m.classList.add('hidden'));
-      const modal = $4(id);
+      const modal = document.getElementById(id);
       if (modal) modal.classList.remove('hidden');
     }
-    function closeModals() { $4('modal-root').classList.add('hidden'); $4('modal-root').classList.remove('flex'); }
+    function closeModals() { document.getElementById('modal-root').classList.add('hidden'); document.getElementById('modal-root').classList.remove('flex'); }
     function closeModalOnBackdrop(e) { if(e.target.id==='modal-root') closeModals(); }
     let wikiOpen = false;
 
@@ -4349,8 +4348,8 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
             panel.classList.add("w-0");
         }
     }
-    function saveSettings() { appSaveJSON(FOURFLO.settings, {tone:$4('tone-select').value, defaultStatus:$4('default-flow-status').value}); closeModals(); showToast('Settings saved'); }
-    function loadAppSettings() { const s=appLoadJSON(FOURFLO.settings,{tone:'practical',defaultStatus:'Active'}); if($4('tone-select')) $4('tone-select').value=s.tone||'practical'; if($4('default-flow-status')) $4('default-flow-status').value=s.defaultStatus||'Active'; }
+    function saveSettings() { appSaveJSON(FOURFLO.settings, {tone:document.getElementById('tone-select').value, defaultStatus:document.getElementById('default-flow-status').value}); closeModals(); showToast('Settings saved'); }
+    function loadAppSettings() { const s=appLoadJSON(FOURFLO.settings,{tone:'practical',defaultStatus:'Active'}); if(document.getElementById('tone-select')) document.getElementById('tone-select').value=s.tone||'practical'; if(document.getElementById('default-flow-status')) document.getElementById('default-flow-status').value=s.defaultStatus||'Active'; }
     function loadGithubRepoSettings() {
       try {
         const legacy = JSON.parse(localStorage.getItem("factory-github-repo") || "{}");
@@ -4367,9 +4366,9 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
       syncRepoInputsFromConfig?.();
       renderGithubRepoState?.();
     }
-    function newFactoryRun() { switchTab('factory'); $4('ideaInput')?.focus(); showToast('Add an idea, then Start Factory Run'); }
+    function newFactoryRun() { switchTab('factory'); document.getElementById('ideaInput')?.focus(); showToast('Add an idea, then Start Factory Run'); }
 
-    document.addEventListener('keydown', e => { if(e.metaKey && e.key.toLowerCase()==='k') { e.preventDefault(); switchTab('chat'); $4('user-input').focus(); } if(e.key==='Escape') closeModals(); });
+    document.addEventListener('keydown', e => { if(e.metaKey && e.key.toLowerCase()==='k') { e.preventDefault(); switchTab('chat'); document.getElementById('user-input').focus(); } if(e.key==='Escape') closeModals(); });
 
 
     function gotoAppSection(targetId = 'factory-screen', tabName = 'factory') {
