@@ -253,13 +253,13 @@
         <div>
           <h2 class="font-semibold text-xl flex items-center gap-2">
             <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            Currently Connected AI &amp; Plugins
+            Project Setup
           </h2>
-          <p class="text-sm text-slate-400">Active roles driving the current software factory loop.</p>
+          <p class="text-sm text-slate-400">Local-first project setup, optional source control, and connected services.</p>
         </div>
         <div class="flex flex-wrap gap-2">
           <button onclick="switchTab('plugins')" class="ui-btn-sm ui-btn-dark border border-slate-700">Configure Plugins</button>
-          <button onclick="togglePanel('connectionsBody')" class="ui-btn-sm ui-btn-dark">Toggle Settings View</button>
+          <button onclick="togglePanel('connectionsBody')" class="ui-btn-sm ui-btn-dark">Toggle Plugin Settings</button>
         </div>
       </div>
 
@@ -283,10 +283,108 @@
       </div>
 
       <div id="connectionRealityNote" class="mb-4 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
-        Demo defaults are labeled as examples. Configure a real repo, credential, endpoint, service ID, or local model test before treating a plugin as connected.
+        Factory 4flo is local-first. Start with a project on your computer, then optionally link source control and cloud plugins.
       </div>
 
-      <div id="connectionsBody" class="hidden grid lg:grid-cols-4 gap-6 pt-4 border-t border-zinc-800">
+      <div id="local-dev-card" class="mb-4 rounded-3xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-4">
+          <div>
+            <h3 class="font-semibold text-lg flex items-center gap-2">
+              <i class="fa-solid fa-laptop-code text-emerald-400"></i>
+              Local Development
+            </h3>
+            <p class="text-sm text-zinc-400 mt-1">Work directly with a project on your computer. Factory 4flo can work completely offline.</p>
+          </div>
+          <div id="local-current-label" class="text-xs rounded-full px-3 py-1 border border-zinc-700 bg-zinc-900 text-zinc-400">No local project connected</div>
+        </div>
+
+        <div id="local-empty-state" class="mb-4 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-4 text-sm text-emerald-100">
+          <div class="font-semibold mb-1">No local project connected.</div>
+          <div class="text-emerald-100/80">Factory 4flo works without a local repository. Connect one to apply patches, create branches, view git status, and commit changes.</div>
+        </div>
+
+        <div class="grid md:grid-cols-[1fr_.9fr] gap-3">
+          <label class="block">
+            <span class="block text-xs text-zinc-500 mb-1">Repository path</span>
+            <input id="localRepoPath" class="w-full factory-field px-4 py-3" placeholder="/Users/you/Projects/my-app" autocomplete="off" />
+          </label>
+          <label class="block">
+            <span class="block text-xs text-zinc-500 mb-1">Local Git Bridge</span>
+            <input id="localGitBridge" class="w-full factory-field px-4 py-3" placeholder="http://localhost:4787" value="http://localhost:4787" autocomplete="off" />
+          </label>
+        </div>
+
+        <div class="flex flex-wrap gap-2 mt-4">
+          <button onclick="detectLocalProject()" class="ui-btn factory-gradient-btn"><i class="fa-solid fa-magnifying-glass-location"></i> Detect Project</button>
+          <button onclick="testLocalDevConnection()" class="ui-btn ui-btn-zinc"><i class="fa-solid fa-plug-circle-check"></i> Test Connection</button>
+          <button onclick="openLocalFolder()" class="ui-btn ui-btn-dark"><i class="fa-solid fa-folder-open"></i> Open Folder</button>
+          <button onclick="saveLocalDevSettings(false)" class="ui-btn ui-btn-dark"><i class="fa-solid fa-floppy-disk"></i> Save Local Settings</button>
+        </div>
+
+        <p id="local-settings-status" class="text-xs text-zinc-500 mt-3">Local repository access is optional and saved in this browser.</p>
+      </div>
+
+      <div id="repo-settings-card" class="mb-4 rounded-3xl border border-blue-500/20 bg-blue-500/5 p-4">
+        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-4">
+          <div>
+            <h3 class="font-semibold text-lg flex items-center gap-2">
+              <i class="fa-solid fa-cloud-arrow-up text-blue-400"></i>
+              Source Control
+            </h3>
+            <p class="text-sm text-zinc-400 mt-1">Associate this Factory Passport with a source control repository. Connect a repository to fetch issues, create branches, open pull requests, publish releases, and synchronize Factory Passport snapshots with your provider.</p>
+          </div>
+          <div id="repo-current-label" class="text-xs rounded-full px-3 py-1 border border-zinc-700 bg-zinc-900 text-zinc-400">No source control repository configured</div>
+        </div>
+
+        <div id="repo-empty-state" class="mb-4 rounded-2xl border border-blue-500/25 bg-blue-500/10 p-4 text-sm text-blue-100">
+          <div class="font-semibold mb-1">No source control repository configured.</div>
+          <div class="text-blue-100/80">Link a repository to fetch issues, open pull requests, publish releases, and share Factory Passports. Public and private repositories are both supported.</div>
+        </div>
+
+        <div class="grid md:grid-cols-[.8fr_1fr_1fr_.7fr] gap-3">
+          <label class="block">
+            <span class="block text-xs text-zinc-500 mb-1">Provider</span>
+            <select id="repo-provider-select" class="w-full factory-field px-4 py-3" onchange="saveGithubRepoSettings(true)">
+              <option value="github">GitHub</option>
+              <option value="gitlab">GitLab</option>
+              <option value="bitbucket">Bitbucket</option>
+              <option value="forgejo">Forgejo / Gitea</option>
+              <option value="azure-devops">Azure DevOps</option>
+            </select>
+          </label>
+          <label class="block">
+            <span class="block text-xs text-zinc-500 mb-1">Owner / workspace</span>
+            <input id="repo-owner-input" class="w-full factory-field px-4 py-3" placeholder="workspace-or-org" autocomplete="off" />
+          </label>
+          <label class="block">
+            <span class="block text-xs text-zinc-500 mb-1">Repository</span>
+            <input id="repo-name-input" class="w-full factory-field px-4 py-3" placeholder="project-name" autocomplete="off" />
+          </label>
+          <label class="block">
+            <span class="block text-xs text-zinc-500 mb-1">Default branch</span>
+            <input id="repo-base-input" class="w-full factory-field px-4 py-3" placeholder="main" value="main" autocomplete="off" />
+          </label>
+        </div>
+
+        <div class="flex flex-wrap gap-2 mt-4">
+          <button onclick="saveGithubRepoSettings(false)" class="ui-btn factory-gradient-btn"><i class="fa-solid fa-floppy-disk"></i> Save Repository</button>
+          <button onclick="testGithubRepoConnection()" class="ui-btn ui-btn-zinc"><i class="fa-solid fa-plug-circle-check"></i> Test Connection</button>
+          <button onclick="openRepo()" class="ui-btn ui-btn-dark"><i class="fa-solid fa-up-right-from-square"></i> Open Repository</button>
+          <button onclick="openGithubToolsModal()" class="ui-btn ui-btn-dark"><i class="fa-solid fa-screwdriver-wrench"></i> Git Tools</button>
+        </div>
+
+        <p id="repo-settings-status" class="text-xs text-zinc-500 mt-3">Source control settings are optional and saved in this browser.</p>
+      </div>
+
+      <div class="mb-3 pt-2 border-t border-zinc-800">
+        <h3 class="font-semibold text-lg flex items-center gap-2">
+          <i class="fa-solid fa-puzzle-piece text-pink-400"></i>
+          Connected Plugins
+        </h3>
+        <p class="text-sm text-zinc-400 mt-1">Choose the AI, Git, deployment, and execution services that should support this Factory Passport.</p>
+      </div>
+
+      <div id="connectionsBody" class="grid lg:grid-cols-4 gap-6 pt-4 border-t border-zinc-800">
         <div>
           <h3 class="font-semibold mb-2 text-sm">AI Model Plugin</h3>
           <select id="aiPluginSelect" class="w-full factory-field p-2.5 text-sm" onchange="savePluginSelections()"></select>
@@ -315,7 +413,7 @@
     <section id="setup-create-run" class="scroll-mt-6 grid lg:grid-cols-4 gap-4 mb-6">
       <div class="lg:col-span-2 factory-card p-5">
         <h2 class="font-semibold text-xl mb-3">Create Factory Run</h2>
-        <textarea id="ideaInput" class="w-full min-h-36 factory-field p-4" placeholder="Paste a vague idea, feature request, or issue numbers like #5368. Comments can be fetched when a compatible Git plugin is selected..."></textarea>
+        <textarea id="ideaInput" class="w-full min-h-36 factory-field p-4" placeholder="Paste a vague idea, feature request, or issue numbers like #5368. Local work is supported first; issue comments can be fetched when source control is configured..."></textarea>
 
         <div class="grid md:grid-cols-2 gap-3 mt-3">
           <input id="runTitleInput" class="factory-field p-3" placeholder="Run title optional">
@@ -534,10 +632,17 @@
         <button onclick="closeModals()" class="text-zinc-400 hover:text-white">✕</button>
       </div>
 
-      <div class="grid md:grid-cols-3 gap-3 mb-4">
-        <input id="gh-tools-owner" class="bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3" placeholder="Owner" />
-        <input id="gh-tools-repo" class="bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3" placeholder="Repo" />
+      <div class="grid md:grid-cols-3 gap-3 mb-3">
+        <input id="gh-tools-owner" class="bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3" placeholder="Owner / org" />
+        <input id="gh-tools-repo" class="bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3" placeholder="Repository" />
         <input id="gh-tools-base" class="bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3" placeholder="Base branch" value="main" />
+      </div>
+      <div id="gh-tools-empty" class="mb-3 rounded-2xl border border-blue-500/25 bg-blue-500/10 p-3 text-xs text-blue-100 hidden">
+        Add a source control owner/workspace and repository first. Public repositories can be read without a token; write actions require a Git credential.
+      </div>
+      <div class="flex flex-wrap gap-2 mb-4">
+        <button onclick="saveGithubRepoSettings(false)" class="px-4 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-sm font-semibold">Save Repository</button>
+        <button onclick="testGithubRepoConnection()" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm">Test Connection</button>
       </div>
 
       <div class="grid md:grid-cols-2 gap-4">
@@ -640,6 +745,18 @@
         apiBase: "https://api.bitbucket.org/2.0",
         repoUrl: ({ owner, repo }) => `https://bitbucket.org/${owner}/${repo}`,
         headers: token => ({ "Accept": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) })
+      },
+      forgejo: {
+        label: "Forgejo / Gitea",
+        apiBase: "",
+        repoUrl: ({ owner, repo }) => `/${encodeURIComponent(owner || "")}/${encodeURIComponent(repo || "")}`,
+        headers: token => ({ "Accept": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) })
+      },
+      "azure-devops": {
+        label: "Azure DevOps",
+        apiBase: "",
+        repoUrl: ({ owner, repo }) => `https://dev.azure.com/${encodeURIComponent(owner || "")}/_git/${encodeURIComponent(repo || "")}`,
+        headers: token => ({ "Accept": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) })
       }
     };
 
@@ -727,7 +844,7 @@
 
     let factoryRunning = false;
 
-    let githubConfig = { provider: "github", owner: "your-org", repo: "platform", token: "", localRepoPath: "", localGitBridge: "http://localhost:4787" };
+    let githubConfig = { provider: "github", owner: "", repo: "", base: "main", token: "", localRepoPath: "", localGitBridge: "http://localhost:4787" };
     let integrations = {
       renderApiKey: "",
       renderServiceId: "",
@@ -840,8 +957,9 @@
       const git = selectedPlugin("git");
       if (git) {
         githubConfig.provider = String(git.provider || git.name || "git").toLowerCase().replace(/\s+/g, "-");
-        githubConfig.owner = pluginSetting(git, "owner", githubConfig.owner || "your-org");
-        githubConfig.repo = pluginSetting(git, "repo", githubConfig.repo || "platform");
+        githubConfig.owner = pluginSetting(git, "owner", githubConfig.owner || "");
+        githubConfig.repo = pluginSetting(git, "repo", githubConfig.repo || "");
+        githubConfig.base = pluginSetting(git, "base", githubConfig.base || "main");
         githubConfig.token = pluginCredentialSecret(git) || githubConfig.token || "";
         githubConfig.apiBase = git.endpoint || pluginSetting(git, "apiBase", "");
         githubConfig.repoUrlTemplate = pluginSetting(git, "repoUrlTemplate", "");
@@ -1034,8 +1152,14 @@
       const issueNumbers = Array.from(raw.matchAll(/#?(\d{3,6})/g)).map(m => m[1]);
       if (!issueNumbers.length) return alert("Paste issue numbers like #5368 #5366 first.");
 
+      if (!saveGithubRepoSettings(true)) {
+        setFetchStatus("Add a repository owner and repo before fetching issues.");
+        document.getElementById("repo-settings-card")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+
       if (!/github/i.test(selectedPlugin("git")?.provider || selectedPlugin("git")?.name || githubConfig.provider || "")) return alert("Issue fetch currently needs a GitHub-compatible plugin. Use raw issue text for other Git plugins, then create a PR/MR in Git Tools.");
-      setFetchStatus("Fetching issue details and comments through the selected Git plugin...");
+      setFetchStatus(`Fetching issue details from ${githubConfig.owner}/${githubConfig.repo}...`);
       const headers = { "Accept": "application/vnd.github+json" };
       if (githubConfig.token) headers.Authorization = `Bearer ${githubConfig.token}`;
 
@@ -2405,6 +2529,11 @@ Local-first is still the default. To use non-local models, select a configured m
     }
 
     async function localGitBridge(action, payload = {}) {
+      const local = localConfigFromInputs?.();
+      if (local) {
+        githubConfig.localRepoPath = local.localRepoPath;
+        githubConfig.localGitBridge = local.localGitBridge;
+      }
       syncGithubConfigFromInputs(true);
       const bridge = (githubConfig.localGitBridge || "").replace(/\/$/, "");
       if (!bridge) throw new Error("Add a Local Git Bridge URL first.");
@@ -2535,9 +2664,14 @@ Local-first is still the default. To use non-local models, select a configured m
 
     // === PLUGIN-AWARE GIT HELPERS ===
     function syncGithubConfigFromInputs(silent = true) {
+      const currentRepo = { owner: githubConfig.owner || "", repo: githubConfig.repo || "", base: githubConfig.base || "main" };
       syncRuntimeFromSelectedPlugins();
-      localStorage.setItem("factory-passport-github", JSON.stringify(githubConfig));
-      if (!silent) showToast(`${gitProvider().label} plugin saved`);
+      githubConfig.owner = githubConfig.owner || currentRepo.owner;
+      githubConfig.repo = githubConfig.repo || currentRepo.repo;
+      githubConfig.base = githubConfig.base || currentRepo.base || "main";
+      persistGithubConfig?.();
+      renderGithubRepoState?.();
+      if (!silent) showToast(`${gitProvider().label} settings saved`);
       return githubConfig;
     }
 
@@ -2576,11 +2710,229 @@ Local-first is still the default. To use non-local models, select a configured m
       return state;
     }
 
+    function isPlaceholderRepoValue(value, kind = "") {
+      const v = String(value || "").trim().toLowerCase();
+      if (!v) return true;
+      if (["your-org", "your-group", "your-workspace", "example-org", "demo-org"].includes(v)) return true;
+      if (kind === "repo" && ["platform", "your-repo", "example-repo", "demo-repo"].includes(v)) return true;
+      return false;
+    }
+
+    function hasConfiguredGithubRepo() {
+      return !isPlaceholderRepoValue(githubConfig.owner, "owner") && !isPlaceholderRepoValue(githubConfig.repo, "repo");
+    }
+
+    function repoConfigFromInputs() {
+      const provider = ($4("repo-provider-select")?.value || githubConfig.provider || "github").trim() || "github";
+      const owner = ($4("repo-owner-input")?.value || $4("gh-tools-owner")?.value || githubConfig.owner || "").trim();
+      const repo = ($4("repo-name-input")?.value || $4("gh-tools-repo")?.value || githubConfig.repo || "").trim();
+      const base = ($4("repo-base-input")?.value || $4("gh-tools-base")?.value || githubConfig.base || "main").trim() || githubConfig.base || "main";
+      return { provider, owner, repo, base };
+    }
+
+    function localConfigFromInputs() {
+      return {
+        localRepoPath: ($4("localRepoPath")?.value || githubConfig.localRepoPath || "").trim(),
+        localGitBridge: ($4("localGitBridge")?.value || githubConfig.localGitBridge || "http://localhost:4787").trim() || "http://localhost:4787"
+      };
+    }
+
+    function syncRepoInputsFromConfig() {
+      setValue("repo-provider-select", githubConfig.provider || "github");
+      setValue("repo-owner-input", githubConfig.owner || "");
+      setValue("repo-name-input", githubConfig.repo || "");
+      setValue("repo-base-input", githubConfig.base || "main");
+      setValue("gh-tools-owner", githubConfig.owner || "");
+      setValue("gh-tools-repo", githubConfig.repo || "");
+      setValue("gh-tools-base", githubConfig.base || "main");
+      setValue("localRepoPath", githubConfig.localRepoPath || "");
+      setValue("localGitBridge", githubConfig.localGitBridge || "http://localhost:4787");
+      renderGithubRepoState();
+      renderLocalDevState();
+    }
+
+    function persistGithubConfig() {
+      localStorage.setItem("factory-passport-github", JSON.stringify(githubConfig));
+      localStorage.setItem("factory-github-repo", JSON.stringify({
+        provider: githubConfig.provider || "github",
+        owner: githubConfig.owner || "",
+        repo: githubConfig.repo || "",
+        base: githubConfig.base || "main",
+        localRepoPath: githubConfig.localRepoPath || "",
+        localGitBridge: githubConfig.localGitBridge || "http://localhost:4787"
+      }));
+    }
+
+    function saveGithubRepoSettings(silent = false) {
+      const { provider, owner, repo, base } = repoConfigFromInputs();
+
+      if (!owner || !repo) {
+        githubConfig.provider = provider || githubConfig.provider || "github";
+        renderGithubRepoState();
+        if (!silent) showToast("Enter both source control owner/workspace and repository");
+        return false;
+      }
+
+      githubConfig.provider = provider || "github";
+      githubConfig.owner = owner;
+      githubConfig.repo = repo;
+      githubConfig.base = base || "main";
+
+      const git = selectedPlugin("git");
+      if (git) {
+        git.settings = { ...(git.settings || {}), provider: githubConfig.provider, owner, repo, base: githubConfig.base };
+        savePluginConfig();
+      }
+
+      persistGithubConfig();
+      syncRepoInputsFromConfig();
+      updatePluginStatus();
+      if (!silent) showToast(`Source control saved: ${owner}/${repo}`);
+      return true;
+    }
+
+    function saveLocalDevSettings(silent = false) {
+      const { localRepoPath, localGitBridge } = localConfigFromInputs();
+      githubConfig.localRepoPath = localRepoPath;
+      githubConfig.localGitBridge = localGitBridge;
+      persistGithubConfig();
+      syncRepoInputsFromConfig();
+      updatePluginStatus();
+      if (!silent) showToast(localRepoPath ? "Local development settings saved" : "Local development left unconfigured");
+      return Boolean(localRepoPath || localGitBridge);
+    }
+
+    function renderGithubRepoState() {
+      const configured = hasConfiguredGithubRepo();
+      const label = $4("repo-current-label");
+      const empty = $4("repo-empty-state");
+      const status = $4("repo-settings-status");
+      const ghEmpty = $4("gh-tools-empty");
+      const providerLabel = (gitProviders[githubConfig.provider]?.label || githubConfig.provider || "Source Control");
+      if (label) {
+        label.textContent = configured
+          ? `${providerLabel}: ${githubConfig.owner}/${githubConfig.repo} · ${githubConfig.base || "main"}`
+          : "No source control repository configured";
+        label.className = configured
+          ? "text-xs rounded-full px-3 py-1 border border-emerald-500/30 bg-emerald-500/10 text-emerald-200"
+          : "text-xs rounded-full px-3 py-1 border border-zinc-700 bg-zinc-900 text-zinc-400";
+      }
+      empty?.classList.toggle("hidden", configured);
+      ghEmpty?.classList.toggle("hidden", configured);
+      if (status) status.textContent = configured
+        ? `Issue fetch and Git Tools will use ${githubConfig.owner}/${githubConfig.repo}.`
+        : "Source control settings are optional and saved in this browser.";
+      const badge = $4("badge-git-connected");
+      if (badge && configured) badge.textContent = `${githubConfig.owner}/${githubConfig.repo}`;
+    }
+
+    function renderLocalDevState() {
+      const configured = Boolean((githubConfig.localRepoPath || "").trim());
+      const label = $4("local-current-label");
+      const empty = $4("local-empty-state");
+      const status = $4("local-settings-status");
+      if (label) {
+        label.textContent = configured ? `Local project: ${githubConfig.localRepoPath}` : "No local project connected";
+        label.className = configured
+          ? "text-xs rounded-full px-3 py-1 border border-emerald-500/30 bg-emerald-500/10 text-emerald-200 max-w-full truncate"
+          : "text-xs rounded-full px-3 py-1 border border-zinc-700 bg-zinc-900 text-zinc-400";
+      }
+      empty?.classList.toggle("hidden", configured);
+      if (status) status.textContent = configured
+        ? `Local Git actions will use ${githubConfig.localRepoPath}.`
+        : "Local repository access is optional and saved in this browser.";
+    }
+
+    async function testLocalDevConnection() {
+      saveLocalDevSettings(true);
+      const status = $4("local-settings-status");
+      if (status) status.textContent = "Testing local bridge connection...";
+      try {
+        const data = await localGitBridge("status", {});
+        if (status) status.textContent = data?.branch
+          ? `Connected locally · branch ${data.branch}`
+          : "Local bridge connected.";
+        showToast("Local bridge connected");
+        renderLocalDevState();
+        return data;
+      } catch (err) {
+        if (status) status.textContent = `Local bridge unavailable: ${err.message || err}`;
+        showToast("Local bridge unavailable");
+      }
+    }
+
+    async function detectLocalProject() {
+      saveLocalDevSettings(true);
+      const status = $4("local-settings-status");
+      if (status) status.textContent = "Detecting local project...";
+      try {
+        const data = await localGitBridge("detect", {});
+        if (data?.repoPath) githubConfig.localRepoPath = data.repoPath;
+        if (data?.owner && !githubConfig.owner) githubConfig.owner = data.owner;
+        if (data?.repo && !githubConfig.repo) githubConfig.repo = data.repo;
+        if (data?.base || data?.branch) githubConfig.base = data.base || data.branch || githubConfig.base || "main";
+        persistGithubConfig();
+        syncRepoInputsFromConfig();
+        if (status) status.textContent = githubConfig.localRepoPath ? `Detected ${githubConfig.localRepoPath}` : "Bridge responded, but no repository path was returned.";
+        showToast("Local project detection complete");
+        return data;
+      } catch (err) {
+        if (status) status.textContent = `Detection failed: ${err.message || err}`;
+        showToast("Could not detect local project");
+      }
+    }
+
+    async function openLocalFolder() {
+      saveLocalDevSettings(true);
+      const status = $4("local-settings-status");
+      if (!githubConfig.localRepoPath) {
+        if (status) status.textContent = "Add a local repository path first.";
+        showToast("Add a local repository path first");
+        return;
+      }
+      try {
+        await localGitBridge("open-folder", {});
+        if (status) status.textContent = "Requested folder open via local bridge.";
+        showToast("Open folder requested");
+      } catch (err) {
+        if (status) status.textContent = `Open folder failed: ${err.message || err}`;
+        showToast("Open folder failed");
+      }
+    }
+
+    async function testGithubRepoConnection() {
+      if (!saveGithubRepoSettings(true)) return;
+      const status = $4("repo-settings-status");
+      if (status) status.textContent = "Testing repository connection...";
+      try {
+        const providerKey = String(githubConfig.provider || "github").toLowerCase();
+        let data;
+        if (providerKey === "github") {
+          data = await githubApi(`/repos/${githubConfig.owner}/${githubConfig.repo}`);
+        } else if (providerKey === "gitlab") {
+          data = await gitApi(`/projects/${encodedGitlabProject()}`);
+        } else if (providerKey === "bitbucket") {
+          data = await gitApi(`/repositories/${githubConfig.owner}/${githubConfig.repo}`);
+        } else {
+          throw new Error("Test connection currently supports GitHub, GitLab, and Bitbucket API defaults. Forgejo/Gitea and Azure DevOps need a provider endpoint/plugin configured first.");
+        }
+        const name = data.full_name || data.path_with_namespace || `${githubConfig.owner}/${githubConfig.repo}`;
+        if (status) status.textContent = `Connected to ${name}`;
+        showToast("Repository connection works");
+        renderGithubRepoState();
+        return data;
+      } catch (err) {
+        console.error(err);
+        if (status) status.textContent = String(err.message || err);
+        showToast("Repository connection failed");
+      }
+    }
+
     function rememberGithubResult(action, data) {
       const patch = { lastAction: action };
       if (action === "createBranch") patch.lastBranch = data?.ref?.replace(/^refs\/heads\//, "") || $4("gh-branch-name")?.value?.trim() || patch.lastBranch;
       if (action === "createCommit") {
-        patch.lastBranch = $4("gh-commit-branch")?.value?.trim() || githubFlowState().lastBranch || "main";
+        patch.lastBranch = $4("gh-commit-branch")?.value?.trim() || githubFlowState().lastBranch || githubConfig.base || "main";
         patch.lastCommitSha = data?.commit?.sha || data?.sha || "";
       }
       if (action === "createPR") patch.lastPrNumber = data?.number || githubFlowState().lastPrNumber || "";
@@ -2807,7 +3159,7 @@ Local-first is still the default. To use non-local models, select a configured m
       syncGithubConfigFromInputs(true);
       setValue("gh-tools-owner", githubConfig.owner);
       setValue("gh-tools-repo", githubConfig.repo);
-      setValue("gh-tools-base", "main");
+      setValue("gh-tools-base", githubConfig.base || "main");
       renderGithubActionFields();
       openModal("github-tools-modal");
     }
@@ -2815,16 +3167,18 @@ Local-first is still the default. To use non-local models, select a configured m
     function syncGithubToolsToConfig() {
       const owner = ($4("gh-tools-owner")?.value || githubConfig.owner || "").trim();
       const repo = ($4("gh-tools-repo")?.value || githubConfig.repo || "").trim();
+      const base = ($4("gh-tools-base")?.value || githubConfig.base || "main").trim() || githubConfig.base || "main";
       githubConfig.owner = owner || githubConfig.owner;
       githubConfig.repo = repo || githubConfig.repo;
+      githubConfig.base = base;
       const git = selectedPlugin("git");
-      if (git) git.settings = { ...(git.settings || {}), owner: githubConfig.owner, repo: githubConfig.repo };
+      if (git) git.settings = { ...(git.settings || {}), owner: githubConfig.owner, repo: githubConfig.repo, base: githubConfig.base };
       syncGithubConfigFromInputs(true);
     }
 
     function renderGithubActionFields() {
       const action = $4("gh-action")?.value || "listBranches";
-      const base = $4("gh-tools-base")?.value || "main";
+      const base = $4("gh-tools-base")?.value || githubConfig.base || "main";
       const flow = githubFlowState();
       const lastBranch = flow.lastBranch || "factory/passport-local";
       const lastSha = flow.lastCommitSha || "";
@@ -2871,9 +3225,9 @@ Local-first is still the default. To use non-local models, select a configured m
       try {
         let data;
         if (action === "listBranches") data = await listBranches();
-        if (action === "createBranch") data = await createBranch($4("gh-branch-name").value.trim(), $4("gh-from-ref").value.trim() || "main");
-        if (action === "createCommit") data = await createCommit($4("gh-commit-message").value.trim(), parseGithubFilesJson(), $4("gh-commit-branch").value.trim() || "main");
-        if (action === "createPR") data = await createProviderPR($4("gh-pr-title").value.trim(), $4("gh-pr-body").value, $4("gh-pr-head").value.trim(), $4("gh-pr-base").value.trim() || "main");
+        if (action === "createBranch") data = await createBranch($4("gh-branch-name").value.trim(), $4("gh-from-ref").value.trim() || githubConfig.base || "main");
+        if (action === "createCommit") data = await createCommit($4("gh-commit-message").value.trim(), parseGithubFilesJson(), $4("gh-commit-branch").value.trim() || githubConfig.base || "main");
+        if (action === "createPR") data = await createProviderPR($4("gh-pr-title").value.trim(), $4("gh-pr-body").value, $4("gh-pr-head").value.trim(), $4("gh-pr-base").value.trim() || githubConfig.base || "main");
         if (action === "mergePR") data = await mergePR($4("gh-pr-number").value.trim(), $4("gh-merge-method").value);
         if (action === "addReviewComment") data = await addReviewComment($4("gh-comment-pr").value.trim(), $4("gh-comment-body").value, $4("gh-comment-commit").value.trim(), $4("gh-comment-path").value.trim(), $4("gh-comment-position").value.trim());
         if (action === "listCheckRuns") data = await listCheckRuns($4("gh-check-sha").value.trim());
@@ -3021,11 +3375,13 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
       loadPluginSelections();
       syncRuntimeFromSelectedPlugins();
       renderConnectionPluginSelectors();
+      syncRepoInputsFromConfig?.();
+      renderGithubRepoState?.();
     }
 
     function openRepo() {
-      saveGithubConfig();
-      window.open(gitProvider().repoUrl(githubConfig), "_blank");
+      if (!saveGithubRepoSettings(true)) return;
+      window.open(gitProvider().repoUrl(githubConfig), "_blank", "noopener,noreferrer");
     }
 
     function exportRun() {
@@ -3348,9 +3704,9 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
 
     function pluginTemplates() {
       return [
-        { id: 'github', name: 'GitHub', description: 'Git provider plugin. Set owner/repo in settings.', provider: 'GitHub', type: 'Git Provider', endpoint: 'https://api.github.com', command: '', arguments: '', credentialId: 'none', enabled: true, version: '1.0.0', permissions: { read: true, write: true, execute: false }, settings: { owner: 'your-org', repo: 'platform', repoUrlTemplate: 'https://github.com/{owner}/{repo}' } },
-        { id: 'gitlab', name: 'GitLab', description: 'Git provider plugin. Set owner/repo in settings.', provider: 'GitLab', type: 'Git Provider', endpoint: 'https://gitlab.com/api/v4', command: '', arguments: '', credentialId: 'none', enabled: false, version: '1.0.0', permissions: { read: true, write: true, execute: false }, settings: { owner: 'your-group', repo: 'platform', repoUrlTemplate: 'https://gitlab.com/{owner}/{repo}' } },
-        { id: 'bitbucket', name: 'Bitbucket', description: 'Git provider plugin. Set workspace/repo in settings.', provider: 'Bitbucket', type: 'Git Provider', endpoint: 'https://api.bitbucket.org/2.0', command: '', arguments: '', credentialId: 'none', enabled: false, version: '1.0.0', permissions: { read: true, write: true, execute: false }, settings: { owner: 'your-workspace', repo: 'platform', repoUrlTemplate: 'https://bitbucket.org/{owner}/{repo}' } },
+        { id: 'github', name: 'GitHub', description: 'Git provider plugin. Set owner/repo in settings.', provider: 'GitHub', type: 'Git Provider', endpoint: 'https://api.github.com', command: '', arguments: '', credentialId: 'none', enabled: true, version: '1.0.0', permissions: { read: true, write: true, execute: false }, settings: { owner: '', repo: '', base: 'main', repoUrlTemplate: 'https://github.com/{owner}/{repo}' } },
+        { id: 'gitlab', name: 'GitLab', description: 'Git provider plugin. Set owner/repo in settings.', provider: 'GitLab', type: 'Git Provider', endpoint: 'https://gitlab.com/api/v4', command: '', arguments: '', credentialId: 'none', enabled: false, version: '1.0.0', permissions: { read: true, write: true, execute: false }, settings: { owner: '', repo: '', base: 'main', repoUrlTemplate: 'https://gitlab.com/{owner}/{repo}' } },
+        { id: 'bitbucket', name: 'Bitbucket', description: 'Git provider plugin. Set workspace/repo in settings.', provider: 'Bitbucket', type: 'Git Provider', endpoint: 'https://api.bitbucket.org/2.0', command: '', arguments: '', credentialId: 'none', enabled: false, version: '1.0.0', permissions: { read: true, write: true, execute: false }, settings: { owner: '', repo: '', base: 'main', repoUrlTemplate: 'https://bitbucket.org/{owner}/{repo}' } },
         { id: 'render', name: 'Render', description: 'Deployment provider plugin. Put serviceId and previewUrl in settings.', provider: 'Render', type: 'Deployment', endpoint: 'https://api.render.com/v1', command: '', arguments: '', credentialId: 'none', enabled: false, version: '1.0.0', permissions: { read: true, write: true, execute: true }, settings: { serviceId: '', previewUrl: '' } },
         { id: 'ollama', name: 'Ollama', description: 'Local AI model endpoint.', provider: 'Local', type: 'AI Model', endpoint: 'http://localhost:11434', command: '', arguments: '', credentialId: 'none', enabled: true, version: '1.0.0', permissions: { read: true, write: false, execute: true }, settings: { model: 'llama3.1', kind: 'ollama' } },
         { id: 'lm-studio', name: 'LM Studio', description: 'OpenAI-compatible local model endpoint.', provider: 'Local', type: 'AI Model', endpoint: 'http://localhost:1234/v1', command: '', arguments: '', credentialId: 'none', enabled: false, version: '1.0.0', permissions: { read: true, write: false, execute: true }, settings: { model: 'local-model', kind: 'openai-compatible' } },
@@ -3400,6 +3756,8 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
       if (storage) PLUGINS.config.storage = { ...(PLUGINS.config.storage || {}), provider: storage.provider || '', url: storage.endpoint || '' };
       savePluginConfig();
       renderConnectionPluginSelectors();
+      syncRepoInputsFromConfig?.();
+      renderGithubRepoState?.();
     }
 
     function credentialOptions(selected = 'none') {
@@ -3993,6 +4351,22 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
     }
     function saveSettings() { appSaveJSON(FOURFLO.settings, {tone:$4('tone-select').value, defaultStatus:$4('default-flow-status').value}); closeModals(); showToast('Settings saved'); }
     function loadAppSettings() { const s=appLoadJSON(FOURFLO.settings,{tone:'practical',defaultStatus:'Active'}); if($4('tone-select')) $4('tone-select').value=s.tone||'practical'; if($4('default-flow-status')) $4('default-flow-status').value=s.defaultStatus||'Active'; }
+    function loadGithubRepoSettings() {
+      try {
+        const legacy = JSON.parse(localStorage.getItem("factory-github-repo") || "{}");
+        if (legacy.provider) githubConfig.provider = legacy.provider;
+        if (legacy.owner) githubConfig.owner = legacy.owner;
+        if (legacy.repo) githubConfig.repo = legacy.repo;
+        if (legacy.base) githubConfig.base = legacy.base;
+        if (legacy.localRepoPath) githubConfig.localRepoPath = legacy.localRepoPath;
+        if (legacy.localGitBridge) githubConfig.localGitBridge = legacy.localGitBridge;
+      } catch {}
+      if (isPlaceholderRepoValue?.(githubConfig.owner, "owner")) githubConfig.owner = "";
+      if (isPlaceholderRepoValue?.(githubConfig.repo, "repo")) githubConfig.repo = "";
+      githubConfig.base = githubConfig.base || "main";
+      syncRepoInputsFromConfig?.();
+      renderGithubRepoState?.();
+    }
     function newFactoryRun() { switchTab('factory'); $4('ideaInput')?.focus(); showToast('Add an idea, then Start Factory Run'); }
 
     document.addEventListener('keydown', e => { if(e.metaKey && e.key.toLowerCase()==='k') { e.preventDefault(); switchTab('chat'); $4('user-input').focus(); } if(e.key==='Escape') closeModals(); });
@@ -4064,6 +4438,9 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
       }
       showToast(`Switched to ${view} view`);
     }
+    loadGithubRepoSettings();
+    syncRepoInputsFromConfig?.();
+    renderGithubRepoState?.();
     loadAppSettings(); renderCredentials(); renderHistory(); renderFlows(); renderPlugins(); updateActiveModelLabel(); switchTab('factory'); handleInitialAppHash(); console.log('%cFactory 4flo ready 🚀','color:#ff8ec8;font-weight:bold');
   </script>
 
