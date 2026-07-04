@@ -366,6 +366,42 @@
           </label>
         </div>
 
+        <div id="github-pat-card" class="mt-4 rounded-3xl border border-sky-500/25 bg-sky-500/5 p-4">
+          <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3 mb-4">
+            <div>
+              <h4 class="font-semibold flex items-center gap-2"><i class="fa-brands fa-github text-sky-300"></i> GitHub Authentication</h4>
+              <p class="text-sm text-zinc-400 mt-1">Use a Personal Access Token first. Public repositories work without a token; private repositories require one.</p>
+            </div>
+            <div id="github-pat-current-label" class="text-xs rounded-full px-3 py-1 border border-zinc-700 bg-zinc-900 text-zinc-400">No token saved</div>
+          </div>
+
+          <div class="grid md:grid-cols-[1fr_auto] gap-3 items-end">
+            <label class="block">
+              <span class="block text-xs text-zinc-500 mb-1">GitHub Personal Access Token</span>
+              <div class="relative">
+                <input id="githubPatInput" type="password" class="w-full factory-field px-4 py-3 pr-14" placeholder="github_pat_... or ghp_..." autocomplete="off" />
+                <button onclick="toggleAppPassword('githubPatInput')" class="absolute right-4 top-3 text-zinc-400" type="button">👁</button>
+              </div>
+            </label>
+            <div class="flex flex-wrap gap-2">
+              <button onclick="saveGithubPatToken(false)" class="ui-btn ui-btn-primary"><i class="fa-solid fa-key"></i> Save Token</button>
+              <button onclick="testGithubPatToken()" class="ui-btn ui-btn-zinc"><i class="fa-solid fa-shield-halved"></i> Test Token</button>
+            </div>
+          </div>
+
+          <div class="mt-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-100 space-y-2">
+            <div><b>Private repo access:</b> GitHub may return <code>404 Not Found</code> when a private repository exists but your request has no valid token.</div>
+            <div><b>Recommended fine-grained permissions:</b> Metadata Read, Contents Read, Issues Read, Pull Requests Read/Write if you want PR creation.</div>
+            <div>Your token is saved only in this browser's localStorage and sent directly to the selected Git provider API unless you enable a proxy plugin.</div>
+          </div>
+
+          <div class="flex flex-wrap gap-2 mt-3">
+            <button onclick="openGithubTokenGenerator()" class="ui-btn-sm ui-btn-dark"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open GitHub Token Generator</button>
+            <button onclick="switchTab('keys')" class="ui-btn-sm ui-btn-dark"><i class="fa-solid fa-vault"></i> View Credentials Vault</button>
+          </div>
+          <p id="github-token-status" class="text-xs text-zinc-500 mt-3">For fine-grained tokens, select only the repositories this app should access.</p>
+        </div>
+
         <div class="flex flex-wrap gap-2 mt-4">
           <button onclick="saveGithubRepoSettings(false)" class="ui-btn factory-gradient-btn"><i class="fa-solid fa-floppy-disk"></i> Save Repository</button>
           <button onclick="testGithubRepoConnection()" class="ui-btn ui-btn-zinc"><i class="fa-solid fa-plug-circle-check"></i> Test Connection</button>
@@ -388,8 +424,18 @@
         <div>
           <h3 class="font-semibold mb-2 text-sm">AI Model Plugin</h3>
           <select id="aiPluginSelect" class="w-full factory-field p-2.5 text-sm" onchange="savePluginSelections()"></select>
-          <div class="flex gap-1.5 mt-2">
-            <button onclick="detectLocalModelEndpoint()" class="ui-btn-sm ui-btn-dark text-xs">Auto-detect Local</button>
+          <label class="block mt-3">
+            <span class="block text-xs text-zinc-500 mb-1">Local model</span>
+            <select id="localModelSelect" class="w-full factory-field p-2.5 text-sm" onchange="selectDiscoveredLocalModel(this.value)">
+              <option value="">Auto-detect models first</option>
+            </select>
+          </label>
+          <div id="local-ai-discovery-results" class="mt-3 rounded-2xl border border-zinc-800 bg-black/25 p-3 text-xs text-zinc-400">
+            No local AI models discovered yet.
+          </div>
+          <div class="flex flex-wrap gap-1.5 mt-2">
+            <button onclick="detectLocalModelEndpoint()" class="ui-btn-sm ui-btn-dark text-xs">Detect Local Models</button>
+            <button onclick="saveLocalModelConfig()" class="ui-btn-sm ui-btn-dark text-xs">Save Model</button>
           </div>
         </div>
         <div>
@@ -856,10 +902,11 @@
 
     let localModelConfig = {
       endpoint: "http://localhost:11434",
-      model: "llama3.1",
+      model: "",
       connected: false,
       kind: "ollama"
     };
+    let localAIProviders = [];
 
 
     let pluginSelections = { ai: "", git: "", deployment: "", execution: "" };
@@ -1161,7 +1208,8 @@
       if (!/github/i.test(selectedPlugin("git")?.provider || selectedPlugin("git")?.name || githubConfig.provider || "")) return alert("Issue fetch currently needs a GitHub-compatible plugin. Use raw issue text for other Git plugins, then create a PR/MR in Git Tools.");
       setFetchStatus(`Fetching issue details from ${githubConfig.owner}/${githubConfig.repo}...`);
       const headers = { "Accept": "application/vnd.github+json" };
-      if (githubConfig.token) headers.Authorization = `Bearer ${githubConfig.token}`;
+      const token = githubTokenFromStorage();
+      if (token) headers.Authorization = `Bearer ${token}`;
 
       const fetched = [];
       for (const n of issueNumbers) {
@@ -1952,28 +2000,38 @@ No provider-specific browser adapter is hardcoded for this plugin. Send the snap
       const base = normalizeLocalEndpoint(endpoint);
       if (/\/v1\/?$/.test(base)) return base + "/chat/completions";
       if (/\/chat\/completions$/.test(base) || /\/api\/chat$/.test(base)) return base;
-      return base + "/api/chat";
+      return base + "/api/generate";
     }
 
     function isOpenAICompatibleLocal(endpoint) {
+      const base = normalizeLocalEndpoint(endpoint);
       const url = localChatUrl(endpoint);
-      return url.includes("/v1/chat/completions") || url.endsWith("/chat/completions");
+      return /\/v1\/?$/.test(base) || url.includes("/v1/chat/completions") || url.endsWith("/chat/completions");
+    }
+
+    function messagesToPrompt(messages) {
+      return (messages || [])
+        .map(m => `${(m.role || "user").toUpperCase()}: ${m.content || ""}`)
+        .join("\n\n") + "\n\nASSISTANT:";
     }
 
     async function callLocalModel(messages, options = {}) {
       const endpoint = normalizeLocalEndpoint(options.endpoint || localModelConfig.endpoint);
-      const model = options.model || localModelConfig.model || "llama3.1";
+      const model = options.model || localModelConfig.model || firstDiscoveredLocalModel()?.model || "llama3.2:latest";
       const url = localChatUrl(endpoint);
-      const payload = isOpenAICompatibleLocal(endpoint)
+      const openAI = isOpenAICompatibleLocal(endpoint);
+      const payload = openAI
         ? { model, messages, temperature: options.temperature ?? 0.3, stream: false }
-        : { model, messages, stream: false, options: { temperature: options.temperature ?? 0.3 } };
+        : { model, prompt: messagesToPrompt(messages), stream: false, options: { temperature: options.temperature ?? 0.3 } };
       const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error?.message || data.message || `${res.status} ${res.statusText}`);
+      if (!res.ok) throw new Error(data.error?.message || data.error || data.message || `${res.status} ${res.statusText}`);
       const content = data.choices?.[0]?.message?.content || data.message?.content || data.response || "";
       if (!content.trim()) throw new Error("Local model returned an empty response");
+      localModelConfig.endpoint = endpoint;
+      localModelConfig.model = model;
       localModelConfig.connected = true;
-      localModelConfig.kind = isOpenAICompatibleLocal(endpoint) ? "openai-compatible" : "ollama";
+      localModelConfig.kind = openAI ? "openai-compatible" : "ollama";
       localStorage.setItem("factory-passport-local-model", JSON.stringify(localModelConfig));
       updatePluginStatus();
       return content;
@@ -2001,11 +2059,11 @@ No provider-specific browser adapter is hardcoded for this plugin. Send the snap
       const list = (activeModelChain && activeModelChain.length ? activeModelChain : [activeModel || 'local'])
         .map(id => (typeof providers !== "undefined" ? providers.find(p => p.id === id) : null))
         .filter(Boolean);
-      return list.length ? list : [{ id: "local", label: "Local Model", keyName: "", model: localModelConfig.model || "llama3.1" }];
+      return list.length ? list : [{ id: "local", label: "Local Model", keyName: "", model: localModelConfig.model || "llama3.2:latest" }];
     }
 
     function activeModelProvider() {
-      return selectedModelProviders()[0] || { id: "local", label: "Local Model", keyName: "", model: localModelConfig.model || "llama3.1" };
+      return selectedModelProviders()[0] || { id: "local", label: "Local Model", keyName: "", model: localModelConfig.model || "llama3.2:latest" };
     }
 
     function shouldUseCloudModelForFactory() {
@@ -2747,6 +2805,7 @@ Local-first is still the default. To use non-local models, select a configured m
       setValue("gh-tools-base", githubConfig.base || "main");
       setValue("localRepoPath", githubConfig.localRepoPath || "");
       setValue("localGitBridge", githubConfig.localGitBridge || "http://localhost:4787");
+      syncGithubPatInputFromConfig();
       renderGithubRepoState();
       renderLocalDevState();
     }
@@ -2761,6 +2820,117 @@ Local-first is still the default. To use non-local models, select a configured m
         localRepoPath: githubConfig.localRepoPath || "",
         localGitBridge: githubConfig.localGitBridge || "http://localhost:4787"
       }));
+    }
+
+    function githubPatCredential() {
+      let items = [];
+      try { items = JSON.parse(localStorage.getItem("4flo-custom-credentials-v1") || "[]"); } catch {}
+      return items.find(item => {
+        const service = String(item.service || "").toLowerCase();
+        const name = String(item.name || "").toLowerCase();
+        const kind = String(item.kind || "").toLowerCase();
+        return service === "github" && (kind === "git" || name.includes("github"));
+      }) || null;
+    }
+
+    function githubTokenFromStorage() {
+      return (githubConfig.token || githubPatCredential()?.secret || "").trim();
+    }
+
+    function syncGithubPatInputFromConfig() {
+      const input = document.getElementById("githubPatInput");
+      const token = githubTokenFromStorage();
+      if (input && token && !input.value) input.value = token;
+      updateGithubPatStatus();
+    }
+
+    function updateGithubPatStatus(message = "") {
+      const token = githubTokenFromStorage();
+      const label = document.getElementById("github-pat-current-label");
+      const status = document.getElementById("github-token-status");
+      if (label) {
+        label.textContent = token ? "Token saved" : "No token saved";
+        label.className = token
+          ? "text-xs rounded-full px-3 py-1 border border-emerald-500/30 bg-emerald-500/10 text-emerald-200"
+          : "text-xs rounded-full px-3 py-1 border border-zinc-700 bg-zinc-900 text-zinc-400";
+      }
+      if (status) status.textContent = message || (token
+        ? "GitHub PAT configured. Test the repository connection to confirm access."
+        : "For fine-grained tokens, select only the repositories this app should access.");
+    }
+
+    function upsertGithubPatCredential(token) {
+      let items = [];
+      try { items = JSON.parse(localStorage.getItem("4flo-custom-credentials-v1") || "[]"); } catch {}
+      const saveItems = next => localStorage.setItem("4flo-custom-credentials-v1", JSON.stringify(next));
+      const now = new Date().toLocaleString();
+      let credential = githubPatCredential();
+      if (credential) {
+        credential = { ...credential, secret: token, username: githubConfig.owner || credential.username || "", updatedAt: now };
+        const next = items.map(item => item.id === credential.id ? credential : item);
+        saveItems(next);
+      } else {
+        credential = {
+          id: credentialId(),
+          name: "GitHub Personal Access Token",
+          kind: "git",
+          service: "github",
+          username: githubConfig.owner || "",
+          secret: token,
+          notes: "Used by Factory 4flo to access GitHub repositories, including private repositories selected on the token.",
+          createdAt: now,
+          updatedAt: now
+        };
+        saveItems([credential, ...items]);
+      }
+      const git = selectedPlugin?.("git");
+      if (git && /github/i.test(`${git.provider || ""} ${git.name || ""}`)) {
+        git.credentialId = credential.id;
+        git.settings = { ...(git.settings || {}), provider: "github", owner: githubConfig.owner || "", repo: githubConfig.repo || "", base: githubConfig.base || "main" };
+        savePluginConfig?.();
+      }
+      return credential;
+    }
+
+    function saveGithubPatToken(silent = false) {
+      const input = document.getElementById("githubPatInput");
+      const token = (input?.value || "").trim();
+      if (!token) {
+        updateGithubPatStatus("Paste a GitHub Personal Access Token first.");
+        if (!silent) showToast("Paste a GitHub token first");
+        return false;
+      }
+      if (!/^(github_pat_|ghp_|gho_|ghu_|ghs_|ghr_)/.test(token)) {
+        updateGithubPatStatus("Saved, but this does not look like a normal GitHub token prefix. Double-check the value if authentication fails.");
+      }
+      githubConfig.token = token;
+      upsertGithubPatCredential(token);
+      persistGithubConfig();
+      syncRuntimeFromSelectedPlugins?.();
+      githubConfig.token = githubConfig.token || token;
+      updateGithubPatStatus("GitHub token saved locally and added to the Credentials Vault.");
+      updatePluginStatus?.();
+      if (!silent) showToast("GitHub token saved");
+      return true;
+    }
+
+    function openGithubTokenGenerator() {
+      window.open("https://github.com/settings/personal-access-tokens/new", "_blank", "noopener,noreferrer");
+      updateGithubPatStatus("Create a fine-grained token, select only this repository, then paste it here.");
+    }
+
+    async function testGithubPatToken() {
+      if (!saveGithubPatToken(true)) return;
+      updateGithubPatStatus("Testing GitHub token...");
+      try {
+        const viewer = await githubApi("/user", { skipRepoRequirement: true });
+        updateGithubPatStatus(`Token works. Signed in as ${viewer.login || "your GitHub account"}. Now test the repository connection.`);
+        showToast("GitHub token works");
+        return viewer;
+      } catch (err) {
+        updateGithubPatStatus(err.friendlyMessage || err.message || String(err));
+        showToast("GitHub token test failed");
+      }
     }
 
     function saveGithubRepoSettings(silent = false) {
@@ -2820,10 +2990,11 @@ Local-first is still the default. To use non-local models, select a configured m
       empty?.classList.toggle("hidden", configured);
       ghEmpty?.classList.toggle("hidden", configured);
       if (status) status.textContent = configured
-        ? `Issue fetch and Git Tools will use ${githubConfig.owner}/${githubConfig.repo}.`
+        ? `Issue fetch and Git Tools will use ${githubConfig.owner}/${githubConfig.repo}.${githubTokenFromStorage() ? " GitHub token is configured for private repo access." : " Add a GitHub PAT below if this is private."}`
         : "Source control settings are optional and saved in this browser.";
       const badge = document.getElementById("badge-git-connected");
       if (badge && configured) badge.textContent = `${githubConfig.owner}/${githubConfig.repo}`;
+      updateGithubPatStatus();
     }
 
     function renderLocalDevState() {
@@ -2883,20 +3054,18 @@ Local-first is still the default. To use non-local models, select a configured m
     }
 
     async function openLocalFolder() {
-      saveLocalDevSettings(true);
-      const status = document.getElementById("local-settings-status");
-      if (!githubConfig.localRepoPath) {
-        if (status) status.textContent = "Add a local repository path first.";
-        showToast("Add a local repository path first");
-        return;
-      }
+      const bridge = githubConfig.localGitBridge || "http://localhost:4787";
+
       try {
-        await localGitBridge("open-folder", {});
-        if (status) status.textContent = "Requested folder open via local bridge.";
-        showToast("Open folder requested");
-      } catch (err) {
-        if (status) status.textContent = `Open folder failed: ${err.message || err}`;
-        showToast("Open folder failed");
+        await fetch(`${bridge}/open-folder`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ path: githubConfig.localRepoPath })
+        });
+
+        showToast("Opening folder");
+      } catch {
+        showToast("Local bridge is not running. Start it first, or open the folder manually.");
       }
     }
 
@@ -2908,6 +3077,8 @@ Local-first is still the default. To use non-local models, select a configured m
         const providerKey = String(githubConfig.provider || "github").toLowerCase();
         let data;
         if (providerKey === "github") {
+          const patInput = (document.getElementById("githubPatInput")?.value || "").trim();
+          if (patInput && patInput !== githubConfig.token) saveGithubPatToken(true);
           data = await githubApi(`/repos/${githubConfig.owner}/${githubConfig.repo}`);
         } else if (providerKey === "gitlab") {
           data = await gitApi(`/projects/${encodedGitlabProject()}`);
@@ -2917,13 +3088,17 @@ Local-first is still the default. To use non-local models, select a configured m
           throw new Error("Test connection currently supports GitHub, GitLab, and Bitbucket API defaults. Forgejo/Gitea and Azure DevOps need a provider endpoint/plugin configured first.");
         }
         const name = data.full_name || data.path_with_namespace || `${githubConfig.owner}/${githubConfig.repo}`;
-        if (status) status.textContent = `Connected to ${name}`;
+        const visibility = data.private === true ? "private" : data.private === false ? "public" : "available";
+        if (status) status.textContent = `Connected to ${name} · ${visibility}${data.default_branch ? ` · default branch ${data.default_branch}` : ""}`;
+        updateGithubPatStatus(data.private ? "Connected to private repository with the configured token." : "Connected. This repository is public or your token has access.");
         showToast("Repository connection works");
         renderGithubRepoState();
         return data;
       } catch (err) {
         console.error(err);
-        if (status) status.textContent = String(err.message || err);
+        const message = err.friendlyMessage || err.message || String(err);
+        if (status) status.textContent = message;
+        updateGithubPatStatus(message);
         showToast("Repository connection failed");
       }
     }
@@ -2944,18 +3119,39 @@ Local-first is still the default. To use non-local models, select a configured m
       return sha.trim();
     }
 
+    function githubErrorMessage(status, data, path) {
+      const tokenConfigured = Boolean(githubTokenFromStorage());
+      const repoName = `${githubConfig.owner || "owner"}/${githubConfig.repo || "repo"}`;
+      const apiMessage = typeof data === "string" ? data : (data?.message || "");
+      if (status === 401) {
+        return "Authentication failed. The configured GitHub Personal Access Token is invalid, expired, revoked, or typed incorrectly. Replace the token, save it, then test again.";
+      }
+      if (status === 403) {
+        return `GitHub responded, but this token does not have permission for ${repoName}. For private repo setup, use a fine-grained PAT with Metadata Read, Contents Read, Issues Read, and Pull Requests Read/Write if creating PRs.`;
+      }
+      if (status === 404) {
+        return tokenConfigured
+          ? `GitHub returned 404 for ${repoName}. For private repos this usually means the token is valid but was not granted access to this repository, or the owner/repo spelling is wrong.`
+          : `GitHub returned 404 for ${repoName}. If this repository is private, add a GitHub Personal Access Token with access to the repository, then test again.`;
+      }
+      return `${gitProvider().label} API ${status}: ${apiMessage || "Request failed"}`;
+    }
+
     async function githubApi(path, options = {}) {
       syncGithubConfigFromInputs(true);
-      if (!githubConfig.owner || !githubConfig.repo) throw new Error("Add an owner/workspace and repo in the selected Git plugin settings first.");
+      if (!options.skipRepoRequirement && (!githubConfig.owner || !githubConfig.repo)) throw new Error("Add an owner/workspace and repo in the selected Git plugin settings first.");
+      const token = githubTokenFromStorage();
+      if (token) githubConfig.token = token;
       const headers = {
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28"
       };
-      if (githubConfig.token) headers.Authorization = `Bearer ${githubConfig.token}`;
+      if (token) headers.Authorization = `Bearer ${token}`;
 
+      const { skipRepoRequirement, ...fetchOptions } = options;
       const requestOptions = {
-        ...options,
-        headers: { ...headers, ...(options.headers || {}) }
+        ...fetchOptions,
+        headers: { ...headers, ...(fetchOptions.headers || {}) }
       };
       const res = PLUGINS.isEnabled("proxy")
         ? await PLUGINS.call(`/github${path}`, requestOptions)
@@ -2967,8 +3163,11 @@ Local-first is still the default. To use non-local models, select a configured m
       try { data = raw ? JSON.parse(raw) : {}; } catch { data = raw; }
 
       if (!res.ok) {
-        const message = typeof data === "string" ? data : (data.message || JSON.stringify(data));
-        throw new Error(`${gitProvider().label} API ${res.status}: ${message}`);
+        const error = new Error(githubErrorMessage(res.status, data, path));
+        error.status = res.status;
+        error.data = data;
+        error.friendlyMessage = error.message;
+        throw error;
       }
       return data;
     }
@@ -3255,21 +3454,157 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
 
 
     function saveLocalModelConfig() {
-      localModelConfig.endpoint = normalizeLocalEndpoint(document.getElementById("localModelEndpoint")?.value || localModelConfig.endpoint);
-      localModelConfig.model = (document.getElementById("localModelName")?.value || localModelConfig.model || "llama3.1").trim();
+      localModelConfig.endpoint = normalizeLocalEndpoint(document.getElementById("localModelEndpoint")?.value || document.getElementById("key-local-endpoint")?.value || localModelConfig.endpoint);
+      localModelConfig.model = (document.getElementById("localModelName")?.value || document.getElementById("key-local-model")?.value || document.getElementById("localModelSelect")?.value || localModelConfig.model || "").trim();
+      if (!localModelConfig.model) localModelConfig.model = firstDiscoveredLocalModel()?.model || "llama3.2:latest";
       localStorage.setItem("factory-passport-local-model", JSON.stringify(localModelConfig));
       if (run.id) {
         run.integrations = publicIntegrations();
         saveRun();
       }
+      renderLocalAIModelOptions();
       updatePluginStatus();
       showToast("Local model settings saved");
+    }
+
+    function localAIProviderCandidates() {
+      const bridge = githubConfig.localGitBridge || document.getElementById("localGitBridge")?.value || "http://localhost:4787";
+      return [
+        { id: "bridge", label: "Local Bridge", endpoint: normalizeLocalEndpoint(bridge), discoverUrl: normalizeLocalEndpoint(bridge) + "/ai/discover", kind: "bridge" },
+        { id: "ollama-localhost", label: "Ollama", endpoint: "http://localhost:11434", modelsUrl: "http://localhost:11434/api/tags", kind: "ollama" },
+        { id: "ollama-127", label: "Ollama", endpoint: "http://127.0.0.1:11434", modelsUrl: "http://127.0.0.1:11434/api/tags", kind: "ollama" },
+        { id: "lmstudio-localhost", label: "LM Studio", endpoint: "http://localhost:1234/v1", modelsUrl: "http://localhost:1234/v1/models", kind: "openai-compatible" },
+        { id: "lmstudio-127", label: "LM Studio", endpoint: "http://127.0.0.1:1234/v1", modelsUrl: "http://127.0.0.1:1234/v1/models", kind: "openai-compatible" },
+        { id: "localai", label: "LocalAI / OpenAI-compatible", endpoint: "http://localhost:8080/v1", modelsUrl: "http://localhost:8080/v1/models", kind: "openai-compatible" },
+        { id: "llamacpp", label: "llama.cpp server", endpoint: "http://localhost:8081/v1", modelsUrl: "http://localhost:8081/v1/models", kind: "openai-compatible" }
+      ];
+    }
+
+    function normalizeDiscoveredModels(provider) {
+      const models = Array.isArray(provider.models) ? provider.models : [];
+      return models.map(m => typeof m === "string" ? { name: m } : m).filter(m => m?.name || m?.id);
+    }
+
+    async function fetchJSON(url, timeoutMs = 1800) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const res = await fetch(url, { signal: controller.signal });
+        const data = await res.json().catch(() => ({}));
+        return { ok: res.ok, status: res.status, data };
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    async function discoverViaBridge(candidate) {
+      try {
+        const result = await fetchJSON(candidate.discoverUrl, 2500);
+        if (!result.ok) throw new Error(`${result.status}`);
+        const providers = Array.isArray(result.data.providers) ? result.data.providers : [];
+        return providers.map(p => ({
+          id: p.id || p.name || `provider-${Math.random()}`,
+          label: p.label || p.name || p.id || "Local AI",
+          endpoint: normalizeLocalEndpoint(p.endpoint || ""),
+          kind: p.kind || p.type || "openai-compatible",
+          status: p.status || (p.ok ? "connected" : "offline"),
+          models: normalizeDiscoveredModels(p),
+          source: "bridge",
+          error: p.error || ""
+        }));
+      } catch (err) {
+        return [{ id: "bridge", label: "Local Bridge", endpoint: candidate.endpoint, kind: "bridge", status: "offline", models: [], source: "bridge", error: err.message }];
+      }
+    }
+
+    async function discoverDirectProvider(candidate) {
+      try {
+        const result = await fetchJSON(candidate.modelsUrl, 1800);
+        if (!result.ok) throw new Error(`${result.status}`);
+        const raw = result.data.models || result.data.data || [];
+        const models = raw.map(m => ({ name: m.name || m.id || String(m), size: m.size || null })).filter(m => m.name);
+        return { ...candidate, status: models.length ? "connected" : "connected-empty", models, source: "browser" };
+      } catch (err) {
+        return { ...candidate, status: "offline", models: [], source: "browser", error: err.message };
+      }
+    }
+
+    function discoveredModelKey(provider, model) {
+      return JSON.stringify({ endpoint: provider.endpoint, kind: provider.kind, model: model.name || model.id });
+    }
+
+    function firstDiscoveredLocalModel() {
+      for (const provider of localAIProviders || []) {
+        const model = normalizeDiscoveredModels(provider)[0];
+        if (provider.status === "connected" && model) return { provider, model: model.name || model.id };
+      }
+      return null;
+    }
+
+    function renderLocalAIModelOptions() {
+      const select = document.getElementById("localModelSelect");
+      const panel = document.getElementById("local-ai-discovery-results");
+      const options = [];
+      (localAIProviders || []).forEach(provider => {
+        normalizeDiscoveredModels(provider).forEach(model => options.push({ provider, model }));
+      });
+
+      if (select) {
+        select.innerHTML = options.length
+          ? options.map(({ provider, model }) => {
+              const name = model.name || model.id;
+              const value = escapeAttr(discoveredModelKey(provider, model));
+              const selected = provider.endpoint === localModelConfig.endpoint && name === localModelConfig.model ? "selected" : "";
+              return `<option value="${value}" ${selected}>${escapeHtml(provider.label)} · ${escapeHtml(name)}</option>`;
+            }).join("")
+          : `<option value="">Auto-detect models first</option>`;
+      }
+
+      if (panel) {
+        if (!localAIProviders?.length) {
+          panel.innerHTML = "No local AI models discovered yet.";
+        } else {
+          panel.innerHTML = localAIProviders.map(provider => {
+            const models = normalizeDiscoveredModels(provider);
+            const statusClass = provider.status === "connected" ? "text-emerald-300" : provider.status === "connected-empty" ? "text-amber-300" : "text-zinc-500";
+            const statusText = provider.status === "connected" ? `${models.length} model${models.length === 1 ? "" : "s"}` : provider.status === "connected-empty" ? "No models found" : "Offline";
+            return `<div class="mb-2 last:mb-0 rounded-xl border border-zinc-800 bg-zinc-950/60 p-2">
+              <div class="flex items-center justify-between gap-2"><span class="font-semibold text-zinc-200">${escapeHtml(provider.label)}</span><span class="${statusClass}">${escapeHtml(statusText)}</span></div>
+              <div class="text-[11px] text-zinc-500 mt-0.5">${escapeHtml(provider.endpoint || provider.source || "")}</div>
+              ${models.length ? `<div class="mt-2 flex flex-wrap gap-1">${models.map(m => `<button onclick='selectDiscoveredLocalModel(${JSON.stringify(discoveredModelKey(provider, m))})' class="px-2 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-[11px]">${escapeHtml(m.name || m.id)}</button>`).join("")}</div>` : provider.error ? `<div class="text-[11px] text-zinc-600 mt-1">${escapeHtml(provider.error)}</div>` : ""}
+            </div>`;
+          }).join("");
+        }
+      }
+
+      setValue("localModelEndpoint", localModelConfig.endpoint || "http://localhost:11434");
+      setValue("localModelName", localModelConfig.model || "");
+      const keyEndpoint = document.getElementById("key-local-endpoint");
+      const keyModel = document.getElementById("key-local-model");
+      if (keyEndpoint) keyEndpoint.value = localModelConfig.endpoint || "http://localhost:11434";
+      if (keyModel) keyModel.value = localModelConfig.model || "";
+    }
+
+    function selectDiscoveredLocalModel(value) {
+      if (!value) return;
+      let parsed = null;
+      try { parsed = typeof value === "string" ? JSON.parse(value) : value; } catch { return; }
+      localModelConfig.endpoint = normalizeLocalEndpoint(parsed.endpoint || localModelConfig.endpoint);
+      localModelConfig.kind = parsed.kind || (isOpenAICompatibleLocal(parsed.endpoint) ? "openai-compatible" : "ollama");
+      localModelConfig.model = parsed.model || localModelConfig.model;
+      localModelConfig.connected = true;
+      setValue("localModelEndpoint", localModelConfig.endpoint);
+      setValue("localModelName", localModelConfig.model);
+      localStorage.setItem("factory-passport-local-model", JSON.stringify(localModelConfig));
+      renderLocalAIModelOptions();
+      updatePluginStatus();
+      showToast(`Selected local model: ${localModelConfig.model}`);
     }
 
     async function testLocalModelConnection(endpoint, model) {
       const old = { ...localModelConfig };
       localModelConfig.endpoint = normalizeLocalEndpoint(endpoint || old.endpoint);
-      localModelConfig.model = model || old.model || "llama3.1";
+      localModelConfig.model = model || old.model || firstDiscoveredLocalModel()?.model || "llama3.2:latest";
       try {
         await callLocalModel([{ role: "user", content: "Reply with exactly: local model connected" }], { temperature: 0 });
         return true;
@@ -3283,42 +3618,44 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
       localModelConfig.endpoint = "http://localhost:11434";
       localModelConfig.kind = "ollama";
       setValue("localModelEndpoint", localModelConfig.endpoint);
-      setValue("localModelName", localModelConfig.model || "llama3.1");
       saveLocalModelConfig();
-      showToast("Local model plugin endpoint selected. Run a test or pipeline to verify.");
+      await detectLocalModelEndpoint();
     }
 
     async function connectLMStudio() {
       localModelConfig.endpoint = "http://localhost:1234/v1";
       localModelConfig.kind = "openai-compatible";
-      localModelConfig.model = localModelConfig.model || "local-model";
       setValue("localModelEndpoint", localModelConfig.endpoint);
-      setValue("localModelName", localModelConfig.model);
       saveLocalModelConfig();
-      showToast("LM Studio endpoint selected. Enable the local server in LM Studio.");
+      await detectLocalModelEndpoint();
     }
 
     async function detectLocalModelEndpoint() {
-      const candidates = [
-        { endpoint: "http://localhost:11434", model: localModelConfig.model || "llama3.1", kind: "ollama" },
-        { endpoint: "http://127.0.0.1:11434", model: localModelConfig.model || "llama3.1", kind: "ollama" },
-        { endpoint: "http://localhost:1234/v1", model: localModelConfig.model || "local-model", kind: "openai-compatible" },
-        { endpoint: "http://127.0.0.1:1234/v1", model: localModelConfig.model || "local-model", kind: "openai-compatible" }
-      ];
-      for (const c of candidates) {
-        localModelConfig.endpoint = c.endpoint;
-        localModelConfig.model = c.model;
-        localModelConfig.kind = c.kind;
-        setValue("localModelEndpoint", c.endpoint);
-        setValue("localModelName", c.model);
-        try {
-          await callLocalModel([{ role: "user", content: "Reply with exactly: ok" }], { temperature: 0 });
-          saveLocalModelConfig();
-          showToast(`Detected local model at ${c.endpoint}`);
-          return;
-        } catch {}
+      showToast("Detecting local AI providers...");
+      const candidates = localAIProviderCandidates();
+      const bridgeProviders = await discoverViaBridge(candidates[0]);
+      const directProviders = await Promise.all(candidates.slice(1).map(discoverDirectProvider));
+      const byKey = new Map();
+      [...bridgeProviders, ...directProviders].forEach(provider => {
+        const key = `${provider.kind}:${provider.endpoint}`;
+        const existing = byKey.get(key);
+        if (!existing || normalizeDiscoveredModels(provider).length > normalizeDiscoveredModels(existing).length || provider.status === "connected") byKey.set(key, provider);
+      });
+      localAIProviders = Array.from(byKey.values());
+      const preferred = firstDiscoveredLocalModel();
+      if (preferred) {
+        localModelConfig.endpoint = preferred.provider.endpoint;
+        localModelConfig.kind = preferred.provider.kind;
+        localModelConfig.model = preferred.model;
+        localModelConfig.connected = true;
+        localStorage.setItem("factory-passport-local-model", JSON.stringify(localModelConfig));
+        showToast(`Detected ${localAIProviders.filter(p => p.status === "connected").length} local AI provider(s). Selected ${preferred.model}.`);
+      } else {
+        localModelConfig.connected = false;
+        showToast("No local AI models found. Start Ollama, LM Studio, or a local OpenAI-compatible server.");
       }
-      showToast("Could not auto-detect a local model. Check your local model plugin endpoint and CORS.");
+      renderLocalAIModelOptions();
+      updatePluginStatus();
     }
 
     function saveIntegrations() {
@@ -3361,6 +3698,7 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
       setValue("githubOwner", githubConfig.owner);
       setValue("githubRepo", githubConfig.repo);
       setValue("githubToken", githubConfig.token);
+      setValue("githubPatInput", githubTokenFromStorage());
       setValue("gitProvider", githubConfig.provider || "github");
       setValue("localRepoPath", githubConfig.localRepoPath || "");
       setValue("localGitBridge", githubConfig.localGitBridge || "http://localhost:4787");
@@ -3371,7 +3709,7 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
       setValue("platformEndpoint", integrations.platformEndpoint);
       setValue("genericWebhook", integrations.genericWebhook);
       setValue("localModelEndpoint", localModelConfig.endpoint || "http://localhost:11434");
-      setValue("localModelName", localModelConfig.model || "llama3.1");
+      setValue("localModelName", localModelConfig.model || "llama3.2:latest");
       loadPluginSelections();
       syncRuntimeFromSelectedPlugins();
       renderConnectionPluginSelectors();
@@ -4103,8 +4441,8 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
         <div class="bg-zinc-900 rounded-3xl p-6 border border-amber-500/40">
           <div class="flex justify-between items-start mb-4"><div><div class="font-semibold">Local Model Endpoint</div><div class="text-xs text-zinc-500">Examples: http://localhost:11434 · http://localhost:1234/v1</div></div><div class="text-xs px-3 py-1 rounded-full bg-amber-900 text-amber-300">Local</div></div>
           <input id="key-local-endpoint" value="${appEsc(localModelConfig.endpoint || 'http://localhost:11434')}" class="w-full bg-black border border-zinc-700 rounded-2xl px-5 py-4 text-sm mb-3">
-          <input id="key-local-model" value="${appEsc(localModelConfig.model || 'llama3.1')}" placeholder="Model name" class="w-full bg-black border border-zinc-700 rounded-2xl px-5 py-4 text-sm">
-          <div class="mt-4 flex flex-wrap gap-2"><button onclick="localModelConfig.endpoint=document.getElementById('key-local-endpoint').value; localModelConfig.model=document.getElementById('key-local-model').value; setValue('localModelEndpoint', localModelConfig.endpoint); setValue('localModelName', localModelConfig.model); saveLocalModelConfig(); selectModel('local')" class="px-5 py-3 bg-white text-black rounded-2xl text-sm font-semibold">Save + Use Local</button><button onclick="toggleModelInRoute('local')" class="px-5 py-3 bg-zinc-800 rounded-2xl text-sm">Add / Remove Local</button><button onclick="setLocalFirstRoute()" class="px-5 py-3 bg-zinc-800 rounded-2xl text-sm">Keep Local First</button><button onclick="detectLocalModelEndpoint()" class="px-5 py-3 bg-zinc-800 rounded-2xl text-sm">Auto-detect</button></div>
+          <input id="key-local-model" value="${appEsc(localModelConfig.model || 'llama3.2:latest')}" placeholder="Detect or choose a local model" class="w-full bg-black border border-zinc-700 rounded-2xl px-5 py-4 text-sm">
+          <div class="mt-4 flex flex-wrap gap-2"><button onclick="localModelConfig.endpoint=document.getElementById('key-local-endpoint').value; localModelConfig.model=document.getElementById('key-local-model').value; setValue('localModelEndpoint', localModelConfig.endpoint); setValue('localModelName', localModelConfig.model); saveLocalModelConfig(); selectModel('local')" class="px-5 py-3 bg-white text-black rounded-2xl text-sm font-semibold">Save + Use Local</button><button onclick="toggleModelInRoute('local')" class="px-5 py-3 bg-zinc-800 rounded-2xl text-sm">Add / Remove Local</button><button onclick="setLocalFirstRoute()" class="px-5 py-3 bg-zinc-800 rounded-2xl text-sm">Keep Local First</button><button onclick="detectLocalModelEndpoint()" class="px-5 py-3 bg-zinc-800 rounded-2xl text-sm">Detect Models</button></div>
         </div>`;
       document.getElementById('credentials-list').innerHTML = customCards + localCard + providers.filter(p=>p.id!=='local').map(p => `
         <div class="bg-zinc-900 rounded-3xl p-6 border border-zinc-700">
