@@ -46,7 +46,7 @@
             <div class="w-12 h-12 bg-gradient-to-br from-pink-500 to-violet-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-pink-500/30">🌸</div>
             <div>
               <h1 class="logo-font text-4xl md:text-5xl font-bold tracking-tight">Factory 4flo Wiki</h1>
-              <p class="text-zinc-400">How to use the Factory Passport page</p>
+              <p class="text-zinc-400">How to use the Factory Run page</p>
             </div>
           </div>
 
@@ -54,7 +54,7 @@
             <p class="text-lg md:text-xl leading-relaxed text-zinc-100">
               <strong>Factory 4flo</strong> is a single-file, local-first project assistant.
               It turns rough ideas, feature requests, or GitHub issue numbers into a structured <strong>Factory Passport
-                run</strong> with snapshots, timeline history, interop payloads, credentials, plugins, and optional automations.
+                run</strong> with snapshots, review steps, export/share tools, and optional power-user integrations.
               <span class="info-wrap" id="infoWrap">
                 <button class="info-btn" type="button" aria-label="Plain English explanation"
                   onclick="toggleInfoTooltip(event)">i</button>
@@ -120,10 +120,7 @@
                 <h3 class="font-semibold text-lg">Review Connected AI &amp; Plugins</h3>
             
                 <p class="text-zinc-400">
-                  Before starting a Factory Run, review your active AI model and connected
-                  plugins. Confirm your AI model, Git provider, deployment provider, and
-                  execution/webhook plugin are configured.
-                  <strong>Local-first Core</strong> is enough to get started.
+                  Before starting a Factory Run, keep <strong>Local-first Core</strong> selected unless you specifically need Git, deployment, cloud AI, or webhooks. Advanced setup now lives under <strong>Power Tools</strong>.
                 </p>
             
                 <button type="button" class="app-step-link secondary" onclick="triggerMainSection('factory', 'setup-connections')">
@@ -139,28 +136,22 @@
                 </div>
               </div>
             </div>
-            <div class="mt-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-100">
-              <strong>Minimum working setup:</strong>
-              Local-first Core is enough to use the app manually.
-              Git, deployment, webhook, and cloud AI plugins are optional until you want automation.
-            </div>
-            <div class="flex gap-4"><span class="step-number">1</span><div><h3 class="font-semibold text-lg">Open Factory Passport</h3><p class="text-zinc-400">Use the left sidebar and choose <strong>Factory Passport</strong>.</p><button type="button" class="app-step-link" onclick="triggerMainSection('factory', 'factory-screen')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Factory Passport</button></div></div>
-            <div class="flex gap-4"><span class="step-number">2</span><div><h3 class="font-semibold text-lg">Paste your idea</h3><p class="text-zinc-400">Add a rough idea, task description, or GitHub issue numbers like <code class="bg-zinc-900 px-2 py-1 rounded">#5368 #5366</code>.</p><button type="button" class="app-step-link" onclick="triggerMainSection('factory', 'ideaInput')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Jump to Idea Input</button></div></div>
-            <div class="flex gap-4"><span class="step-number">3</span><div><h3 class="font-semibold text-lg">Pick a template</h3><p class="text-zinc-400">Use <strong>4-Step Factory</strong> for normal product work, <strong>Security / Upgrade</strong> for risk-focused work, or <strong>Minimal Custom</strong> for a small run.</p><button type="button" class="app-step-link secondary" onclick="triggerMainSection('factory', 'templateSelect')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Jump to Templates</button></div></div>
-            <div class="flex gap-4"><span class="step-number">4</span><div><h3 class="font-semibold text-lg">Start the run</h3><p class="text-zinc-400">Click <strong>Start Factory Run</strong>. The page creates the first set of snapshots and timeline events.</p><button type="button" class="app-step-link" onclick="triggerMainSection('factory', 'ideaInput')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Go Start a Run</button></div></div>
-            <div class="flex gap-4"><span class="step-number">5</span><div><h3 class="font-semibold text-lg">Review, edit, approve, export</h3><p class="text-zinc-400">Open each snapshot, improve the text, approve what looks right, then export or share the run.</p><button type="button" class="app-step-link secondary" onclick="triggerMainSection('factory', 'board')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Jump to Snapshots</button></div></div>
+            <div class="flex gap-4"><span class="step-number">1</span><div><h3 class="font-semibold text-lg">Paste your idea</h3><p class="text-zinc-400">Add a rough idea, task description, or GitHub issue numbers like <code class="bg-zinc-900 px-2 py-1 rounded">#5368 #5366</code>.</p><button type="button" class="app-step-link" onclick="triggerMainSection('factory', 'ideaInput')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Jump to Idea Input</button></div></div>
+            <div class="flex gap-4"><span class="step-number">2</span><div><h3 class="font-semibold text-lg">Pick a template</h3><p class="text-zinc-400">Use <strong>4-Step Factory</strong> for normal product work, <strong>Security / Upgrade</strong> for risk-focused work, or <strong>Minimal Custom</strong> for a small run.</p><button type="button" class="app-step-link secondary" onclick="triggerMainSection('factory', 'templateSelect')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Jump to Templates</button></div></div>
+            <div class="flex gap-4"><span class="step-number">3</span><div><h3 class="font-semibold text-lg">Start the run</h3><p class="text-zinc-400">Click <strong>Start Factory Run</strong>. The page creates the first set of snapshots and timeline events.</p><button type="button" class="app-step-link" onclick="triggerMainSection('factory', 'ideaInput')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Go Start a Run</button></div></div>
+            <div class="flex gap-4"><span class="step-number">4</span><div><h3 class="font-semibold text-lg">Review, edit, approve, export</h3><p class="text-zinc-400">Open each snapshot, improve the text, approve what looks right, then export or share the run.</p><button type="button" class="app-step-link secondary" onclick="triggerMainSection('factory', 'board')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Jump to Snapshots</button></div></div>
           </div>
         </section>
 
         <section id="tabs" class="card p-6 md:p-8">
           <h2 class="logo-font text-3xl font-bold mb-5">Main tabs</h2>
           <div class="grid md:grid-cols-2 gap-4">
-            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><h3 class="font-semibold"><i class="fa-solid fa-factory text-pink-400 mr-2"></i>Factory Passport</h3><p class="text-sm text-zinc-400 mt-2">Main workspace for creating runs, viewing snapshots, timeline, lineage, diffs, and interop payloads.</p></div>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><h3 class="font-semibold"><i class="fa-solid fa-factory text-pink-400 mr-2"></i>Factory Run</h3><p class="text-sm text-zinc-400 mt-2">Main workspace for creating a run, reviewing snapshots, checking context, then exporting or sharing.</p></div>
             <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><h3 class="font-semibold"><i class="fa-solid fa-comments text-blue-400 mr-2"></i>4flo Assistant</h3><p class="text-sm text-zinc-400 mt-2">Chat-style helper for controlling runs, asking questions, or creating quick actions.</p></div>
             <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><h3 class="font-semibold"><i class="fa-solid fa-key text-yellow-300 mr-2"></i>Credentials</h3><p class="text-sm text-zinc-400 mt-2">Local vault for tokens, API keys, webhook URLs, provider details, and notes.</p></div>
             <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><h3 class="font-semibold"><i class="fa-solid fa-history text-violet-400 mr-2"></i>History</h3><p class="text-sm text-zinc-400 mt-2">Past assistant sessions and saved local activity.</p></div>
             <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><h3 class="font-semibold"><i class="fa-solid fa-bolt text-emerald-400 mr-2"></i>Automations</h3><p class="text-sm text-zinc-400 mt-2">Optional triggers and actions, such as “when this happens, do that.”</p></div>
-            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><h3 class="font-semibold"><i class="fa-solid fa-plug text-cyan-300 mr-2"></i>Plugins</h3><p class="text-sm text-zinc-400 mt-2">Connect model, git, deployment, execution, storage, proxy, or webhook tools.</p></div>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><h3 class="font-semibold"><i class="fa-solid fa-plug text-cyan-300 mr-2"></i>Power Tools</h3><p class="text-sm text-zinc-400 mt-2">Advanced area for credentials, automations, history, plugins, and service setup.</p></div>
           </div>
         </section>
 

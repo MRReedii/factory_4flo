@@ -14,6 +14,27 @@
     * { transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, transform; transition-duration: 150ms; transition-timing-function: cubic-bezier(.4,0,.2,1); }
     body { font-family: 'Inter', system-ui, sans-serif; }
     .logo-font { font-family: 'Space Grotesk', sans-serif; }
+
+    /* Shared UI primitives to reduce repeated Tailwind class bloat. */
+    .ui-panel { background:#0f172a; border:1px solid #1e293b; border-radius:1rem; }
+    .ui-panel-zinc { background:#18181b; border:1px solid #3f3f46; border-radius:1.5rem; }
+    .ui-btn { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; border-radius:.75rem; padding:.5rem 1rem; font-weight:500; }
+    .ui-btn-sm { border-radius:.75rem; padding:.375rem .75rem; font-size:.875rem; }
+    .ui-btn-dark { background:#1e293b; color:#fff; }
+    .ui-btn-dark:hover { background:#334155; }
+    .ui-btn-zinc { background:#27272a; color:#fff; }
+    .ui-btn-zinc:hover { background:#3f3f46; }
+    .ui-btn-primary { background:#4f46e5; color:#fff; }
+    .ui-btn-primary:hover { background:#6366f1; }
+    .ui-btn-violet { background:#7c3aed; color:#fff; }
+    .ui-btn-violet:hover { background:#8b5cf6; }
+    .ui-btn-green { background:#059669; color:#fff; }
+    .ui-btn-green:hover { background:#10b981; }
+    .ui-btn-danger { background:#dc2626; color:#fff; }
+    .ui-btn-danger:hover { background:#ef4444; }
+    .ui-field { background:#020617; border:1px solid #334155; border-radius:.75rem; color:#f8fafc; }
+    .ui-field-zinc { background:#09090b; border:1px solid #3f3f46; border-radius:1rem; color:#fff; }
+    .ui-muted-note { border:1px solid rgba(245,158,11,.2); background:rgba(245,158,11,.1); color:#fffbeb; border-radius:.75rem; }
     textarea, input, select { outline: none; }
     textarea:focus, input:focus, select:focus { box-shadow: 0 0 0 2px rgba(255,142,200,.45); }
     .thin-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
@@ -25,6 +46,48 @@
     .sidebar-item.active { background: #18181b; color: white; }
     .sidebar-item.active::after { content:''; position:absolute; left:0; top:50%; transform:translateY(-50%); height:28px; width:4px; background:var(--pink); border-top-right-radius:9999px; border-bottom-right-radius:9999px; }
     .chat-container { background: radial-gradient(circle at top left, rgba(255,142,200,.08), transparent 32%), linear-gradient(180deg,#09090b 0%,#111827 100%); }
+
+    /* Factory Passport now uses the same visual language as the 4flo Assistant. */
+    .factory-container {
+      background: radial-gradient(circle at top left, rgba(255,142,200,.10), transparent 34%), radial-gradient(circle at top right, rgba(0,212,255,.08), transparent 30%), linear-gradient(180deg,#09090b 0%,#111827 100%);
+      color:#f4f4f5;
+    }
+    .factory-hero {
+      background: rgba(24,24,27,.72);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:1.75rem;
+      padding:1.25rem;
+      box-shadow:0 22px 70px rgba(0,0,0,.30);
+    }
+    .factory-card {
+      background:#18181b;
+      border:1px solid #3f3f46;
+      border-radius:1.5rem;
+      box-shadow:0 18px 45px rgba(0,0,0,.22);
+    }
+    .factory-card-soft {
+      background:rgba(24,24,27,.72);
+      border:1px solid rgba(63,63,70,.82);
+      border-radius:1.5rem;
+    }
+    .factory-field {
+      background:#09090b;
+      border:1px solid #3f3f46;
+      border-radius:1.25rem;
+      color:#fff;
+    }
+    .factory-pill {
+      background:rgba(39,39,42,.9);
+      border:1px solid #3f3f46;
+      border-radius:999px;
+      color:#d4d4d8;
+    }
+    .factory-gradient-btn {
+      background:linear-gradient(135deg,var(--pink),var(--blue));
+      color:#09090b;
+      font-weight:700;
+    }
+    .factory-gradient-btn:hover { filter:brightness(1.08); }
     .modal-backdrop { background: rgba(0,0,0,.72); backdrop-filter: blur(8px); }
     .diff-add { background: rgba(16,185,129,.18); color: #a7f3d0; }
     .diff-remove { background: rgba(239,68,68,.18); color: #fecaca; text-decoration: line-through; }
@@ -92,12 +155,41 @@
         <div class="min-w-0"><div class="logo-font text-3xl font-bold tracking-tighter truncate">Factory 4flo</div><div class="text-xs text-zinc-500">Passport + Assistant</div></div>
       </div>
       <nav id="nav" class="flex-1 p-4 space-y-1">
-        <button onclick="switchTab('factory')" id="nav-factory" class="sidebar-item active w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-900 rounded-2xl text-lg font-medium cursor-pointer text-left"><i class="fa-solid fa-factory w-5"></i><span>Factory Passport</span></button>
-        <button onclick="switchTab('chat')" id="nav-chat" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-900 rounded-2xl text-lg font-medium cursor-pointer text-left"><i class="fa-solid fa-comments w-5"></i><span>4flo Assistant</span></button>
-        <button onclick="switchTab('keys')" id="nav-keys" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-900 rounded-2xl text-lg font-medium cursor-pointer text-left"><i class="fa-solid fa-key w-5"></i><span>Credentials</span></button>
-        <button onclick="switchTab('history')" id="nav-history" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-900 rounded-2xl text-lg font-medium cursor-pointer text-left"><i class="fa-solid fa-history w-5"></i><span>History</span></button>
-        <button onclick="switchTab('flows')" id="nav-flows" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-900 rounded-2xl text-lg font-medium cursor-pointer text-left"><i class="fa-solid fa-bolt w-5"></i><span>Automations</span></button>
-        <button onclick="switchTab('plugins')" id="nav-plugins" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-900 rounded-2xl text-lg font-medium cursor-pointer text-left"><i class="fa-solid fa-plug w-5"></i><span>Plugins</span></button>
+        <button onclick="switchTab('factory')" id="nav-factory"
+          class="sidebar-item active w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-900 rounded-2xl text-lg font-medium cursor-pointer text-left">
+          <i class="fa-solid fa-passport w-5"></i>
+          <span>Factory Passport</span>
+        </button>
+      
+        <button onclick="switchTab('chat')" id="nav-chat"
+          class="sidebar-item w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-900 rounded-2xl text-lg font-medium cursor-pointer text-left">
+          <i class="fa-solid fa-comments w-5"></i>
+          <span>4flo Assistant</span>
+        </button>
+      
+        <button onclick="switchTab('keys')" id="nav-keys"
+          class="sidebar-item w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-900 rounded-2xl text-lg font-medium cursor-pointer text-left">
+          <i class="fa-solid fa-key w-5"></i>
+          <span>Credentials</span>
+        </button>
+      
+        <button onclick="switchTab('history')" id="nav-history"
+          class="sidebar-item w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-900 rounded-2xl text-lg font-medium cursor-pointer text-left">
+          <i class="fa-solid fa-clock-rotate-left w-5"></i>
+          <span>History</span>
+        </button>
+      
+        <button onclick="switchTab('flows')" id="nav-flows"
+          class="sidebar-item w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-900 rounded-2xl text-lg font-medium cursor-pointer text-left">
+          <i class="fa-solid fa-wand-magic-sparkles w-5"></i>
+          <span>Automations</span>
+        </button>
+      
+        <button onclick="switchTab('plugins')" id="nav-plugins"
+          class="sidebar-item w-full flex items-center gap-3 px-4 py-3 hover:bg-zinc-900 rounded-2xl text-lg font-medium cursor-pointer text-left">
+          <i class="fa-solid fa-puzzle-piece w-5"></i>
+          <span>Plugins</span>
+        </button>
       </nav>
       <div class="p-4 border-t border-zinc-800 space-y-3">
         <button onclick="newFactoryRun()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-2xl font-medium flex items-center justify-center gap-2"><i class="fa-solid fa-plus"></i> New Factory Run</button>
@@ -115,8 +207,7 @@
         <div class="flex items-center gap-2 text-sm">
           <span id="connection-status" class="hide-mobile px-3 py-1 rounded-xl bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-xs">Local-first</span>
           <button onclick="syncNow()" id="sync-now-btn" class="hide-mobile hidden px-4 py-1.5 bg-emerald-700 hover:bg-emerald-600 rounded-xl">Sync Now</button>
-          <button onclick="copyShareUrl('run')" class="hide-mobile px-4 py-1.5 bg-violet-600 hover:bg-violet-500 rounded-xl">Share Run</button>
-          <button onclick="exportRun()" class="hide-mobile px-4 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-xl">Export</button>
+          <button onclick="scrollToFactoryActions()" class="hide-mobile ui-btn-sm ui-btn-zinc">Run Actions</button>
           <button onclick="newChat()" class="px-4 py-1.5 bg-white text-black rounded-xl font-semibold"><i class="fa-solid fa-plus mr-1"></i><span class="hide-mobile">New Session</span></button>
         </div>
       </header>
@@ -131,33 +222,33 @@
         </div>
       </div>
 
-      <section id="factory-screen" class="tab-screen flex-1 overflow-auto bg-slate-950 text-slate-100 thin-scroll">
+      <section id="factory-screen" class="tab-screen flex-1 overflow-auto factory-container thin-scroll">
         <div class="max-w-7xl mx-auto p-4 md:p-6">
-    <header class="mb-6">
+    <header class="mb-6 factory-hero">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 class="text-3xl md:text-4xl font-bold tracking-tight">Factory Passport</h1>
-          <p class="text-slate-400 mt-1">
+          <h1 class="text-3xl md:text-4xl font-bold logo-font tracking-tighter">Factory Passport</h1>
+          <p class="text-zinc-400 mt-1">
             Interoperable, human-in-the-loop snapshots for AI software factories.
           </p>
-          <p class="text-xs text-slate-500 mt-2">
+          <p class="text-xs text-zinc-500 mt-2">
             Single HTML file · localStorage · shareable hash URLs · export/import JSON · webhook-friendly
           </p>
         </div>
 
         <div id="factory-share-actions" class="scroll-mt-6 flex flex-wrap gap-2">
-          <button onclick="exportRun()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700">Export JSON</button>
-          <label class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 cursor-pointer">
+          <button onclick="exportRun()" class="ui-btn ui-btn-zinc">Export JSON</button>
+          <label class="ui-btn ui-btn-zinc cursor-pointer">
             Import JSON
             <input type="file" accept="application/json" class="hidden" onchange="importRun(event)" />
           </label>
-          <button onclick="copyShareUrl('run')" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500">Share Run</button>
-          <button onclick="copyShareUrl('snapshot')" class="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500">Share Selected</button>
+          <button onclick="copyShareUrl('run')" class="ui-btn factory-gradient-btn">Share Run</button>
+          <button onclick="copyShareUrl('snapshot')" class="ui-btn bg-zinc-800 hover:bg-zinc-700 text-cyan-300">Share Selected</button>
         </div>
       </div>
     </header>
 
-    <section id="setup-connections" class="scroll-mt-6 bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6">
+    <section id="setup-connections" class="scroll-mt-6 factory-card p-4 mb-6">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4">
         <div>
           <h2 class="font-semibold text-xl flex items-center gap-2">
@@ -167,25 +258,25 @@
           <p class="text-sm text-slate-400">Active roles driving the current software factory loop.</p>
         </div>
         <div class="flex flex-wrap gap-2">
-          <button onclick="switchTab('plugins')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-zinc-800 text-sm border border-slate-700">Configure Plugins</button>
-          <button onclick="togglePanel('connectionsBody')" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-zinc-700 text-sm">Toggle Settings View</button>
+          <button onclick="switchTab('plugins')" class="ui-btn-sm ui-btn-dark border border-slate-700">Configure Plugins</button>
+          <button onclick="togglePanel('connectionsBody')" class="ui-btn-sm ui-btn-dark">Toggle Settings View</button>
         </div>
       </div>
 
-      <div id="activeConnectionsBadges" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 bg-slate-950/60 p-3 rounded-xl border border-slate-800 text-xs">
-        <div class="p-2 bg-slate-900/50 rounded-lg border border-slate-800">
+      <div id="activeConnectionsBadges" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 bg-black/35 p-3 rounded-2xl border border-zinc-800 text-xs">
+        <div class="p-3 bg-zinc-900/70 rounded-2xl border border-zinc-800">
           <div class="text-slate-500 font-medium">AI Model</div>
           <div id="badge-ai-connected" class="font-semibold text-pink-400 mt-0.5 truncate">Detecting...</div>
         </div>
-        <div class="p-2 bg-slate-900/50 rounded-lg border border-slate-800">
+        <div class="p-3 bg-zinc-900/70 rounded-2xl border border-zinc-800">
           <div class="text-slate-500 font-medium">Git Provider</div>
           <div id="badge-git-connected" class="font-semibold text-blue-400 mt-0.5 truncate">Detecting...</div>
         </div>
-        <div class="p-2 bg-slate-900/50 rounded-lg border border-slate-800">
+        <div class="p-3 bg-zinc-900/70 rounded-2xl border border-zinc-800">
           <div class="text-slate-500 font-medium">Deployment</div>
           <div id="badge-deploy-connected" class="font-semibold text-violet-400 mt-0.5 truncate">Detecting...</div>
         </div>
-        <div class="p-2 bg-slate-900/50 rounded-lg border border-slate-800">
+        <div class="p-3 bg-zinc-900/70 rounded-2xl border border-zinc-800">
           <div class="text-slate-500 font-medium">Execution Engine</div>
           <div id="badge-exec-connected" class="font-semibold text-emerald-400 mt-0.5 truncate">Detecting...</div>
         </div>
@@ -195,40 +286,40 @@
         Demo defaults are labeled as examples. Configure a real repo, credential, endpoint, service ID, or local model test before treating a plugin as connected.
       </div>
 
-      <div id="connectionsBody" class="hidden grid lg:grid-cols-4 gap-6 pt-4 border-t border-slate-800">
+      <div id="connectionsBody" class="hidden grid lg:grid-cols-4 gap-6 pt-4 border-t border-zinc-800">
         <div>
           <h3 class="font-semibold mb-2 text-sm">AI Model Plugin</h3>
-          <select id="aiPluginSelect" class="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm" onchange="savePluginSelections()"></select>
+          <select id="aiPluginSelect" class="w-full factory-field p-2.5 text-sm" onchange="savePluginSelections()"></select>
           <div class="flex gap-1.5 mt-2">
-            <button onclick="detectLocalModelEndpoint()" class="text-xs px-2.5 py-1.5 bg-slate-800 rounded-lg hover:bg-slate-700">Auto-detect Local</button>
+            <button onclick="detectLocalModelEndpoint()" class="ui-btn-sm ui-btn-dark text-xs">Auto-detect Local</button>
           </div>
         </div>
         <div>
           <h3 class="font-semibold mb-2 text-sm">Git Provider Plugin</h3>
-          <select id="gitPluginSelect" class="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm" onchange="savePluginSelections()"></select>
+          <select id="gitPluginSelect" class="w-full factory-field p-2.5 text-sm" onchange="savePluginSelections()"></select>
           <div class="flex gap-1.5 mt-2">
-            <button onclick="openGithubToolsModal()" class="text-xs px-2.5 py-1.5 bg-pink-900/40 text-pink-300 rounded-lg hover:bg-pink-900/60">Git Tools</button>
+            <button onclick="openGithubToolsModal()" class="ui-btn-sm bg-pink-900/40 text-pink-300 hover:bg-pink-900/60 text-xs">Git Tools</button>
           </div>
         </div>
         <div>
           <h3 class="font-semibold mb-2 text-sm">Deployment Plugin</h3>
-          <select id="deploymentPluginSelect" class="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm" onchange="savePluginSelections()"></select>
+          <select id="deploymentPluginSelect" class="w-full factory-field p-2.5 text-sm" onchange="savePluginSelections()"></select>
         </div>
         <div>
           <h3 class="font-semibold mb-2 text-sm">Execution / Webhook</h3>
-          <select id="executionPluginSelect" class="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-sm" onchange="savePluginSelections()"></select>
+          <select id="executionPluginSelect" class="w-full factory-field p-2.5 text-sm" onchange="savePluginSelections()"></select>
         </div>
       </div>
     </section>
 
     <section id="setup-create-run" class="scroll-mt-6 grid lg:grid-cols-4 gap-4 mb-6">
-      <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-4">
+      <div class="lg:col-span-2 factory-card p-5">
         <h2 class="font-semibold text-xl mb-3">Create Factory Run</h2>
-        <textarea id="ideaInput" class="w-full min-h-36 p-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100" placeholder="Paste a vague idea, feature request, or issue numbers like #5368. Comments can be fetched when a compatible Git plugin is selected..."></textarea>
+        <textarea id="ideaInput" class="w-full min-h-36 factory-field p-4" placeholder="Paste a vague idea, feature request, or issue numbers like #5368. Comments can be fetched when a compatible Git plugin is selected..."></textarea>
 
         <div class="grid md:grid-cols-2 gap-3 mt-3">
-          <input id="runTitleInput" class="p-3 rounded-xl bg-slate-950 border border-slate-700" placeholder="Run title optional">
-          <select id="templateSelect" class="p-3 rounded-xl bg-slate-950 border border-slate-700">
+          <input id="runTitleInput" class="factory-field p-3" placeholder="Run title optional">
+          <select id="templateSelect" class="factory-field p-3">
             <option value="software-factory">4-Step Factory</option>
             <option value="security-upgrade">Security / Upgrade 4-Step</option>
             <option value="custom">Minimal Custom</option>
@@ -236,29 +327,32 @@
         </div>
 
         <div id="factory-run-actions" class="scroll-mt-6 flex flex-wrap gap-2 mt-3">
-          <button onclick="createRun()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-medium">Start Factory Run</button>
-          <button onclick="createRunFromGithubIssues()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 font-medium">Fetch Issue + Start</button>
-          <button onclick="runFactoryPipeline(selectedSnapshotId)" class="px-4 py-2 rounded-xl bg-violet-700 hover:bg-violet-600">Resume From Selected</button>
-          <button onclick="addSnapshotAfterSelected()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700">Add Snapshot</button>
-          <button onclick="resetRun()" class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500">Reset</button>
+          <button onclick="createRun()" class="ui-btn factory-gradient-btn">Start Factory Run</button>
+          <button onclick="createRunFromGithubIssues()" class="ui-btn ui-btn-primary">Fetch Issue + Start</button>
+          <button onclick="runFactoryPipeline(selectedSnapshotId)" class="ui-btn ui-btn-violet">Resume From Selected</button>
+          <button onclick="addSnapshotAfterSelected()" class="ui-btn ui-btn-dark">Add Snapshot</button>
+          <button onclick="resetRun()" class="ui-btn ui-btn-danger">Reset</button>
         </div>
         <p id="fetchStatus" class="text-sm text-slate-400 mt-3"></p>
       </div>
 
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
-        <h2 class="font-semibold text-xl mb-3">Factory Fingerprint</h2>
+    <!-- Unified Inspector (Level 2) -->
+    <div id="inspector-panel" class="factory-card p-5 lg:col-span-1">
+      <div class="flex justify-between items-center mb-4 border-b border-zinc-800 pb-3">
+        <h3 class="font-semibold text-lg">Inspector</h3>
+        <button onclick="this.closest('#inspector-panel').classList.toggle('collapsed')" class="text-xs px-3 py-1 bg-zinc-800 rounded-xl">Toggle</button>
+      </div>
+      <div id="inspector-content" class="space-y-6">
+        <!-- Fingerprint + Selected Snapshot content will be merged here by JS -->
         <div id="insights" class="space-y-2 text-sm text-slate-300"></div>
+        <div id="selectedPanel" class="text-sm text-slate-300 space-y-2 border-t border-zinc-800 pt-4"></div>
       </div>
-
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
-        <h2 class="font-semibold text-xl mb-3">Selected Snapshot</h2>
-        <div id="selectedPanel" class="text-sm text-slate-300 space-y-2"></div>
-      </div>
+    </div>
     </section>
 
     <section id="setup-pipeline" class="scroll-mt-6 grid xl:grid-cols-4 gap-6">
       <aside class="xl:col-span-1 space-y-4">
-        <div id="setup-history" class="scroll-mt-6 bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <div id="setup-history" class="scroll-mt-6 factory-card p-4">
           <div class="flex items-center justify-between mb-3">
             <h2 class="font-semibold text-base flex items-center gap-2">
               <i class="fa-solid fa-folder-open text-amber-400"></i> Local Runs History
@@ -270,7 +364,7 @@
           </div>
         </div>
 
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <div class="factory-card p-4">
           <div class="flex items-center justify-between mb-3">
             <h2 class="font-semibold text-base">Timeline Graph</h2>
             <span id="eventCount" class="text-xs text-slate-500"></span>
@@ -278,7 +372,7 @@
           <div id="timeline" class="space-y-3 text-xs max-h-[220px] overflow-auto thin-scroll pr-1"></div>
         </div>
 
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <div class="factory-card p-4">
           <h2 class="font-semibold text-base mb-3">Lineage Root</h2>
           <div id="lineage" class="space-y-2 text-xs max-h-[160px] overflow-auto thin-scroll pr-1"></div>
         </div>
@@ -304,8 +398,8 @@
         </div>
 
         <div id="board" class="grid md:grid-cols-2 2xl:grid-cols-3 gap-4"></div>
-        <div id="diffView" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-4"></div>
-        <div id="interopView" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-4"></div>
+        <div id="diffView" class="hidden factory-card p-4"></div>
+        <div id="interopView" class="hidden factory-card p-4"></div>
       </main>
     </section>
   </div>
@@ -377,7 +471,7 @@
             <button onclick="testConfiguredModel()" class="px-6 py-3 bg-gradient-to-r from-pink-500 to-blue-500 rounded-2xl font-semibold">Test Active Model</button>
             <button onclick="clearAllKeys()" class="px-6 py-3 bg-zinc-900 border border-zinc-700 rounded-2xl font-semibold">Clear Keys</button>
           </div>
-          <div class="mt-10 text-xs text-zinc-500 border-l-2 border-pink-500 pl-4">⚠️ Keys are saved only in this browser's localStorage. For production, use a backend proxy instead of calling AI APIs directly from public HTML.</div>
+          <div class="mt-10 text-xs text-zinc-500 border-l-2 border-pink-500 pl-4">⚠️ Browser-only storage. For production, use a backend proxy for secrets and AI API calls.</div>
         </div>
       </section>
 
@@ -404,7 +498,6 @@
     </main>
   </div>
 
-  <button onclick="openModal('model-modal')" data-tooltip="Choose assistant model" aria-label="Choose assistant model" class="fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-br from-pink-500 to-blue-500 rounded-3xl flex items-center justify-center shadow-2xl shadow-pink-500/40 hover:scale-110 text-2xl z-[9000]">🤖</button>
   <div id="toast" class="hidden fixed top-20 left-1/2 -translate-x-1/2 bg-zinc-900 border border-pink-400 text-pink-300 px-6 py-3 rounded-3xl text-sm font-medium shadow-xl z-[10000]"></div>
 
   <div id="modal-root" onclick="closeModalOnBackdrop(event)" class="hidden fixed inset-0 modal-backdrop z-[9998] items-center justify-center p-4">
@@ -484,10 +577,6 @@
 
       <button onclick="runGithubToolAction()" class="mt-5 w-full bg-gradient-to-r from-pink-500 to-violet-500 rounded-2xl py-3 font-semibold">Run Git Action</button>
     </div>
-    <div id="model-modal" class="app-modal hidden w-full max-w-xl bg-zinc-950 border border-zinc-700 rounded-3xl p-6 shadow-2xl">
-      <div class="flex items-center justify-between mb-5"><h3 class="text-2xl font-semibold">Model Selector</h3><button onclick="closeModals()" class="text-zinc-400 hover:text-white">✕</button></div>
-      <div id="model-options" class="space-y-3"></div>
-    </div>
   </div>
   <button onclick="toggleWikiPopover()"
     class="fixed bottom-24 right-8 z-[9000] px-4 py-3 rounded-2xl bg-sky-600 hover:bg-sky-500 font-semibold shadow-xl">
@@ -498,8 +587,27 @@
     class="hidden fixed top-20 right-8 z-[9500] w-[520px] h-[720px] bg-zinc-950 border border-zinc-700 rounded-3xl shadow-2xl overflow-hidden">
     <div id="wiki-drag-handle"
       class="h-12 cursor-move bg-zinc-900 border-b border-zinc-800 flex items-center justify-between px-4">
-      <div class="font-semibold"><i class="fa-solid fa-book mr-2"></i>Factory Wiki</div>
-      <button onclick="toggleWikiPopover()" class="text-zinc-400 hover:text-white">✕</button>
+
+      <div class="font-semibold">
+        <i class="fa-solid fa-book mr-2"></i>
+        Wiki
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button
+          onclick="openWikiInNewTab()"
+          class="w-8 h-8 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white"
+          title="Open in new tab">
+          <i class="fa-solid fa-up-right-from-square"></i>
+        </button>
+
+        <button
+          onclick="toggleWikiPopover()"
+          class="w-8 h-8 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white"
+          title="Close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
     </div>
 
     <iframe src="wiki/index.html#quick-start-section" class="w-full h-[calc(100%-48px)] border-0 bg-white"></iframe>
@@ -685,6 +793,11 @@
     }
 
     function setText(id, value) { const el = document.getElementById(id); if (el) el.textContent = value; }
+
+    function scrollToFactoryActions() {
+      switchTab('factory');
+      setTimeout(() => document.getElementById('factory-share-actions')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+    }
 
     function updatePluginSelectionSummaries() {
       const label = (role) => {
@@ -1091,9 +1204,9 @@
             </div>
 
             <div class="flex flex-wrap gap-2">
-              <button onclick="useStarterPrompt(); createRun();" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-medium">Use starter + create run</button>
-              <button onclick="switchTab('plugins')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700">Configure plugins</button>
-              <label class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 cursor-pointer">Import JSON<input type="file" accept="application/json" class="hidden" onchange="importRun(event)" /></label>
+              <button onclick="useStarterPrompt(); createRun();" class="ui-btn ui-btn-green">Use starter + create run</button>
+              <button onclick="switchTab('plugins')" class="ui-btn ui-btn-dark">Configure plugins</button>
+              <label class="ui-btn ui-btn-zinc cursor-pointer">Import JSON<input type="file" accept="application/json" class="hidden" onchange="importRun(event)" /></label>
             </div>
           </div>
         </section>`;
@@ -1240,7 +1353,7 @@
       getTruncatedSnapshots().forEach((snapshot, index) => {
         const card = document.createElement("section");
         const selected = snapshot.id === selectedSnapshotId;
-        card.className = `${selected ? "ring-2 ring-indigo-500 " : ""}bg-slate-900 border border-slate-800 rounded-2xl p-4 cursor-pointer`;
+        card.className = `${selected ? "ring-2 ring-pink-400/80 " : ""}factory-card p-4 cursor-pointer hover:border-pink-400/50`;
         card.onclick = (e) => {
           if (e.target.closest("button, textarea, input, select, a")) return;
           selectedSnapshotId = snapshot.id;
@@ -1258,23 +1371,23 @@
           </div>
 
           <div class="grid grid-cols-2 gap-2 mb-3">
-            <select class="p-2 rounded-xl bg-slate-950 border border-slate-700 text-xs" onchange="updateSnapshot('${snapshot.id}', 'stage', this.value, true)">
+            <select class="p-2 factory-field text-xs" onchange="updateSnapshot('${snapshot.id}', 'stage', this.value, true)">
               ${stageOptions(snapshot.stage)}
             </select>
-            <select class="p-2 rounded-xl bg-slate-950 border border-slate-700 text-xs" onchange="updateSnapshot('${snapshot.id}', 'source', this.value, true)">
+            <select class="p-2 factory-field text-xs" onchange="updateSnapshot('${snapshot.id}', 'source', this.value, true)">
               ${sourceOptions(snapshot.source)}
             </select>
           </div>
 
           <label class="text-xs text-slate-400">Input</label>
-          <textarea class="w-full mt-1 mb-3 min-h-20 p-2 rounded-xl bg-slate-950 border border-slate-700 text-sm" onchange="updateSnapshot('${snapshot.id}', 'input', this.value)">${escapeHtml(snapshot.input)}</textarea>
+          <textarea class="w-full mt-1 mb-3 min-h-20 p-3 factory-field text-sm" onchange="updateSnapshot('${snapshot.id}', 'input', this.value)">${escapeHtml(snapshot.input)}</textarea>
 
           <label class="text-xs text-slate-400">Output</label>
-          <textarea class="w-full mt-1 mb-3 min-h-28 p-2 rounded-xl bg-slate-950 border border-slate-700 text-sm" placeholder="AI-generated result, human edit, validation result, PR link, deployment preview URL..." onchange="updateSnapshot('${snapshot.id}', 'output', this.value)">${escapeHtml(snapshot.output)}</textarea>
+          <textarea class="w-full mt-1 mb-3 min-h-28 p-3 factory-field text-sm" placeholder="AI-generated result, human edit, validation result, PR link, deployment preview URL..." onchange="updateSnapshot('${snapshot.id}', 'output', this.value)">${escapeHtml(snapshot.output)}</textarea>
 
           <div class="grid grid-cols-2 gap-2 mb-3">
-            <input class="p-2 rounded-xl bg-slate-950 border border-slate-700 text-xs" placeholder="Confidence %" value="${escapeHtml(snapshot.confidence || "")}" onchange="updateSnapshot('${snapshot.id}', 'confidence', this.value, true)">
-            <input class="p-2 rounded-xl bg-slate-950 border border-slate-700 text-xs" placeholder="Preview / PR URL" value="${escapeHtml(snapshot.artifacts?.renderPreviewUrl || snapshot.artifacts?.githubPrUrl || "")}" onchange="updateArtifact('${snapshot.id}', this.value)">
+            <input class="p-2 factory-field text-xs" placeholder="Confidence %" value="${escapeHtml(snapshot.confidence || "")}" onchange="updateSnapshot('${snapshot.id}', 'confidence', this.value, true)">
+            <input class="p-2 factory-field text-xs" placeholder="Preview / PR URL" value="${escapeHtml(snapshot.artifacts?.renderPreviewUrl || snapshot.artifacts?.githubPrUrl || "")}" onchange="updateArtifact('${snapshot.id}', this.value)">
           </div>
 
           <label class="text-xs text-slate-400">Validation</label>
@@ -1283,16 +1396,16 @@
           </div>
 
           <label class="text-xs text-slate-400">Human Notes</label>
-          <textarea class="w-full mt-1 mb-3 min-h-16 p-2 rounded-xl bg-slate-950 border border-slate-700 text-sm" placeholder="Why approved, rejected, retried, forked, or changed..." onchange="updateSnapshot('${snapshot.id}', 'notes', this.value)">${escapeHtml(snapshot.notes)}</textarea>
+          <textarea class="w-full mt-1 mb-3 min-h-16 p-3 factory-field text-sm" placeholder="Why approved, rejected, retried, forked, or changed..." onchange="updateSnapshot('${snapshot.id}', 'notes', this.value)">${escapeHtml(snapshot.notes)}</textarea>
 
           <div class="flex flex-wrap gap-2">
             <button onclick="approveSnapshot('${snapshot.id}')" class="px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-sm">Approve</button>
             <button onclick="rejectSnapshot('${snapshot.id}')" class="px-3 py-2 rounded-xl bg-red-700 hover:bg-red-600 text-sm">Reject</button>
             <button onclick="retrySnapshot('${snapshot.id}')" class="px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-sm">Retry</button>
-            <button onclick="forkSnapshot('${snapshot.id}')" class="px-3 py-2 rounded-xl bg-indigo-700 hover:bg-indigo-600 text-sm">Fork</button>
+            <button onclick="forkSnapshot('${snapshot.id}')" class="px-3 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-sm">Fork</button>
             <button onclick="replayFromSnapshot('${snapshot.id}')" class="px-3 py-2 rounded-xl bg-cyan-700 hover:bg-cyan-600 text-sm">Replay</button>
             <button onclick="executeSnapshot('${snapshot.id}')"
-                class="px-3 py-2 rounded-xl bg-violet-700 hover:bg-violet-600 text-sm">
+                class="px-3 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-sm">
                 Execute
             </button>
           </div>
@@ -3728,8 +3841,7 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
     function connectNonLocalAI() {
       switchTab('keys');
       renderCredentials();
-      openModal('model-modal');
-      showToast('Add a cloud key in Credentials, then add one or more non-local providers to the model route. Local stays available as the default/fallback.');
+      showToast('Add a cloud key in Credentials, then configure your AI Model Plugin from the Factory Passport connections panel.');
     }
 
     function selectModel(id) { activeModelChain=[id]; appSaveModelChain(); showToast('Model route set to '+modelRouteLabel()); }
@@ -3848,42 +3960,14 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
     function runFlow(id) { const flows=appLoadJSON(FOURFLO.flows,[]); const f=flows.find(x=>x.id===id); if(!f) return; f.lastRun=new Date().toLocaleString(); appSaveJSON(FOURFLO.flows,flows); renderFlows(); switchTab('chat'); $4('welcome').classList.add('hidden'); $4('messages').classList.remove('hidden'); addMessage('Run automation: '+f.name,'user'); addMessage('✅ Automation run complete.\nTrigger: '+f.trigger+'\nAction: '+f.action,'ai'); showToast('Automation ran'); }
     function deleteFlow(id) { appSaveJSON(FOURFLO.flows, appLoadJSON(FOURFLO.flows,[]).filter(f=>f.id!==id)); renderFlows(); showToast('Automation deleted'); }
 
-    function renderModelOptions() {
-      const route = activeModelChain || ['local'];
-      $4('model-options').innerHTML = `
-        <div class="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-100 mb-4">
-          <div class="font-semibold">Factory model route</div>
-          <div class="text-xs mt-1">${appEsc(modelRouteLabel())}</div>
-          <div class="flex flex-wrap gap-2 mt-3">
-            <button onclick="setLocalFirstRoute()" class="px-3 py-2 rounded-xl bg-amber-400 text-black font-semibold text-xs">Keep Local First</button>
-            <button onclick="activeModelChain=['local']; appSaveModelChain();" class="px-3 py-2 rounded-xl bg-zinc-800 text-xs">Local Only</button>
-          </div>
-        </div>` + providers.map(p=>{
-          const inRoute = route.includes(p.id);
-          const pos = route.indexOf(p.id);
-          return `<div class="w-full text-left p-5 rounded-2xl border ${inRoute?'border-pink-400 bg-pink-500/10':'border-zinc-700 bg-zinc-900'} mb-3">
-            <div class="flex justify-between gap-3">
-              <div><div class="font-semibold">${p.label}</div><div class="text-xs text-zinc-500 mt-1">${p.hint}</div>${inRoute?`<div class="text-xs text-pink-300 mt-2">Route position ${pos+1}</div>`:''}</div>
-              <div>${inRoute?'✓':''}</div>
-            </div>
-            <div class="flex flex-wrap gap-2 mt-4">
-              <button onclick="toggleModelInRoute('${p.id}')" class="px-3 py-2 rounded-xl ${inRoute?'bg-red-900 text-red-200':'bg-zinc-800'} text-xs">${inRoute?'Remove':'Add to Route'}</button>
-              <button onclick="selectModel('${p.id}')" class="px-3 py-2 rounded-xl bg-zinc-800 text-xs">Use Only</button>
-              <button onclick="moveRouteModel('${p.id}', -1)" class="px-3 py-2 rounded-xl bg-zinc-800 text-xs">↑</button>
-              <button onclick="moveRouteModel('${p.id}', 1)" class="px-3 py-2 rounded-xl bg-zinc-800 text-xs">↓</button>
-            </div>
-          </div>`;
-        }).join('');
-    }
     function openModal(id) {
-      renderModelOptions();
       const root = $4('modal-root');
       if (!root) return;
       if (root.parentElement !== document.body) document.body.appendChild(root);
       root.style.zIndex = '9998';
       root.classList.remove('hidden');
       root.classList.add('flex');
-      document.querySelectorAll('.app-modal').forEach(m=>m.classList.add('hidden'));
+      document.querySelectorAll('.app-modal').forEach(m => m.classList.add('hidden'));
       const modal = $4(id);
       if (modal) modal.classList.remove('hidden');
     }
@@ -3891,6 +3975,9 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
     function closeModalOnBackdrop(e) { if(e.target.id==='modal-root') closeModals(); }
     let wikiOpen = false;
 
+    function openWikiInNewTab() {
+        window.open("wiki/index.html#quick-start-section", "_blank", "noopener,noreferrer");
+    }
     function toggleWiki() {
         wikiOpen = !wikiOpen;
 
@@ -3956,24 +4043,56 @@ Next SHA to reuse: ${flow.lastCommitSha}` : "";
       if (!known) return;
       gotoAppSection(raw);
     }
+    // === NEW: Level 2 & Unified History Helpers ===
+    function toggleLevel2Panel() {
+      const group = document.getElementById('level2-group');
+      if (group) group.classList.toggle('hidden');
+    }
+
+    function setHistoryView(view) {
+      const content = document.getElementById('unified-history-content');
+      if (!content) return;
+      
+      if (view === 'list') {
+        content.innerHTML = `<div class="text-sm">📋 Full History List (your existing renderPassportSessionHistory logic can go here)</div>`;
+      } else if (view === 'timeline') {
+        content.innerHTML = `<div id="timeline" class="space-y-3 text-xs"></div>`;
+        renderTimeline(); // your existing function
+      } else if (view === 'tree') {
+        content.innerHTML = `<div id="lineage" class="space-y-2 text-xs"></div>`;
+        renderLineage(); // your existing function
+      }
+      showToast(`Switched to ${view} view`);
+    }
     loadAppSettings(); renderCredentials(); renderHistory(); renderFlows(); renderPlugins(); updateActiveModelLabel(); switchTab('factory'); handleInitialAppHash(); console.log('%cFactory 4flo ready 🚀','color:#ff8ec8;font-weight:bold');
   </script>
 
   <script>
     let wikiPopoverOpen = false;
 
-function toggleWikiPopover() {
-    const popover = document.getElementById("wiki-popover");
-    const iframe = popover.querySelector("iframe");
+    function toggleWikiPopover() {
+        const wiki = document.getElementById("wiki-popover");
+        const iframe = wiki.querySelector("iframe");
 
-    const opening = popover.classList.contains("hidden");
+        if (wiki.classList.contains("hidden")) {
+            // Reset the wiki page (optional)
+            if (iframe) {
+                iframe.src = "wiki/index.html#quick-start-section";
+            }
 
-    popover.classList.toggle("hidden");
+            // Default size & position
+            wiki.style.width = "412px";
+            wiki.style.height = "586px";
+            wiki.style.top = "76px";
+            wiki.style.left = "8px";
+            wiki.style.right = "auto";
+            wiki.style.bottom = "auto";
 
-    if (opening) {
-        iframe.src = "wiki/index.html#quick-start-section";
+            wiki.classList.remove("hidden");
+        } else {
+            wiki.classList.add("hidden");
+        }
     }
-}
 
     (function makeWikiDraggable() {
       const popover = document.getElementById("wiki-popover");
