@@ -16,8 +16,6 @@ No database.
 
 Just open one HTML file and start building.
 
----
-
 ## 🌸 About
 
 Factory 4flo began as a one-day hackathon.
@@ -37,8 +35,6 @@ Share your workflows.
 Share your ideas.
 
 Let's build better software factories together.
-
----
 
 # 🚀 5-Minute Quick Start
 
@@ -60,7 +56,7 @@ index.html
 
 inside your favorite browser.
 
----
+
 
 ## 2. Start a Factory Run
 
@@ -87,7 +83,7 @@ Click:
 
 Factory 4flo immediately creates a structured engineering workflow.
 
----
+
 
 ## 3. Review Your Snapshots
 
@@ -111,7 +107,7 @@ Proof
 
 Every snapshot records one stage of development.
 
----
+
 
 ## 4. Configure Plugins (Optional)
 
@@ -126,7 +122,7 @@ Choose plugins for:
 
 You can remain completely local or connect external services.
 
----
+
 
 ## 5. Export
 
@@ -143,7 +139,7 @@ You can:
 * import it later
 * continue development anywhere
 
----
+
 
 # 📖 What is Factory 4flo?
 
@@ -168,7 +164,7 @@ It organizes:
 
 Everything stays structured instead of disappearing into chat history.
 
----
+
 
 # 🏭 Core Concepts
 
@@ -189,7 +185,7 @@ It includes:
 * Deployment information
 * Exportable JSON
 
----
+
 
 ## Snapshots
 
@@ -224,7 +220,7 @@ Snapshots can be:
 * Exported
 * Replayed
 
----
+
 
 ## Timeline
 
@@ -262,7 +258,7 @@ Deployment Complete
 
 Nothing disappears.
 
----
+
 
 ## Plugins
 
@@ -301,7 +297,7 @@ Examples include:
 * Local commands
 * Custom bridges
 
----
+
 
 # 🤖 Assistant
 
@@ -321,7 +317,7 @@ the Assistant already understands:
 
 It works with your project—not beside it.
 
----
+
 
 # 🔐 Credentials
 
@@ -337,7 +333,7 @@ Store things like:
 
 Credentials remain in your browser.
 
----
+
 
 # ⚡ Automations
 
@@ -369,7 +365,7 @@ Build engineering workflows once.
 
 Reuse them forever.
 
----
+
 
 # 🔄 Local First
 
@@ -386,7 +382,7 @@ Everything lives inside your browser.
 
 Cloud services are optional.
 
----
+
 
 # 📦 Export & Import
 
@@ -400,7 +396,7 @@ Benefits include:
 * Long-term project history
 * Interoperability
 
----
+
 
 # 🌍 Who is Factory 4flo For?
 
@@ -415,7 +411,7 @@ Factory 4flo is designed for:
 * Technical product managers
 * Hackathon participants
 
----
+
 
 # 🧠 Design Philosophy
 
@@ -425,7 +421,7 @@ Factory 4flo follows five principles.
 
 Your work belongs to you.
 
----
+
 
 ## Human in the Loop
 
@@ -433,13 +429,13 @@ AI assists.
 
 Humans decide.
 
----
+
 
 ## Everything is Versioned
 
 Every important decision should be recoverable.
 
----
+
 
 ## Plugin Driven
 
@@ -447,13 +443,13 @@ Replace any provider.
 
 Nothing is hardcoded.
 
----
+
 
 ## Portable
 
 Projects should remain understandable years later.
 
----
+
 
 # 📂 Project Structure
 
@@ -496,7 +492,7 @@ Factory 4flo
 └── Settings
 ```
 
----
+
 
 # 🛣 Roadmap
 
@@ -513,7 +509,7 @@ Future ideas include:
 * Multiple Factory Passports
 * Shared workspaces
 
----
+
 
 # 🤝 Contributing
 
@@ -532,7 +528,7 @@ Ways to contribute:
 
 If you have an idea that improves how humans and AI build software together, we'd love to hear it.
 
----
+
 
 # 📄 License
 
@@ -551,7 +547,7 @@ The only requirement is that the original copyright notice and this license rema
 
 See the [LICENSE](LICENSE) file for the complete license text.
 
----
+
 
 ## ⭐ Support the Project
 
@@ -566,6 +562,6 @@ If Factory 4flo saves you time, helps your team, or powers something you're prou
 
 Every contribution helps make Factory 4flo better for everyone.
 
----
+
 
 > **Factory 4flo isn't another AI chat window. It's a software factory where humans and AI build together.**
