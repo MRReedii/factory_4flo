@@ -18,6 +18,28 @@ Just open one HTML file and start building.
 
 ---
 
+## 🌸 About
+
+Factory 4flo began as a one-day hackathon.
+
+I didn't know what anyone else was building. I just knew I wanted to build something different—something simple, interoperable, and useful in almost any environment.
+
+The challenge was to create an AI-powered software factory. Rather than focusing only on generating code, I became interested in everything that happens around it: capturing context, recording decisions, validating results, and giving people the ability to inspect, replay, fork, and improve the process.
+
+Those ideas shaped the project's core principles: keep it simple, keep it portable, keep it human-readable, and avoid locking the workflow to any single AI model, platform, or vendor. Every component should have a clear responsibility, degrade gracefully, and remain useful on its own—from a single HTML file to a local CLI, or as part of a larger software factory.
+
+Factory 4flo is open source because the future of AI-assisted software development should be transparent, interoperable, extensible, and owned by the people who build with it.
+
+Share your plugins.
+
+Share your workflows.
+
+Share your ideas.
+
+Let's build better software factories together.
+
+---
+
 # 🚀 5-Minute Quick Start
 
 You can be productive in less than five minutes.
@@ -528,28 +550,6 @@ You are free to:
 The only requirement is that the original copyright notice and this license remain included in all copies or substantial portions of the software.
 
 See the [LICENSE](LICENSE) file for the complete license text.
-
----
-
-## 🌸 Built in the Open
-
-Factory 4flo began as a one-day hackathon.
-
-I didn't know what anyone else was building. I just knew I wanted to build something different—something simple, interoperable, and useful in almost any environment.
-
-The challenge was to create an AI-powered software factory. Rather than focusing only on generating code, I became interested in everything that happens around it: capturing context, recording decisions, validating results, and giving people the ability to inspect, replay, fork, and improve the process.
-
-Those ideas shaped the project's core principles: keep it simple, keep it portable, keep it human-readable, and avoid locking the workflow to any single AI model, platform, or vendor. Every component should have a clear responsibility, degrade gracefully, and remain useful on its own—from a single HTML file to a local CLI, or as part of a larger software factory.
-
-Factory 4flo is open source because the future of AI-assisted software development should be transparent, interoperable, extensible, and owned by the people who build with it.
-
-Share your plugins.
-
-Share your workflows.
-
-Share your ideas.
-
-Let's build better software factories together.
 
 ---
 
